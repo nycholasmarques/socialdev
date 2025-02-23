@@ -7,17 +7,60 @@ package db
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 )
 
-const getUsers = `-- name: GetUsers :one
-SELECT user_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
-WHERE user_id = $1 LIMIT 1
+const createRole = `-- name: CreateRole :one
+INSERT INTO roles (
+  role_id, name
+) VALUES (
+  $1, $2
+)
+RETURNING role_id, name, created_at, updated_at
 `
 
-func (q *Queries) GetUsers(ctx context.Context, userID uuid.UUID) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUsers, userID)
+type CreateRoleParams struct {
+	RoleID uuid.UUID
+	Name   string
+}
+
+func (q *Queries) CreateRole(ctx context.Context, arg CreateRoleParams) (Role, error) {
+	row := q.db.QueryRowContext(ctx, createRole, arg.RoleID, arg.Name)
+	var i Role
+	err := row.Scan(
+		&i.RoleID,
+		&i.Name,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (
+  user_id, username, email, password
+) VALUES (
+  $1, $2, $3, $4
+) ON CONFLICT (username) DO NOTHING
+RETURNING user_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at
+`
+
+type CreateUserParams struct {
+	UserID   uuid.UUID
+	Username string
+	Email    string
+	Password string
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, createUser,
+		arg.UserID,
+		arg.Username,
+		arg.Email,
+		arg.Password,
+	)
 	var i User
 	err := row.Scan(
 		&i.UserID,
@@ -33,4 +76,281 @@ func (q *Queries) GetUsers(ctx context.Context, userID uuid.UUID) (User, error) 
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const createUserWithRoles = `-- name: CreateUserWithRoles :one
+INSERT INTO user_roles (
+  user_id, role_id
+) VALUES (
+  $1, $2
+)
+RETURNING user_id, role_id
+`
+
+type CreateUserWithRolesParams struct {
+	UserID uuid.UUID
+	RoleID uuid.UUID
+}
+
+func (q *Queries) CreateUserWithRoles(ctx context.Context, arg CreateUserWithRolesParams) (UserRole, error) {
+	row := q.db.QueryRowContext(ctx, createUserWithRoles, arg.UserID, arg.RoleID)
+	var i UserRole
+	err := row.Scan(&i.UserID, &i.RoleID)
+	return i, err
+}
+
+const deleteRole = `-- name: DeleteRole :exec
+DELETE FROM roles
+WHERE role_id = $1
+`
+
+func (q *Queries) DeleteRole(ctx context.Context, roleID uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteRole, roleID)
+	return err
+}
+
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users
+WHERE user_id = $1
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, userID)
+	return err
+}
+
+const deleteUserWithRoles = `-- name: DeleteUserWithRoles :exec
+DELETE FROM user_roles 
+WHERE user_id = $1 AND
+role_id = $2
+`
+
+type DeleteUserWithRolesParams struct {
+	UserID uuid.UUID
+	RoleID uuid.UUID
+}
+
+func (q *Queries) DeleteUserWithRoles(ctx context.Context, arg DeleteUserWithRolesParams) error {
+	_, err := q.db.ExecContext(ctx, deleteUserWithRoles, arg.UserID, arg.RoleID)
+	return err
+}
+
+const getAllRoles = `-- name: GetAllRoles :many
+SELECT role_id, name, created_at, updated_at FROM roles
+`
+
+func (q *Queries) GetAllRoles(ctx context.Context) ([]Role, error) {
+	rows, err := q.db.QueryContext(ctx, getAllRoles)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Role
+	for rows.Next() {
+		var i Role
+		if err := rows.Scan(
+			&i.RoleID,
+			&i.Name,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllUsers = `-- name: GetAllUsers :many
+SELECT user_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
+`
+
+func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, getAllUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.UserID,
+			&i.Username,
+			&i.Email,
+			&i.Password,
+			&i.Avatar,
+			&i.Bio,
+			&i.Github,
+			&i.Linkedin,
+			&i.Website,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getRole = `-- name: GetRole :one
+SELECT role_id, name, created_at, updated_at FROM roles
+WHERE role_id = $1
+`
+
+func (q *Queries) GetRole(ctx context.Context, roleID uuid.UUID) (Role, error) {
+	row := q.db.QueryRowContext(ctx, getRole, roleID)
+	var i Role
+	err := row.Scan(
+		&i.RoleID,
+		&i.Name,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getRoleWithName = `-- name: GetRoleWithName :many
+SELECT role_id, name, created_at, updated_at FROM roles
+WHERE name = $1
+`
+
+func (q *Queries) GetRoleWithName(ctx context.Context, name string) ([]Role, error) {
+	rows, err := q.db.QueryContext(ctx, getRoleWithName, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Role
+	for rows.Next() {
+		var i Role
+		if err := rows.Scan(
+			&i.RoleID,
+			&i.Name,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUser = `-- name: GetUser :one
+SELECT user_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
+WHERE user_id = $1 LIMIT 1
+`
+
+func (q *Queries) GetUser(ctx context.Context, userID uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUser, userID)
+	var i User
+	err := row.Scan(
+		&i.UserID,
+		&i.Username,
+		&i.Email,
+		&i.Password,
+		&i.Avatar,
+		&i.Bio,
+		&i.Github,
+		&i.Linkedin,
+		&i.Website,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserWithUsername = `-- name: GetUserWithUsername :one
+SELECT username, avatar FROM users
+WHERE username = $1
+`
+
+type GetUserWithUsernameRow struct {
+	Username string
+	Avatar   sql.NullString
+}
+
+func (q *Queries) GetUserWithUsername(ctx context.Context, username string) (GetUserWithUsernameRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserWithUsername, username)
+	var i GetUserWithUsernameRow
+	err := row.Scan(&i.Username, &i.Avatar)
+	return i, err
+}
+
+const updateRole = `-- name: UpdateRole :exec
+UPDATE roles
+  SET name = $2
+WHERE role_id = $1
+RETURNING role_id, name, created_at, updated_at
+`
+
+type UpdateRoleParams struct {
+	RoleID uuid.UUID
+	Name   string
+}
+
+func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) error {
+	_, err := q.db.ExecContext(ctx, updateRole, arg.RoleID, arg.Name)
+	return err
+}
+
+const updateUser = `-- name: UpdateUser :exec
+UPDATE users
+  SET username = $2,
+  email = $3,
+  password = $4,
+  avatar = $5,
+  bio = $6,
+  github = $7,
+  linkedin = $8,
+  website = $9
+WHERE user_id = $1
+RETURNING user_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at
+`
+
+type UpdateUserParams struct {
+	UserID   uuid.UUID
+	Username string
+	Email    string
+	Password string
+	Avatar   sql.NullString
+	Bio      sql.NullString
+	Github   sql.NullString
+	Linkedin sql.NullString
+	Website  sql.NullString
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
+	_, err := q.db.ExecContext(ctx, updateUser,
+		arg.UserID,
+		arg.Username,
+		arg.Email,
+		arg.Password,
+		arg.Avatar,
+		arg.Bio,
+		arg.Github,
+		arg.Linkedin,
+		arg.Website,
+	)
+	return err
 }
