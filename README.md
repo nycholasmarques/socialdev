@@ -33,12 +33,19 @@ Gerenciamento de usuários e conteúdo.
 Sistema de filtragem avançada para moderação.
 
 ⚙️ Tecnologias Utilizadas:
+
 Golang - Linguagem principal do backend
+
 gRPC - Comunicação eficiente entre serviços
+
 SQLC - Geração de código SQL segura e rápida
+
 WebSockets - Comunicação em tempo real para o chat
+
 JWT - Autenticação baseada em tokens
+
 PostgreSQL - Banco de dados relacional
+
 Redis - Cache e mensagens em tempo real
 
 🔥 Como Rodar o Projeto Localmente 🔥
