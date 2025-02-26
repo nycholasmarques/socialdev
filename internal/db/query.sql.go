@@ -257,25 +257,33 @@ func (q *Queries) GetRoleWithName(ctx context.Context, name string) ([]Role, err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT user_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
+SELECT username, avatar, bio, github, linkedin, website, email, created_at FROM users
 WHERE user_id = $1 LIMIT 1
 `
 
-func (q *Queries) GetUser(ctx context.Context, userID uuid.UUID) (User, error) {
+type GetUserRow struct {
+	Username  string
+	Avatar    sql.NullString
+	Bio       sql.NullString
+	Github    sql.NullString
+	Linkedin  sql.NullString
+	Website   sql.NullString
+	Email     string
+	CreatedAt sql.NullTime
+}
+
+func (q *Queries) GetUser(ctx context.Context, userID uuid.UUID) (GetUserRow, error) {
 	row := q.db.QueryRowContext(ctx, getUser, userID)
-	var i User
+	var i GetUserRow
 	err := row.Scan(
-		&i.UserID,
 		&i.Username,
-		&i.Email,
-		&i.Password,
 		&i.Avatar,
 		&i.Bio,
 		&i.Github,
 		&i.Linkedin,
 		&i.Website,
+		&i.Email,
 		&i.CreatedAt,
-		&i.UpdatedAt,
 	)
 	return i, err
 }

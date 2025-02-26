@@ -17,4 +17,5 @@ func SetupUserRoutes(r *http.ServeMux, queries *db.Queries) {
 
 	// Registrar a rota para criar usuário
 	r.HandleFunc("POST /user/create", userHandler.CreateUserHandler)
+	r.HandleFunc("GET /user/{user_id}", userHandler.GetUserHandler)
 }

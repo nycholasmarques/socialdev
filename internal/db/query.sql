@@ -2,7 +2,7 @@
 SELECT * FROM users;
 
 -- name: GetUser :one
-SELECT * FROM users
+SELECT username, avatar, bio, github, linkedin, website, email, created_at FROM users
 WHERE user_id = $1 LIMIT 1;
 
 -- name: GetUserWithUsername :one

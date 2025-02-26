@@ -38,3 +38,8 @@ func (s *UserService) CreateUser(username, email, password string) (db.User, err
 	// Chamar o repositório para criar o usuário
 	return s.userRepo.CreateUser(ctx, userParams)
 }
+
+func (s *UserService) GetUser(user_id uuid.UUID) (db.GetUserRow, error) {
+	ctx := context.Background()
+	return s.userRepo.GetUser(ctx, user_id)
+}
