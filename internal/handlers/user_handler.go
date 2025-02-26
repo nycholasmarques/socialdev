@@ -89,4 +89,21 @@ func (h *UserHandler) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(res))
 }
 
-// TROCAR NOMENCLATURA DAS PASTAS USER 
+func (h *UserHandler) GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
+
+	users, err := h.userService.GetAllUsers()
+	if err != nil {
+		http.Error(w, "Failed to get users", http.StatusInternalServerError)
+		return
+	}
+
+	res, err := json.Marshal(users)
+	if err != nil {
+		http.Error(w, "Failed to marshal users", http.StatusInternalServerError)
+		return
+	}
+
+	// Retornar a resposta
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(res))
+}
