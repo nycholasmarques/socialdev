@@ -156,7 +156,7 @@ func (h *UserHandler) GetUserWithUsernameHandler(w http.ResponseWriter, r *http.
 func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	
 	id := r.URL.Path
-	userID := strings.TrimPrefix(id, "/user/update/")
+	userID := strings.TrimPrefix(id, "/user/")
 
 	convertUUID, err := uuid.Parse(userID)
 	if err != nil {
@@ -232,4 +232,31 @@ func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 	// Retornar a resposta
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
+}
+
+func (h *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	user_id := r.URL.Path
+	userID := strings.TrimPrefix(user_id, "/user/")
+
+	uuid, err := uuid.Parse(userID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Invalid user ID: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	_, err = h.userService.GetUser(uuid)
+	if err != nil {
+		http.Error(w, "User does not exist", http.StatusNotFound)
+		return
+	}
+
+	err = h.userService.DeleteUser(uuid)
+	if err != nil {
+		http.Error(w, "Failed delete user", http.StatusInternalServerError)
+		return
+	}
+
+	// Retornar a resposta
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("User deleted successfully!"))
 }

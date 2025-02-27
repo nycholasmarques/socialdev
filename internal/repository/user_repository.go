@@ -60,3 +60,11 @@ func (r *UserRepository) UpdateUser(ctx context.Context, params db.UpdateUserPar
 	}
 	return user, err
 }
+
+func (r *UserRepository) DeleteUser(ctx context.Context, user_id uuid.UUID) (error) {
+	err := r.queries.DeleteUser(ctx, user_id)
+	if err != nil {
+		log.Printf("%v", err)
+	}
+	return err
+}

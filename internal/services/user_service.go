@@ -70,3 +70,8 @@ func (s *UserService) UpdateUser(user_id uuid.UUID, username, email, password, a
 		Website:  utils.StringToSqlNull(website),
 	})
 }
+
+func (s *UserService) DeleteUser(user_id uuid.UUID) (error) {
+	ctx := context.Background()
+	return s.userRepo.DeleteUser(ctx, user_id)
+}
