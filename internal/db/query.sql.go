@@ -257,33 +257,25 @@ func (q *Queries) GetRoleWithName(ctx context.Context, name string) ([]Role, err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT username, avatar, bio, github, linkedin, website, email, created_at FROM users
+SELECT user_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
 WHERE user_id = $1 LIMIT 1
 `
 
-type GetUserRow struct {
-	Username  string
-	Avatar    sql.NullString
-	Bio       sql.NullString
-	Github    sql.NullString
-	Linkedin  sql.NullString
-	Website   sql.NullString
-	Email     string
-	CreatedAt sql.NullTime
-}
-
-func (q *Queries) GetUser(ctx context.Context, userID uuid.UUID) (GetUserRow, error) {
+func (q *Queries) GetUser(ctx context.Context, userID uuid.UUID) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUser, userID)
-	var i GetUserRow
+	var i User
 	err := row.Scan(
+		&i.UserID,
 		&i.Username,
+		&i.Email,
+		&i.Password,
 		&i.Avatar,
 		&i.Bio,
 		&i.Github,
 		&i.Linkedin,
 		&i.Website,
-		&i.Email,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -338,7 +330,7 @@ func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) error {
 	return err
 }
 
-const updateUser = `-- name: UpdateUser :exec
+const updateUser = `-- name: UpdateUser :one
 UPDATE users
   SET username = $2,
   email = $3,
@@ -347,7 +339,8 @@ UPDATE users
   bio = $6,
   github = $7,
   linkedin = $8,
-  website = $9
+  website = $9,
+  updated_at = CURRENT_TIMESTAMP
 WHERE user_id = $1
 RETURNING user_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at
 `
@@ -364,8 +357,8 @@ type UpdateUserParams struct {
 	Website  sql.NullString
 }
 
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
-	_, err := q.db.ExecContext(ctx, updateUser,
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateUser,
 		arg.UserID,
 		arg.Username,
 		arg.Email,
@@ -376,5 +369,19 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
 		arg.Linkedin,
 		arg.Website,
 	)
-	return err
+	var i User
+	err := row.Scan(
+		&i.UserID,
+		&i.Username,
+		&i.Email,
+		&i.Password,
+		&i.Avatar,
+		&i.Bio,
+		&i.Github,
+		&i.Linkedin,
+		&i.Website,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
 	"github.com/nycholasmarques/socialdev/internal/repository"
+	"github.com/nycholasmarques/socialdev/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -39,7 +40,7 @@ func (s *UserService) CreateUser(username, email, password string) (db.User, err
 	return s.userRepo.CreateUser(ctx, userParams)
 }
 
-func (s *UserService) GetUser(user_id uuid.UUID) (db.GetUserRow, error) {
+func (s *UserService) GetUser(user_id uuid.UUID) (db.User, error) {
 	ctx := context.Background()
 	return s.userRepo.GetUser(ctx, user_id)
 }
@@ -52,4 +53,20 @@ func (s *UserService) GetAllUsers() ([]db.User, error) {
 func (s *UserService) GetUserWithUsername(username string) ([]db.GetUserWithUsernameRow, error) {
 	ctx := context.Background()
 	return s.userRepo.GetUserWithUsername(ctx, username)
+}
+
+func (s *UserService) UpdateUser(user_id uuid.UUID, username, email, password, avatar, bio, github, linkedin, website string) (db.User, error) {
+	ctx := context.Background()
+	
+	return s.userRepo.UpdateUser(ctx, db.UpdateUserParams{
+		UserID:   user_id,
+		Username: username,
+		Email:    email,
+		Password: password,
+		Avatar:   utils.StringToSqlNull(avatar),
+		Bio:      utils.StringToSqlNull(bio),
+		Github:   utils.StringToSqlNull(github),
+		Linkedin: utils.StringToSqlNull(linkedin),
+		Website:  utils.StringToSqlNull(website),
+	})
 }

@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -21,6 +22,18 @@ func NewUserHandler(userService *services.UserService) *UserHandler {
 
 type UserWithUsername struct {
 	Username string
+}
+
+type UpdateUserRequest struct {
+	UserID   string `json:"user_id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Avatar   string `json:"avatar"`
+	Bio      string `json:"bio"`
+	Github   string `json:"github"`
+	Linkedin string `json:"linkedin"`
+	Website  string `json:"website"`
 }
 
 var validate *validator.Validate
@@ -75,7 +88,7 @@ func (h *UserHandler) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Invalid user ID: %v", err), http.StatusBadRequest)
 		return
 	}
-	
+
 	user, err := h.userService.GetUser(uuid)
 	if err != nil {
 		http.Error(w, "Failed to get user", http.StatusInternalServerError)
@@ -135,7 +148,88 @@ func (h *UserHandler) GetUserWithUsernameHandler(w http.ResponseWriter, r *http.
 		http.Error(w, "Failed to marshal users", http.StatusInternalServerError)
 		return
 	}
-		// Retornar a resposta
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(res))
+	// Retornar a resposta
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(res))
+}
+
+func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+	
+	id := r.URL.Path
+	userID := strings.TrimPrefix(id, "/user/update/")
+
+	convertUUID, err := uuid.Parse(userID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Invalid user ID: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.userService.GetUser(convertUUID)
+	if err != nil {
+		http.Error(w, "User does not exist", http.StatusNotFound)
+		return
+	}
+
+	rb := r.Body
+	reader, err := io.ReadAll(rb)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		return
+	}
+	rb.Close()
+
+	var userUpdate *UpdateUserRequest
+	err = json.Unmarshal(reader, &userUpdate)
+	if err != nil {
+		http.Error(w, "Failed to unmarshal request body", http.StatusBadRequest)
+		return
+	}
+
+	validate = validator.New()
+
+	if userUpdate.Username == "" {
+		userUpdate.Username = user.Username
+	}
+
+	if userUpdate.Email == "" {
+		userUpdate.Email = user.Email
+	}
+
+	if userUpdate.Password == "" {
+		userUpdate.Password = user.Password
+	}
+
+	err = validate.Var(userUpdate.Username, "min=3,max=30,alpha")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Invalid username: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	err = validate.Var(userUpdate.Email, "email")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Invalid email: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	err = validate.Var(userUpdate.Password, "min=6,max=12")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Invalid password: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	updatedUser, err := h.userService.UpdateUser(convertUUID, userUpdate.Username, userUpdate.Email, userUpdate.Password, userUpdate.Avatar, userUpdate.Bio, userUpdate.Github, userUpdate.Linkedin, userUpdate.Website)
+	if err != nil {
+		http.Error(w, "Failed to update user", http.StatusInternalServerError)
+		return
+	}
+
+	res, err := json.Marshal(updatedUser)
+	if err != nil {
+		http.Error(w, "Failed to marshal user", http.StatusInternalServerError)
+		return
+	}
+
+	// Retornar a resposta
+	w.WriteHeader(http.StatusOK)
+	w.Write(res)
 }

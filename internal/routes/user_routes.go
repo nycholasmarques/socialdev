@@ -20,4 +20,5 @@ func SetupUserRoutes(r *http.ServeMux, queries *db.Queries) {
 	r.HandleFunc("GET /user/{user_id}", userHandler.GetUserHandler)
 	r.HandleFunc("GET /users/", userHandler.GetAllUsersHandler)
 	r.HandleFunc("GET /users/filters", userHandler.GetUserWithUsernameHandler)
+	r.HandleFunc("PATCH /user/update/{user_id}", userHandler.UpdateUserHandler)
 }

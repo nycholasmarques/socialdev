@@ -2,7 +2,7 @@
 SELECT * FROM users;
 
 -- name: GetUser :one
-SELECT username, avatar, bio, github, linkedin, website, email, created_at FROM users
+SELECT * FROM users
 WHERE user_id = $1 LIMIT 1;
 
 -- name: GetUserWithUsername :many
@@ -17,7 +17,7 @@ INSERT INTO users (
 ) ON CONFLICT (username) DO NOTHING
 RETURNING *;
 
--- name: UpdateUser :exec
+-- name: UpdateUser :one
 UPDATE users
   SET username = $2,
   email = $3,
@@ -26,7 +26,8 @@ UPDATE users
   bio = $6,
   github = $7,
   linkedin = $8,
-  website = $9
+  website = $9,
+  updated_at = CURRENT_TIMESTAMP
 WHERE user_id = $1
 RETURNING *;
 
