@@ -19,6 +19,10 @@ func NewUserHandler(userService *services.UserService) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
+type UserWithUsername struct {
+	Username string
+}
+
 var validate *validator.Validate
 
 func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -106,4 +110,32 @@ func (h *UserHandler) GetAllUsersHandler(w http.ResponseWriter, r *http.Request)
 	// Retornar a resposta
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(res))
+}
+
+func (h *UserHandler) GetUserWithUsernameHandler(w http.ResponseWriter, r *http.Request) {
+
+	username := r.URL.Query().Get("username")
+
+	validate = validator.New()
+
+	err := validate.Var(username, "required,max=30")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Invalid username: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.userService.GetUserWithUsername(username)
+	if err != nil {
+		http.Error(w, "Failed to get user", http.StatusInternalServerError)
+		return
+	}
+
+	res, err := json.Marshal(user)
+	if err != nil {
+		http.Error(w, "Failed to marshal users", http.StatusInternalServerError)
+		return
+	}
+		// Retornar a resposta
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(res))
 }

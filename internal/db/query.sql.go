@@ -288,9 +288,9 @@ func (q *Queries) GetUser(ctx context.Context, userID uuid.UUID) (GetUserRow, er
 	return i, err
 }
 
-const getUserWithUsername = `-- name: GetUserWithUsername :one
+const getUserWithUsername = `-- name: GetUserWithUsername :many
 SELECT username, avatar FROM users
-WHERE username = $1
+WHERE username LIKE $1
 `
 
 type GetUserWithUsernameRow struct {
@@ -298,11 +298,27 @@ type GetUserWithUsernameRow struct {
 	Avatar   sql.NullString
 }
 
-func (q *Queries) GetUserWithUsername(ctx context.Context, username string) (GetUserWithUsernameRow, error) {
-	row := q.db.QueryRowContext(ctx, getUserWithUsername, username)
-	var i GetUserWithUsernameRow
-	err := row.Scan(&i.Username, &i.Avatar)
-	return i, err
+func (q *Queries) GetUserWithUsername(ctx context.Context, username string) ([]GetUserWithUsernameRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserWithUsername, username)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUserWithUsernameRow
+	for rows.Next() {
+		var i GetUserWithUsernameRow
+		if err := rows.Scan(&i.Username, &i.Avatar); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateRole = `-- name: UpdateRole :exec

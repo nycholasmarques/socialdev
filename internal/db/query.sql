@@ -5,9 +5,9 @@ SELECT * FROM users;
 SELECT username, avatar, bio, github, linkedin, website, email, created_at FROM users
 WHERE user_id = $1 LIMIT 1;
 
--- name: GetUserWithUsername :one
+-- name: GetUserWithUsername :many
 SELECT username, avatar FROM users
-WHERE username = $1;
+WHERE username LIKE $1;
 
 -- name: CreateUser :one
 INSERT INTO users (
