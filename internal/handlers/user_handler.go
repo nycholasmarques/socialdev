@@ -9,7 +9,9 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	configs "github.com/nycholasmarques/socialdev/config"
 	"github.com/nycholasmarques/socialdev/internal/services"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserHandler struct {
@@ -22,6 +24,11 @@ func NewUserHandler(userService *services.UserService) *UserHandler {
 
 type UserWithUsername struct {
 	Username string
+}
+
+type LoginUserRequest struct {
+	Email    string `json:"email" validator:"required,email"`
+	Password string `json:"password" validator:"required,min=6,max=12"`
 }
 
 type UpdateUserRequest struct {
@@ -199,23 +206,23 @@ func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 		userUpdate.Password = user.Password
 	}
 
-	err = validate.Var(userUpdate.Username, "min=3,max=30,alpha")
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Invalid username: %v", err), http.StatusBadRequest)
-		return
-	}
+	// err = validate.Var(userUpdate.Username, "min=3,max=30,alpha")
+	// if err != nil {
+	// 	http.Error(w, fmt.Sprintf("Invalid username: %v", err), http.StatusBadRequest)
+	// 	return
+	// }
 
-	err = validate.Var(userUpdate.Email, "email")
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Invalid email: %v", err), http.StatusBadRequest)
-		return
-	}
+	// err = validate.Var(userUpdate.Email, "email")
+	// if err != nil {
+	// 	http.Error(w, fmt.Sprintf("Invalid email: %v", err), http.StatusBadRequest)
+	// 	return
+	// }
 
-	err = validate.Var(userUpdate.Password, "min=6,max=12")
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Invalid password: %v", err), http.StatusBadRequest)
-		return
-	}
+	// err = validate.Var(userUpdate.Password, "min=6,max=12")
+	// if err != nil {
+	// 	http.Error(w, fmt.Sprintf("Invalid password: %v", err), http.StatusBadRequest)
+	// 	return
+	// }
 
 	updatedUser, err := h.userService.UpdateUser(convertUUID, userUpdate.Username, userUpdate.Email, userUpdate.Password, userUpdate.Avatar, userUpdate.Bio, userUpdate.Github, userUpdate.Linkedin, userUpdate.Website)
 	if err != nil {
@@ -259,4 +266,64 @@ func (h *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) 
 	// Retornar a resposta
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("User deleted successfully!"))
+}
+
+func (h *UserHandler) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
+	rb := r.Body
+	reader, err := io.ReadAll(rb)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		return
+	}
+	rb.Close()
+
+	var userLogin *LoginUserRequest
+	err = json.Unmarshal(reader, &userLogin)
+	if err != nil {
+		http.Error(w, "Failed to unmarshal request body", http.StatusBadRequest)
+		return
+	}
+
+	validate = validator.New()
+
+	err = validate.Var(userLogin.Email, "required,email")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Invalid email: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	err = validate.Var(userLogin.Password, "required,min=6,max=12")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Invalid password: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.userService.LoginUser(userLogin.Email)
+	if err != nil {
+		http.Error(w, "User does not exist", http.StatusNotFound)
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userLogin.Password))
+	if err != nil {
+		http.Error(w, "Invalid password", http.StatusUnauthorized)
+		return
+	}
+
+	res, err := json.Marshal(user)
+	if err != nil {
+		http.Error(w, "Failed to marshal user", http.StatusInternalServerError)
+		return
+	}
+
+	token, err := configs.CreateToken(user.Username)
+	if err != nil {
+		http.Error(w, "Failed to create token", http.StatusInternalServerError)
+		return
+	}
+
+	// Retornar a resposta
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(res))
+	w.Write([]byte(token))
 }

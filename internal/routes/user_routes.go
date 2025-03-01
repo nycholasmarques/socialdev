@@ -5,6 +5,7 @@ import (
 
 	"github.com/nycholasmarques/socialdev/internal/db"
 	"github.com/nycholasmarques/socialdev/internal/handlers"
+	"github.com/nycholasmarques/socialdev/internal/middlewares"
 	"github.com/nycholasmarques/socialdev/internal/repository"
 	"github.com/nycholasmarques/socialdev/internal/services"
 )
@@ -18,8 +19,10 @@ func SetupUserRoutes(r *http.ServeMux, queries *db.Queries) {
 	// Registrar a rota para criar usuário
 	r.HandleFunc("POST /user/create", userHandler.CreateUserHandler)
 	r.HandleFunc("GET /user/{user_id}", userHandler.GetUserHandler)
-	r.HandleFunc("GET /users/", userHandler.GetAllUsersHandler)
+	r.HandleFunc("GET /users/", middlewares.ProtectedRoutes(userHandler.GetAllUsersHandler))
 	r.HandleFunc("GET /users/filters", userHandler.GetUserWithUsernameHandler)
 	r.HandleFunc("PATCH /user/{user_id}", userHandler.UpdateUserHandler)
 	r.HandleFunc("DELETE /user/{user_id}", userHandler.DeleteUserHandler)
+
+	r.HandleFunc("POST /user/login", userHandler.LoginUserHandler)
 }

@@ -280,6 +280,30 @@ func (q *Queries) GetUser(ctx context.Context, userID uuid.UUID) (User, error) {
 	return i, err
 }
 
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT user_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
+WHERE email = $1 LIMIT 1
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.UserID,
+		&i.Username,
+		&i.Email,
+		&i.Password,
+		&i.Avatar,
+		&i.Bio,
+		&i.Github,
+		&i.Linkedin,
+		&i.Website,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getUserWithUsername = `-- name: GetUserWithUsername :many
 SELECT username, avatar FROM users
 WHERE username LIKE $1
