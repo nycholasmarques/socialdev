@@ -10,6 +10,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	configs "github.com/nycholasmarques/socialdev/config"
+	"github.com/nycholasmarques/socialdev/internal/db"
 	"github.com/nycholasmarques/socialdev/internal/services"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -43,18 +44,50 @@ type UpdateUserRequest struct {
 	Website  string `json:"website"`
 }
 
+type RegisterUserRequest struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type UserResponse struct {
+	UserID   string `json:"user_id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Avatar   string `json:"avatar"`
+	Bio      string `json:"bio"`
+	Github   string `json:"github"`
+	Linkedin string `json:"linkedin"`
+	Website  string `json:"website"`
+}
+
 var validate *validator.Validate
 
 func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 
+	rb := r.Body
+	reader, err := io.ReadAll(rb)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		return
+	}
+	rb.Close()
+
+	var registerUser *RegisterUserRequest
+	err = json.Unmarshal(reader, &registerUser)
+	if err != nil {
+		http.Error(w, "Failed to unmarshal request body", http.StatusBadRequest)
+		return
+	}
+
 	validate = validator.New()
 	// Parsear os dados da requisição
-	username := r.FormValue("username")
-	email := r.FormValue("email")
-	password := r.FormValue("password")
+	username := registerUser.Username
+	email := registerUser.Email
+	password := registerUser.Password
 
 	// Validar os dados
-	err := validate.Var(username, "required,min=3,max=30,alpha")
+	err = validate.Var(username, "required,min=3,max=30,alpha")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Invalid username: %v", err), http.StatusBadRequest)
 		return
@@ -74,6 +107,12 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 
 	// validar erro se email já existe
 
+	user, _ := h.userService.LoginUser(email)
+	if user != (db.User{}) {
+		http.Error(w, "User already exists", http.StatusConflict)
+		return
+	}
+	
 	// Chamar o serviço para criar o usuário
 	_, err = h.userService.CreateUser(username, email, password)
 	if err != nil {
@@ -161,79 +200,86 @@ func (h *UserHandler) GetUserWithUsernameHandler(w http.ResponseWriter, r *http.
 }
 
 func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
-	
 	id := r.URL.Path
 	userID := strings.TrimPrefix(id, "/user/")
 
 	convertUUID, err := uuid.Parse(userID)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Invalid user ID: %v", err), http.StatusBadRequest)
-		return
+			http.Error(w, fmt.Sprintf("Invalid user ID: %v", err), http.StatusBadRequest)
+			return
 	}
 
 	user, err := h.userService.GetUser(convertUUID)
 	if err != nil {
-		http.Error(w, "User does not exist", http.StatusNotFound)
-		return
+			http.Error(w, "User does not exist", http.StatusNotFound)
+			return
 	}
 
 	rb := r.Body
 	reader, err := io.ReadAll(rb)
 	if err != nil {
-		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
-		return
+			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+			return
 	}
 	rb.Close()
 
-	var userUpdate *UpdateUserRequest
+	var userUpdate UpdateUserRequest
 	err = json.Unmarshal(reader, &userUpdate)
 	if err != nil {
-		http.Error(w, "Failed to unmarshal request body", http.StatusBadRequest)
-		return
+			http.Error(w, "Failed to unmarshal request body", http.StatusBadRequest)
+			return
 	}
 
-	validate = validator.New()
+	validate := validator.New()
 
-	if userUpdate.Username == "" {
-		userUpdate.Username = user.Username
+	// Atualiza apenas os campos fornecidos
+	if userUpdate.Username != "" {
+			err = validate.Var(userUpdate.Username, "min=3,max=30")
+			if err != nil {
+					http.Error(w, fmt.Sprintf("Invalid username: %v", err), http.StatusBadRequest)
+					return
+			}
+	} else {
+			userUpdate.Username = user.Username
 	}
 
-	if userUpdate.Email == "" {
-		userUpdate.Email = user.Email
+	if userUpdate.Email != "" {
+			err = validate.Var(userUpdate.Email, "email")
+			if err != nil {
+					http.Error(w, fmt.Sprintf("Invalid email: %v", err), http.StatusBadRequest)
+					return
+			}
+	} else {
+			userUpdate.Email = user.Email
 	}
 
-	if userUpdate.Password == "" {
-		userUpdate.Password = user.Password
+	if userUpdate.Password != "" {
+			err = validate.Var(userUpdate.Password, "min=6,max=12")
+			if err != nil {
+					http.Error(w, fmt.Sprintf("Invalid password: %v", err), http.StatusBadRequest)
+					return
+			}
+			passwordHash, err := bcrypt.GenerateFromPassword([]byte(userUpdate.Password), bcrypt.DefaultCost)
+			if err != nil {
+				http.Error(w, "Failed to encrypt password", http.StatusInternalServerError)
+				return
+			}
+			userUpdate.Password = string(passwordHash)
+	} else {
+			userUpdate.Password = user.Password
 	}
 
-	// err = validate.Var(userUpdate.Username, "min=3,max=30,alpha")
-	// if err != nil {
-	// 	http.Error(w, fmt.Sprintf("Invalid username: %v", err), http.StatusBadRequest)
-	// 	return
-	// }
-
-	// err = validate.Var(userUpdate.Email, "email")
-	// if err != nil {
-	// 	http.Error(w, fmt.Sprintf("Invalid email: %v", err), http.StatusBadRequest)
-	// 	return
-	// }
-
-	// err = validate.Var(userUpdate.Password, "min=6,max=12")
-	// if err != nil {
-	// 	http.Error(w, fmt.Sprintf("Invalid password: %v", err), http.StatusBadRequest)
-	// 	return
-	// }
-
+	// Atualiza o usuário com os novos valores
 	updatedUser, err := h.userService.UpdateUser(convertUUID, userUpdate.Username, userUpdate.Email, userUpdate.Password, userUpdate.Avatar, userUpdate.Bio, userUpdate.Github, userUpdate.Linkedin, userUpdate.Website)
 	if err != nil {
-		http.Error(w, "Failed to update user", http.StatusInternalServerError)
-		return
+			http.Error(w, "Failed to update user", http.StatusInternalServerError)
+			return
 	}
 
 	res, err := json.Marshal(updatedUser)
 	if err != nil {
-		http.Error(w, "Failed to marshal user", http.StatusInternalServerError)
-		return
+			http.Error(w, "Failed to marshal user", http.StatusInternalServerError)
+			return
 	}
 
 	// Retornar a resposta
