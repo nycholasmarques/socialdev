@@ -10,12 +10,15 @@ import (
 )
 
 func SetupUserRoutes(r *http.ServeMux, queries *db.Queries) {
-	// Criar instâncias das camadas
 	userRepo := repository.NewUserRepository(queries)
 	userService := services.NewUserService(userRepo)
 	userHandler := handlers.NewUserHandler(userService)
 
-	// Registrar a rota para criar usuário
-	r.HandleFunc("POST /user/create", userHandler.CreateUserHandler)
-	r.HandleFunc("GET /user/{user_id}", userHandler.GetUserHandler)
+	r.HandleFunc("POST /users", userHandler.CreateUserHandler)
+	r.HandleFunc("GET /users/{user_id}", userHandler.GetUserHandler)
+	r.HandleFunc("GET /users", userHandler.GetAllUsersHandler)
+	r.HandleFunc("PATCH /users/{user_id}", userHandler.UpdateUserHandler)
+	r.HandleFunc("DELETE /users/{user_id}", userHandler.DeleteUserHandler)
+
+	r.HandleFunc("POST /auth/login", userHandler.LoginUserHandler)
 }
