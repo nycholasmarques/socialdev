@@ -127,7 +127,7 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 
 func (h *UserHandler) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	user_id := r.URL.Path
-	userID := strings.TrimPrefix(user_id, "/user/")
+	userID := strings.TrimPrefix(user_id, "/users/")
 
 	uuid, err := uuid.Parse(userID)
 	if err != nil {
@@ -201,7 +201,7 @@ func (h *UserHandler) GetUserWithUsernameHandler(w http.ResponseWriter, r *http.
 
 func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Path
-	userID := strings.TrimPrefix(id, "/user/")
+	userID := strings.TrimPrefix(id, "/users/")
 
 	convertUUID, err := uuid.Parse(userID)
 	if err != nil {
@@ -289,7 +289,7 @@ func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 
 func (h *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	user_id := r.URL.Path
-	userID := strings.TrimPrefix(user_id, "/user/")
+	userID := strings.TrimPrefix(user_id, "/users/")
 
 	uuid, err := uuid.Parse(userID)
 	if err != nil {
