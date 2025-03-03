@@ -122,8 +122,9 @@ type UserGroup struct {
 }
 
 type UserRole struct {
-	UserID uuid.UUID
-	RoleID uuid.UUID
+	UserID    uuid.UUID
+	RoleID    uuid.UUID
+	CreatedAt sql.NullTime
 }
 
 type View struct {

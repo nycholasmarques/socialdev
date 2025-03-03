@@ -48,7 +48,7 @@ WHERE role_id = $1;
 
 -- name: GetRoleWithName :many
 SELECT * FROM roles
-WHERE name = $1;
+WHERE name LIKE $1;
 
 -- name: CreateRole :one
 INSERT INTO roles (
@@ -58,7 +58,7 @@ INSERT INTO roles (
 )
 RETURNING *;
 
--- name: UpdateRole :exec
+-- name: UpdateRole :one
 UPDATE roles
   SET name = $2
 WHERE role_id = $1
@@ -80,4 +80,3 @@ RETURNING *;
 DELETE FROM user_roles 
 WHERE user_id = $1 AND
 role_id = $2;
-

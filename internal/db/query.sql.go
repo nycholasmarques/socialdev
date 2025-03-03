@@ -84,7 +84,7 @@ INSERT INTO user_roles (
 ) VALUES (
   $1, $2
 )
-RETURNING user_id, role_id
+RETURNING user_id, role_id, created_at
 `
 
 type CreateUserWithRolesParams struct {
@@ -95,7 +95,7 @@ type CreateUserWithRolesParams struct {
 func (q *Queries) CreateUserWithRoles(ctx context.Context, arg CreateUserWithRolesParams) (UserRole, error) {
 	row := q.db.QueryRowContext(ctx, createUserWithRoles, arg.UserID, arg.RoleID)
 	var i UserRole
-	err := row.Scan(&i.UserID, &i.RoleID)
+	err := row.Scan(&i.UserID, &i.RoleID, &i.CreatedAt)
 	return i, err
 }
 
@@ -225,7 +225,7 @@ func (q *Queries) GetRole(ctx context.Context, roleID uuid.UUID) (Role, error) {
 
 const getRoleWithName = `-- name: GetRoleWithName :many
 SELECT role_id, name, created_at, updated_at FROM roles
-WHERE name = $1
+WHERE name LIKE $1
 `
 
 func (q *Queries) GetRoleWithName(ctx context.Context, name string) ([]Role, error) {
@@ -337,7 +337,7 @@ func (q *Queries) GetUserWithUsername(ctx context.Context, username string) ([]G
 	return items, nil
 }
 
-const updateRole = `-- name: UpdateRole :exec
+const updateRole = `-- name: UpdateRole :one
 UPDATE roles
   SET name = $2
 WHERE role_id = $1
@@ -349,9 +349,16 @@ type UpdateRoleParams struct {
 	Name   string
 }
 
-func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) error {
-	_, err := q.db.ExecContext(ctx, updateRole, arg.RoleID, arg.Name)
-	return err
+func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) (Role, error) {
+	row := q.db.QueryRowContext(ctx, updateRole, arg.RoleID, arg.Name)
+	var i Role
+	err := row.Scan(
+		&i.RoleID,
+		&i.Name,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const updateUser = `-- name: UpdateUser :one
