@@ -64,6 +64,7 @@ type UserResponse struct {
 var validate *validator.Validate
 
 func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
 	rb := r.Body
 	reader, err := io.ReadAll(rb)
@@ -72,6 +73,8 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	rb.Close()
+
+	fmt.Println("ok")
 
 	var registerUser *RegisterUserRequest
 	err = json.Unmarshal(reader, &registerUser)
