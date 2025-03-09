@@ -10,7 +10,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	configs "github.com/nycholasmarques/socialdev/config"
-	"github.com/nycholasmarques/socialdev/internal/db"
+	"github.com/nycholasmarques/socialdev/internal/entity"
 	"github.com/nycholasmarques/socialdev/internal/services"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -51,15 +51,10 @@ type RegisterUserRequest struct {
 }
 
 type UserResponse struct {
-	UserID   string `json:"user_id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Avatar   string `json:"avatar"`
-	Bio      string `json:"bio"`
-	Github   string `json:"github"`
-	Linkedin string `json:"linkedin"`
-	Website  string `json:"website"`
+	User entity.UserResponse `json:"user"`
+	Token string               `json:"token"`
 }
+
 
 var validate *validator.Validate
 
@@ -74,7 +69,7 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	rb.Close()
 
-	fmt.Println("ok")
+
 
 	var registerUser *RegisterUserRequest
 	err = json.Unmarshal(reader, &registerUser)
@@ -107,25 +102,34 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, fmt.Sprintf("Invalid password: %v", err), http.StatusBadRequest)
 		return
 	}
-
-	// validar erro se email já existe
-
-	user, _ := h.userService.LoginUser(email)
-	if user != (db.User{}) {
-		http.Error(w, "User already exists", http.StatusConflict)
-		return
-	}
 	
 	// Chamar o serviço para criar o usuário
-	_, err = h.userService.CreateUser(username, email, password)
+	userResponse, err := h.userService.CreateUser(username, email, password)
 	if err != nil {
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
 
+	token, err := configs.CreateToken(userResponse.Username)
+	if err != nil {
+		http.Error(w, "Failed to create token", http.StatusInternalServerError)
+		return
+	}
+
+	response := UserResponse{
+		User: userResponse,
+		Token: token,
+	}
+
+	res, err := json.Marshal(response)
+	if err != nil {
+		http.Error(w, "Failed to marshal user", http.StatusInternalServerError)
+		return
+	}
+
 	// Retornar a resposta
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("User created successfully"))
+	w.Write([]byte(res))
 }
 
 func (h *UserHandler) GetUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -325,7 +329,7 @@ func (h *UserHandler) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rb.Close()
-
+	fmt.Println("ok")
 	var userLogin *LoginUserRequest
 	err = json.Unmarshal(reader, &userLogin)
 	if err != nil {
@@ -359,20 +363,24 @@ func (h *UserHandler) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := json.Marshal(user)
-	if err != nil {
-		http.Error(w, "Failed to marshal user", http.StatusInternalServerError)
-		return
-	}
-
 	token, err := configs.CreateToken(user.Username)
 	if err != nil {
 		http.Error(w, "Failed to create token", http.StatusInternalServerError)
 		return
 	}
 
-	// Retornar a resposta
+	response := UserResponse{
+		User: user,
+		Token: token,
+	}
+
+	res, err := json.Marshal(response)
+	if err != nil {
+		http.Error(w, "Failed to marshal user", http.StatusInternalServerError)
+		return
+	}
+
+	// Retornar a posta
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(res))
-	w.Write([]byte(token))
 }

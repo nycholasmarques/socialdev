@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
+	"github.com/nycholasmarques/socialdev/internal/entity"
 	"github.com/nycholasmarques/socialdev/internal/repository"
 	"github.com/nycholasmarques/socialdev/utils"
 	"golang.org/x/crypto/bcrypt"
@@ -19,14 +20,14 @@ func NewUserService(userRepo *repository.UserRepository) *UserService {
 	return &UserService{userRepo: userRepo}
 }
 
-func (s *UserService) CreateUser(username, email, password string) (db.User, error) {
+func (s *UserService) CreateUser(username, email, password string) (entity.UserResponse, error) {
 	ctx := context.Background()
 
 	// Gerar hash da senha
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Error encrypting password: %v", err)
-		return db.User{}, err
+		return entity.UserResponse{}, err
 	}
 
 	// Criar parâmetros para o repositório
@@ -76,7 +77,7 @@ func (s *UserService) DeleteUser(user_id uuid.UUID) (error) {
 	return s.userRepo.DeleteUser(ctx, user_id)
 }
 
-func (s *UserService) LoginUser(email string) (db.User, error) {
+func (s *UserService) LoginUser(email string) (entity.UserResponse, error) {
 	ctx := context.Background()
 	return s.userRepo.LoginUser(ctx, email)
 }
