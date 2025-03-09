@@ -66,6 +66,25 @@ func (r *UserRepository) GetUserWithUsername(ctx context.Context, username strin
 	return getUserWithUsername, err
 }
 
+func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (entity.UserResponse, error) {
+	user, err := r.queries.GetUserByEmail(ctx, email)
+	if err != nil {
+		log.Printf("%v", err)
+	}
+	var userResponse entity.UserResponse
+
+	userResponse.UserID = user.UserID.String()
+	userResponse.Username = user.Username
+	userResponse.Email = user.Email
+	userResponse.Avatar = user.Avatar.String
+	userResponse.Bio = user.Bio.String
+	userResponse.Github = user.Github.String
+	userResponse.Linkedin = user.Linkedin.String
+	userResponse.Website = user.Website.String
+
+	return userResponse, err
+}
+
 func (r *UserRepository) UpdateUser(ctx context.Context, params db.UpdateUserParams) (db.User, error) {
 	user, err := r.queries.UpdateUser(ctx, params)
 	if err != nil {

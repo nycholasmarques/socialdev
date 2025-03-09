@@ -40,11 +40,11 @@ func (q *Queries) CreateRole(ctx context.Context, arg CreateRoleParams) (Role, e
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
-  user_id, username, email, password
+  user_id, username, email, password, google_id, avatar
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3, $4, $5, $6
 ) ON CONFLICT (username) DO NOTHING
-RETURNING user_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at
+RETURNING user_id, google_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -52,6 +52,8 @@ type CreateUserParams struct {
 	Username string
 	Email    string
 	Password string
+	GoogleID sql.NullString
+	Avatar   sql.NullString
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -60,10 +62,13 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Username,
 		arg.Email,
 		arg.Password,
+		arg.GoogleID,
+		arg.Avatar,
 	)
 	var i User
 	err := row.Scan(
 		&i.UserID,
+		&i.GoogleID,
 		&i.Username,
 		&i.Email,
 		&i.Password,
@@ -168,7 +173,7 @@ func (q *Queries) GetAllRoles(ctx context.Context) ([]Role, error) {
 }
 
 const getAllUsers = `-- name: GetAllUsers :many
-SELECT user_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
+SELECT user_id, google_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
 `
 
 func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
@@ -182,6 +187,7 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 		var i User
 		if err := rows.Scan(
 			&i.UserID,
+			&i.GoogleID,
 			&i.Username,
 			&i.Email,
 			&i.Password,
@@ -257,7 +263,7 @@ func (q *Queries) GetRoleWithName(ctx context.Context, name string) ([]Role, err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT user_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
+SELECT user_id, google_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
 WHERE user_id = $1 LIMIT 1
 `
 
@@ -266,6 +272,7 @@ func (q *Queries) GetUser(ctx context.Context, userID uuid.UUID) (User, error) {
 	var i User
 	err := row.Scan(
 		&i.UserID,
+		&i.GoogleID,
 		&i.Username,
 		&i.Email,
 		&i.Password,
@@ -281,7 +288,7 @@ func (q *Queries) GetUser(ctx context.Context, userID uuid.UUID) (User, error) {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT user_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
+SELECT user_id, google_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
 WHERE email = $1 LIMIT 1
 `
 
@@ -290,6 +297,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	var i User
 	err := row.Scan(
 		&i.UserID,
+		&i.GoogleID,
 		&i.Username,
 		&i.Email,
 		&i.Password,
@@ -373,7 +381,7 @@ UPDATE users
   website = $9,
   updated_at = CURRENT_TIMESTAMP
 WHERE user_id = $1
-RETURNING user_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at
+RETURNING user_id, google_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at
 `
 
 type UpdateUserParams struct {
@@ -403,6 +411,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 	var i User
 	err := row.Scan(
 		&i.UserID,
+		&i.GoogleID,
 		&i.Username,
 		&i.Email,
 		&i.Password,
