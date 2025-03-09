@@ -6,37 +6,36 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 )
- 
- var secretKey = []byte("secret-key")
- 
- func CreateToken(username string) (string, error) {
-		 token := jwt.NewWithClaims(jwt.SigningMethodHS256, 
-				 jwt.MapClaims{ 
-				 "username": username, 
-				 "exp": time.Now().Add(time.Hour * 24).Unix(), 
-				 })
- 
-		 tokenString, err := token.SignedString(secretKey)
-		 if err != nil {
-		 return "", err
-		 }
- 
-	return tokenString, nil
- }
 
- func VerifyToken(tokenString string) error {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		 return secretKey, nil
-	})
- 
+var cfg = LoadConfig()
+
+func CreateToken(username string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
+		jwt.MapClaims{
+			"username": username,
+			"exp":      time.Now().Add(time.Hour * 24).Unix(),
+		})
+
+	tokenString, err := token.SignedString([]byte(cfg.JWTSecret))
 	if err != nil {
-		 return err
+		return "", err
 	}
- 
-	if !token.Valid {
-		 return fmt.Errorf("invalid token")
-	}
- 
-	return nil
+
+	return tokenString, nil
 }
 
+func VerifyToken(tokenString string) error {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(cfg.JWTSecret), nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if !token.Valid {
+		return fmt.Errorf("token inválido")
+	}
+
+	return nil
+}

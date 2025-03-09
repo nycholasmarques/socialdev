@@ -2,6 +2,7 @@ package entity
 
 type UserResponse struct {
 	UserID   string `json:"user_id"`
+	GoogleID string `json:"-"`
 	Username string `json:"username"`
 	Password string `json:"-"`
 	Email    string `json:"email"`

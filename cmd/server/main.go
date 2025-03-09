@@ -12,8 +12,10 @@ import (
 )
 
 func main() {
+
+	cfg := configs.LoadConfig()
 	// Conectar ao banco de dados
-	conn, err := configs.NewConnectionDB()
+	conn, err := configs.NewConnectionDB(cfg)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}

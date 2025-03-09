@@ -21,4 +21,6 @@ func SetupUserRoutes(r *http.ServeMux, queries *db.Queries) {
 	r.HandleFunc("DELETE /users/{user_id}", userHandler.DeleteUserHandler)
 
 	r.HandleFunc("POST /auth/login", userHandler.LoginUserHandler)
+	r.HandleFunc("GET /auth/google", userHandler.HandleGoogleLogin)
+	r.HandleFunc("GET /auth/google/callback", userHandler.HandleGoogleCallback)
 }

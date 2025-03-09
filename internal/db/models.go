@@ -103,6 +103,7 @@ type Tag struct {
 
 type User struct {
 	UserID    uuid.UUID
+	GoogleID  sql.NullString
 	Username  string
 	Email     string
 	Password  string

@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/google/uuid"
@@ -39,6 +41,67 @@ func (s *UserService) CreateUser(username, email, password string) (entity.UserR
 	}
 	// Chamar o repositório para criar o usuário
 	return s.userRepo.CreateUser(ctx, userParams)
+}
+
+func (s *UserService) CreateUserWithGoogle(username, email, password, googleID, avatar string) (entity.UserResponse, error) {
+	ctx := context.Background()
+
+	existingUser, err := s.userRepo.GetUserByEmail(ctx, email)
+	if err != nil && err != sql.ErrNoRows {
+		log.Printf("Error getting user by email: %v", err)
+		return entity.UserResponse{}, fmt.Errorf("erro ao verificar usuário existente: %v", err)
+	}
+
+	if existingUser.UserID != "" {
+		if existingUser.GoogleID == googleID {
+			return entity.UserResponse{
+				UserID:   existingUser.UserID,
+				Username: existingUser.Username,
+				Email:    existingUser.Email,
+			}, nil
+		}
+	}
+
+	existingUserByUsername, err := s.userRepo.GetUserWithUsername(ctx, username)
+	if err != nil && err != sql.ErrNoRows {
+		return entity.UserResponse{}, fmt.Errorf("erro ao verificar nome de usuário: %v", err)
+	}
+
+	if len(existingUserByUsername) > 0 {
+		username = fmt.Sprintf("%s_%s", username, uuid.New().String()[:8])
+	}
+
+	var passwordHash string
+	if password != "" {
+		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			log.Printf("Error encrypting password: %v", err)
+			return entity.UserResponse{}, fmt.Errorf("erro ao gerar hash da senha: %v", err)
+		}
+		passwordHash = string(hash)
+	}
+
+	userParams := db.CreateUserParams{
+		UserID:   uuid.New(),
+		Username: username,
+		Password: passwordHash, 
+		Email:    email,
+		GoogleID: sql.NullString{String: googleID, Valid: googleID != ""}, 
+		Avatar:   sql.NullString{String: avatar, Valid: avatar != ""},
+	}
+
+	createdUser, err := s.userRepo.CreateUser(ctx, userParams)
+	if err != nil {
+		log.Printf("Error creating user: %v", err)
+		return entity.UserResponse{}, fmt.Errorf("{erro ao criar usuário: %v}", err)
+	}
+
+	return entity.UserResponse{
+		UserID:   createdUser.UserID,
+		Username: createdUser.Username,
+		Email:    createdUser.Email,
+		Avatar:   createdUser.Avatar,
+	}, nil
 }
 
 func (s *UserService) GetUser(user_id uuid.UUID) (db.User, error) {
