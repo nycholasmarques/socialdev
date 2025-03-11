@@ -7,6 +7,6 @@ import (
 )
 
 func SetupAPIRoutes(r *http.ServeMux, queries *db.Queries) {
-	// Registrar as rotas do módulo de usuário
 	SetupUserRoutes(r, queries)
+	// SetupPostRoutes(r, queries)
 }

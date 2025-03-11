@@ -61,8 +61,6 @@ type UserResponse struct {
 	Token string               `json:"token"`
 }
 
-var validate *validator.Validate
-
 var (
 	googleOauthConfig = &oauth2.Config{
 		RedirectURL:  cfg.GoogleRedirectURL,
@@ -99,7 +97,7 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	password := registerUser.Password
 
 	// Validar os dados
-	err = validate.Var(username, "required,min=3,max=30,alpha")
+	err = validate.Var(username, "required,min=3,max=30")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Invalid username: %v", err), http.StatusBadRequest)
 		return

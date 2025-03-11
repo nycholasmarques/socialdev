@@ -80,3 +80,76 @@ RETURNING *;
 DELETE FROM user_roles 
 WHERE user_id = $1 AND
 role_id = $2;
+
+-- name: GetAllPosts :many
+SELECT * FROM posts;
+
+-- name: GetPost :one
+SELECT * FROM posts
+WHERE post_id = $1;
+
+-- name: CreatePost :one
+INSERT INTO posts (
+  post_id, user_id, title, content, photo, video
+) VALUES (
+  $1, $2, $3, $4, $5, $6
+)
+RETURNING *;
+
+-- name: UpdatePost :one
+UPDATE posts
+  SET title = $2,
+  content = $3,
+  photo = $4,
+  video = $5,
+  updated_at = CURRENT_TIMESTAMP
+WHERE post_id = $1
+RETURNING *;
+
+-- name: DeletePost :exec
+DELETE FROM posts
+WHERE post_id = $1;
+
+-- name: GetAllComments :many
+SELECT * FROM comments;
+
+-- name: GetComment :one
+SELECT * FROM comments
+WHERE comment_id = $1;
+
+-- name: CreateComment :one
+INSERT INTO comments (
+  comment_id, user_id, post_id, content
+) VALUES (
+  $1, $2, $3, $4
+)
+RETURNING *;
+
+-- name: UpdateComment :one
+UPDATE comments
+  SET content = $2,
+  updated_at = CURRENT_TIMESTAMP
+WHERE comment_id = $1
+RETURNING *;
+
+-- name: DeleteComment :exec
+DELETE FROM comments
+WHERE comment_id = $1;
+
+-- name: CreateLike :one
+INSERT INTO likes (
+  user_id, post_id
+) VALUES (
+  $1, $2
+)
+RETURNING *;
+
+-- name: DeleteLike :exec
+DELETE FROM likes
+WHERE user_id = $1 AND
+post_id = $2;
+
+-- name: GetLike :one
+SELECT * FROM likes
+WHERE user_id = $1 AND
+post_id = $2;
