@@ -384,6 +384,44 @@ func (q *Queries) GetAllRoles(ctx context.Context) ([]Role, error) {
 	return items, nil
 }
 
+const getAllUserPosts = `-- name: GetAllUserPosts :many
+SELECT post_id, user_id, category_id, title, content, photo, video, created_at, updated_at FROM posts
+WHERE user_id = $1
+`
+
+func (q *Queries) GetAllUserPosts(ctx context.Context, userID uuid.UUID) ([]Post, error) {
+	rows, err := q.db.QueryContext(ctx, getAllUserPosts, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Post
+	for rows.Next() {
+		var i Post
+		if err := rows.Scan(
+			&i.PostID,
+			&i.UserID,
+			&i.CategoryID,
+			&i.Title,
+			&i.Content,
+			&i.Photo,
+			&i.Video,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAllUsers = `-- name: GetAllUsers :many
 SELECT user_id, google_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
 `
@@ -589,6 +627,34 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	return i, err
 }
 
+const getUserPost = `-- name: GetUserPost :one
+SELECT post_id, user_id, category_id, title, content, photo, video, created_at, updated_at FROM posts
+WHERE user_id = $1 AND
+post_id = $2
+`
+
+type GetUserPostParams struct {
+	UserID uuid.UUID
+	PostID uuid.UUID
+}
+
+func (q *Queries) GetUserPost(ctx context.Context, arg GetUserPostParams) (Post, error) {
+	row := q.db.QueryRowContext(ctx, getUserPost, arg.UserID, arg.PostID)
+	var i Post
+	err := row.Scan(
+		&i.PostID,
+		&i.UserID,
+		&i.CategoryID,
+		&i.Title,
+		&i.Content,
+		&i.Photo,
+		&i.Video,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getUserWithUsername = `-- name: GetUserWithUsername :many
 SELECT username, avatar FROM users
 WHERE username LIKE $1
@@ -652,17 +718,19 @@ func (q *Queries) UpdateComment(ctx context.Context, arg UpdateCommentParams) (C
 
 const updatePost = `-- name: UpdatePost :one
 UPDATE posts
-  SET title = $2,
-  content = $3,
-  photo = $4,
-  video = $5,
+  SET title = $3,
+  content = $4,
+  photo = $5,
+  video = $6,
   updated_at = CURRENT_TIMESTAMP
-WHERE post_id = $1
+WHERE post_id = $1 AND
+user_id = $2
 RETURNING post_id, user_id, category_id, title, content, photo, video, created_at, updated_at
 `
 
 type UpdatePostParams struct {
 	PostID  uuid.UUID
+	UserID  uuid.UUID
 	Title   sql.NullString
 	Content string
 	Photo   sql.NullString
@@ -672,6 +740,7 @@ type UpdatePostParams struct {
 func (q *Queries) UpdatePost(ctx context.Context, arg UpdatePostParams) (Post, error) {
 	row := q.db.QueryRowContext(ctx, updatePost,
 		arg.PostID,
+		arg.UserID,
 		arg.Title,
 		arg.Content,
 		arg.Photo,

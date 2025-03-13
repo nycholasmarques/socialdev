@@ -98,17 +98,27 @@ RETURNING *;
 
 -- name: UpdatePost :one
 UPDATE posts
-  SET title = $2,
-  content = $3,
-  photo = $4,
-  video = $5,
+  SET title = $3,
+  content = $4,
+  photo = $5,
+  video = $6,
   updated_at = CURRENT_TIMESTAMP
-WHERE post_id = $1
+WHERE post_id = $1 AND
+user_id = $2
 RETURNING *;
 
 -- name: DeletePost :exec
 DELETE FROM posts
 WHERE post_id = $1;
+
+-- name: GetAllUserPosts :many
+SELECT * FROM posts
+WHERE user_id = $1;
+
+-- name: GetUserPost :one
+SELECT * FROM posts
+WHERE user_id = $1 AND
+post_id = $2;
 
 -- name: GetAllComments :many
 SELECT * FROM comments;

@@ -122,7 +122,7 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	token, err := configs.CreateToken(userResponse.Username)
+	token, err := configs.CreateToken(userResponse.UserID)
 	if err != nil {
 		http.Error(w, "Failed to create token", http.StatusInternalServerError)
 		return
@@ -375,7 +375,7 @@ func (h *UserHandler) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := configs.CreateToken(user.Username)
+	token, err := configs.CreateToken(user.UserID)
 	if err != nil {
 		http.Error(w, "Failed to create token", http.StatusInternalServerError)
 		return
@@ -461,7 +461,7 @@ func (h *UserHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	jwtToken, err := configs.CreateToken(user.Username)
+	jwtToken, err := configs.CreateToken(user.UserID)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusInternalServerError, "Erro ao criar token", err.Error())
 		return

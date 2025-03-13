@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -8,7 +9,10 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte("secret-key")
+var jwtSecret = []byte("x")
+
+type contextKey string
+const UserIDKey contextKey = "user_id"
 
 func ProtectedRoutes(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -36,13 +40,25 @@ func ProtectedRoutes(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		// Obter claims do token
-		_, ok := token.Claims.(jwt.MapClaims)
+		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
 			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
 			return
 		}
-		
+
+		userID, ok := claims["user_id"].(string)
+		if !ok {
+			if userIDFloat, ok := claims["user_id"].(float64); ok {
+				userID = fmt.Sprintf("%.0f", userIDFloat)
+			} else {
+				http.Error(w, "user_id not found", http.StatusUnauthorized)
+				return
+			}
+		}
+
+		ctx := context.WithValue(r.Context(), UserIDKey, userID)
+		r = r.WithContext(ctx)
+
 		next(w, r)
 	}
 }
