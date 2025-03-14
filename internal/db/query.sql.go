@@ -12,6 +12,110 @@ import (
 	"github.com/google/uuid"
 )
 
+const createComment = `-- name: CreateComment :one
+INSERT INTO comments (
+  comment_id, user_id, post_id, content
+) VALUES (
+  $1, $2, $3, $4
+)
+RETURNING comment_id, user_id, post_id, content, visible, created_at, updated_at
+`
+
+type CreateCommentParams struct {
+	CommentID uuid.UUID
+	UserID    uuid.UUID
+	PostID    uuid.UUID
+	Content   string
+}
+
+func (q *Queries) CreateComment(ctx context.Context, arg CreateCommentParams) (Comment, error) {
+	row := q.db.QueryRowContext(ctx, createComment,
+		arg.CommentID,
+		arg.UserID,
+		arg.PostID,
+		arg.Content,
+	)
+	var i Comment
+	err := row.Scan(
+		&i.CommentID,
+		&i.UserID,
+		&i.PostID,
+		&i.Content,
+		&i.Visible,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createLike = `-- name: CreateLike :one
+INSERT INTO likes (
+  user_id, post_id
+) VALUES (
+  $1, $2
+)
+RETURNING user_id, post_id, created_at, updated_at
+`
+
+type CreateLikeParams struct {
+	UserID uuid.UUID
+	PostID uuid.UUID
+}
+
+func (q *Queries) CreateLike(ctx context.Context, arg CreateLikeParams) (Like, error) {
+	row := q.db.QueryRowContext(ctx, createLike, arg.UserID, arg.PostID)
+	var i Like
+	err := row.Scan(
+		&i.UserID,
+		&i.PostID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createPost = `-- name: CreatePost :one
+INSERT INTO posts (
+  post_id, user_id, title, content, photo, video
+) VALUES (
+  $1, $2, $3, $4, $5, $6
+)
+RETURNING post_id, user_id, category_id, title, content, photo, video, created_at, updated_at
+`
+
+type CreatePostParams struct {
+	PostID  uuid.UUID
+	UserID  uuid.UUID
+	Title   sql.NullString
+	Content string
+	Photo   sql.NullString
+	Video   sql.NullString
+}
+
+func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) (Post, error) {
+	row := q.db.QueryRowContext(ctx, createPost,
+		arg.PostID,
+		arg.UserID,
+		arg.Title,
+		arg.Content,
+		arg.Photo,
+		arg.Video,
+	)
+	var i Post
+	err := row.Scan(
+		&i.PostID,
+		&i.UserID,
+		&i.CategoryID,
+		&i.Title,
+		&i.Content,
+		&i.Photo,
+		&i.Video,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createRole = `-- name: CreateRole :one
 INSERT INTO roles (
   role_id, name
@@ -104,6 +208,42 @@ func (q *Queries) CreateUserWithRoles(ctx context.Context, arg CreateUserWithRol
 	return i, err
 }
 
+const deleteComment = `-- name: DeleteComment :exec
+DELETE FROM comments
+WHERE comment_id = $1
+`
+
+func (q *Queries) DeleteComment(ctx context.Context, commentID uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteComment, commentID)
+	return err
+}
+
+const deleteLike = `-- name: DeleteLike :exec
+DELETE FROM likes
+WHERE user_id = $1 AND
+post_id = $2
+`
+
+type DeleteLikeParams struct {
+	UserID uuid.UUID
+	PostID uuid.UUID
+}
+
+func (q *Queries) DeleteLike(ctx context.Context, arg DeleteLikeParams) error {
+	_, err := q.db.ExecContext(ctx, deleteLike, arg.UserID, arg.PostID)
+	return err
+}
+
+const deletePost = `-- name: DeletePost :exec
+DELETE FROM posts
+WHERE post_id = $1
+`
+
+func (q *Queries) DeletePost(ctx context.Context, postID uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deletePost, postID)
+	return err
+}
+
 const deleteRole = `-- name: DeleteRole :exec
 DELETE FROM roles
 WHERE role_id = $1
@@ -140,6 +280,78 @@ func (q *Queries) DeleteUserWithRoles(ctx context.Context, arg DeleteUserWithRol
 	return err
 }
 
+const getAllComments = `-- name: GetAllComments :many
+SELECT comment_id, user_id, post_id, content, visible, created_at, updated_at FROM comments
+`
+
+func (q *Queries) GetAllComments(ctx context.Context) ([]Comment, error) {
+	rows, err := q.db.QueryContext(ctx, getAllComments)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Comment
+	for rows.Next() {
+		var i Comment
+		if err := rows.Scan(
+			&i.CommentID,
+			&i.UserID,
+			&i.PostID,
+			&i.Content,
+			&i.Visible,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllPosts = `-- name: GetAllPosts :many
+SELECT post_id, user_id, category_id, title, content, photo, video, created_at, updated_at FROM posts
+`
+
+func (q *Queries) GetAllPosts(ctx context.Context) ([]Post, error) {
+	rows, err := q.db.QueryContext(ctx, getAllPosts)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Post
+	for rows.Next() {
+		var i Post
+		if err := rows.Scan(
+			&i.PostID,
+			&i.UserID,
+			&i.CategoryID,
+			&i.Title,
+			&i.Content,
+			&i.Photo,
+			&i.Video,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAllRoles = `-- name: GetAllRoles :many
 SELECT role_id, name, created_at, updated_at FROM roles
 `
@@ -156,6 +368,44 @@ func (q *Queries) GetAllRoles(ctx context.Context) ([]Role, error) {
 		if err := rows.Scan(
 			&i.RoleID,
 			&i.Name,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllUserPosts = `-- name: GetAllUserPosts :many
+SELECT post_id, user_id, category_id, title, content, photo, video, created_at, updated_at FROM posts
+WHERE user_id = $1
+`
+
+func (q *Queries) GetAllUserPosts(ctx context.Context, userID uuid.UUID) ([]Post, error) {
+	rows, err := q.db.QueryContext(ctx, getAllUserPosts, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Post
+	for rows.Next() {
+		var i Post
+		if err := rows.Scan(
+			&i.PostID,
+			&i.UserID,
+			&i.CategoryID,
+			&i.Title,
+			&i.Content,
+			&i.Photo,
+			&i.Video,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -210,6 +460,71 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getComment = `-- name: GetComment :one
+SELECT comment_id, user_id, post_id, content, visible, created_at, updated_at FROM comments
+WHERE comment_id = $1
+`
+
+func (q *Queries) GetComment(ctx context.Context, commentID uuid.UUID) (Comment, error) {
+	row := q.db.QueryRowContext(ctx, getComment, commentID)
+	var i Comment
+	err := row.Scan(
+		&i.CommentID,
+		&i.UserID,
+		&i.PostID,
+		&i.Content,
+		&i.Visible,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getLike = `-- name: GetLike :one
+SELECT user_id, post_id, created_at, updated_at FROM likes
+WHERE user_id = $1 AND
+post_id = $2
+`
+
+type GetLikeParams struct {
+	UserID uuid.UUID
+	PostID uuid.UUID
+}
+
+func (q *Queries) GetLike(ctx context.Context, arg GetLikeParams) (Like, error) {
+	row := q.db.QueryRowContext(ctx, getLike, arg.UserID, arg.PostID)
+	var i Like
+	err := row.Scan(
+		&i.UserID,
+		&i.PostID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getPost = `-- name: GetPost :one
+SELECT post_id, user_id, category_id, title, content, photo, video, created_at, updated_at FROM posts
+WHERE post_id = $1
+`
+
+func (q *Queries) GetPost(ctx context.Context, postID uuid.UUID) (Post, error) {
+	row := q.db.QueryRowContext(ctx, getPost, postID)
+	var i Post
+	err := row.Scan(
+		&i.PostID,
+		&i.UserID,
+		&i.CategoryID,
+		&i.Title,
+		&i.Content,
+		&i.Photo,
+		&i.Video,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const getRole = `-- name: GetRole :one
@@ -312,6 +627,34 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	return i, err
 }
 
+const getUserPost = `-- name: GetUserPost :one
+SELECT post_id, user_id, category_id, title, content, photo, video, created_at, updated_at FROM posts
+WHERE user_id = $1 AND
+post_id = $2
+`
+
+type GetUserPostParams struct {
+	UserID uuid.UUID
+	PostID uuid.UUID
+}
+
+func (q *Queries) GetUserPost(ctx context.Context, arg GetUserPostParams) (Post, error) {
+	row := q.db.QueryRowContext(ctx, getUserPost, arg.UserID, arg.PostID)
+	var i Post
+	err := row.Scan(
+		&i.PostID,
+		&i.UserID,
+		&i.CategoryID,
+		&i.Title,
+		&i.Content,
+		&i.Photo,
+		&i.Video,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getUserWithUsername = `-- name: GetUserWithUsername :many
 SELECT username, avatar FROM users
 WHERE username LIKE $1
@@ -343,6 +686,79 @@ func (q *Queries) GetUserWithUsername(ctx context.Context, username string) ([]G
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateComment = `-- name: UpdateComment :one
+UPDATE comments
+  SET content = $2,
+  updated_at = CURRENT_TIMESTAMP
+WHERE comment_id = $1
+RETURNING comment_id, user_id, post_id, content, visible, created_at, updated_at
+`
+
+type UpdateCommentParams struct {
+	CommentID uuid.UUID
+	Content   string
+}
+
+func (q *Queries) UpdateComment(ctx context.Context, arg UpdateCommentParams) (Comment, error) {
+	row := q.db.QueryRowContext(ctx, updateComment, arg.CommentID, arg.Content)
+	var i Comment
+	err := row.Scan(
+		&i.CommentID,
+		&i.UserID,
+		&i.PostID,
+		&i.Content,
+		&i.Visible,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updatePost = `-- name: UpdatePost :one
+UPDATE posts
+  SET title = $3,
+  content = $4,
+  photo = $5,
+  video = $6,
+  updated_at = CURRENT_TIMESTAMP
+WHERE post_id = $1 AND
+user_id = $2
+RETURNING post_id, user_id, category_id, title, content, photo, video, created_at, updated_at
+`
+
+type UpdatePostParams struct {
+	PostID  uuid.UUID
+	UserID  uuid.UUID
+	Title   sql.NullString
+	Content string
+	Photo   sql.NullString
+	Video   sql.NullString
+}
+
+func (q *Queries) UpdatePost(ctx context.Context, arg UpdatePostParams) (Post, error) {
+	row := q.db.QueryRowContext(ctx, updatePost,
+		arg.PostID,
+		arg.UserID,
+		arg.Title,
+		arg.Content,
+		arg.Photo,
+		arg.Video,
+	)
+	var i Post
+	err := row.Scan(
+		&i.PostID,
+		&i.UserID,
+		&i.CategoryID,
+		&i.Title,
+		&i.Content,
+		&i.Photo,
+		&i.Video,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const updateRole = `-- name: UpdateRole :one

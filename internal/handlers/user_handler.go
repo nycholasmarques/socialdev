@@ -61,8 +61,6 @@ type UserResponse struct {
 	Token string               `json:"token"`
 }
 
-var validate *validator.Validate
-
 var (
 	googleOauthConfig = &oauth2.Config{
 		RedirectURL:  cfg.GoogleRedirectURL,
@@ -99,7 +97,7 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	password := registerUser.Password
 
 	// Validar os dados
-	err = validate.Var(username, "required,min=3,max=30,alpha")
+	err = validate.Var(username, "required,min=3,max=30")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Invalid username: %v", err), http.StatusBadRequest)
 		return
@@ -124,7 +122,7 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	token, err := configs.CreateToken(userResponse.Username)
+	token, err := configs.CreateToken(userResponse.UserID)
 	if err != nil {
 		http.Error(w, "Failed to create token", http.StatusInternalServerError)
 		return
@@ -377,7 +375,7 @@ func (h *UserHandler) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := configs.CreateToken(user.Username)
+	token, err := configs.CreateToken(user.UserID)
 	if err != nil {
 		http.Error(w, "Failed to create token", http.StatusInternalServerError)
 		return
@@ -463,7 +461,7 @@ func (h *UserHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	jwtToken, err := configs.CreateToken(user.Username)
+	jwtToken, err := configs.CreateToken(user.UserID)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusInternalServerError, "Erro ao criar token", err.Error())
 		return
