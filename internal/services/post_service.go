@@ -31,7 +31,7 @@ func (p *PostService) CreatePost(user_id, title, content, photo, video string) (
 
 	post_id_UUID := uuid.New()
 
-	params := db.CreatePostParams{PostID: post_id_UUID, UserID: user_id_UUID, Title: sql.NullString{String: title, Valid: title != ""}, Content: content, Photo: sql.NullString{String: title, Valid: title != ""}, Video: sql.NullString{String: title, Valid: title != ""}}
+	params := db.CreatePostParams{PostID: post_id_UUID, UserID: user_id_UUID, Title: sql.NullString{String: title, Valid: title != ""}, Content: content, Photo: sql.NullString{String: photo, Valid: photo != ""}, Video: sql.NullString{String: video, Valid: video != ""}}
 
 	return p.postRepo.CreatePost(ctx, params)
 }
