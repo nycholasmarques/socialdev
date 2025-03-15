@@ -121,7 +121,8 @@ WHERE user_id = $1 AND
 post_id = $2;
 
 -- name: GetAllComments :many
-SELECT * FROM comments;
+SELECT * FROM comments
+WHERE post_id = $1;
 
 -- name: GetComment :one
 SELECT * FROM comments
@@ -139,12 +140,15 @@ RETURNING *;
 UPDATE comments
   SET content = $2,
   updated_at = CURRENT_TIMESTAMP
-WHERE comment_id = $1
+WHERE comment_id = $1 AND
+user_id = $3
 RETURNING *;
 
 -- name: DeleteComment :exec
 DELETE FROM comments
-WHERE comment_id = $1;
+WHERE comment_id = $1 AND
+user_id = $2
+;
 
 -- name: CreateLike :one
 INSERT INTO likes (
