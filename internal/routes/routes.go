@@ -14,6 +14,7 @@ func SetupRoutes(queries *db.Queries) *http.ServeMux {
 	SetupAPIRoutes(apiRouter, queries)
 	SetupRoleRoutes(apiRouter, queries)
 	SetupPostRoutes(apiRouter, queries)
+	SetupLikeRoutes(apiRouter, queries)
 
 	// Registrar o grupo de rotas /api no ServeMux principal
 	r.Handle("/api/", http.StripPrefix("/api", apiRouter))

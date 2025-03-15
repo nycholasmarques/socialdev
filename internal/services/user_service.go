@@ -84,9 +84,9 @@ func (s *UserService) CreateUserWithGoogle(username, email, password, googleID, 
 	userParams := db.CreateUserParams{
 		UserID:   uuid.New(),
 		Username: username,
-		Password: passwordHash, 
+		Password: passwordHash,
 		Email:    email,
-		GoogleID: sql.NullString{String: googleID, Valid: googleID != ""}, 
+		GoogleID: sql.NullString{String: googleID, Valid: googleID != ""},
 		Avatar:   sql.NullString{String: avatar, Valid: avatar != ""},
 	}
 
@@ -121,7 +121,7 @@ func (s *UserService) GetUserWithUsername(username string) ([]db.GetUserWithUser
 
 func (s *UserService) UpdateUser(user_id uuid.UUID, username, email, password, avatar, bio, github, linkedin, website string) (db.User, error) {
 	ctx := context.Background()
-	
+
 	return s.userRepo.UpdateUser(ctx, db.UpdateUserParams{
 		UserID:   user_id,
 		Username: username,
@@ -135,7 +135,7 @@ func (s *UserService) UpdateUser(user_id uuid.UUID, username, email, password, a
 	})
 }
 
-func (s *UserService) DeleteUser(user_id uuid.UUID) (error) {
+func (s *UserService) DeleteUser(user_id uuid.UUID) error {
 	ctx := context.Background()
 	return s.userRepo.DeleteUser(ctx, user_id)
 }
