@@ -210,11 +210,17 @@ func (q *Queries) CreateUserWithRoles(ctx context.Context, arg CreateUserWithRol
 
 const deleteComment = `-- name: DeleteComment :exec
 DELETE FROM comments
-WHERE comment_id = $1
+WHERE comment_id = $1 AND
+user_id = $2
 `
 
-func (q *Queries) DeleteComment(ctx context.Context, commentID uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteComment, commentID)
+type DeleteCommentParams struct {
+	CommentID uuid.UUID
+	UserID    uuid.UUID
+}
+
+func (q *Queries) DeleteComment(ctx context.Context, arg DeleteCommentParams) error {
+	_, err := q.db.ExecContext(ctx, deleteComment, arg.CommentID, arg.UserID)
 	return err
 }
 
@@ -282,10 +288,11 @@ func (q *Queries) DeleteUserWithRoles(ctx context.Context, arg DeleteUserWithRol
 
 const getAllComments = `-- name: GetAllComments :many
 SELECT comment_id, user_id, post_id, content, visible, created_at, updated_at FROM comments
+WHERE post_id = $1
 `
 
-func (q *Queries) GetAllComments(ctx context.Context) ([]Comment, error) {
-	rows, err := q.db.QueryContext(ctx, getAllComments)
+func (q *Queries) GetAllComments(ctx context.Context, postID uuid.UUID) ([]Comment, error) {
+	rows, err := q.db.QueryContext(ctx, getAllComments, postID)
 	if err != nil {
 		return nil, err
 	}
@@ -692,17 +699,19 @@ const updateComment = `-- name: UpdateComment :one
 UPDATE comments
   SET content = $2,
   updated_at = CURRENT_TIMESTAMP
-WHERE comment_id = $1
+WHERE comment_id = $1 AND
+user_id = $3
 RETURNING comment_id, user_id, post_id, content, visible, created_at, updated_at
 `
 
 type UpdateCommentParams struct {
 	CommentID uuid.UUID
 	Content   string
+	UserID    uuid.UUID
 }
 
 func (q *Queries) UpdateComment(ctx context.Context, arg UpdateCommentParams) (Comment, error) {
-	row := q.db.QueryRowContext(ctx, updateComment, arg.CommentID, arg.Content)
+	row := q.db.QueryRowContext(ctx, updateComment, arg.CommentID, arg.Content, arg.UserID)
 	var i Comment
 	err := row.Scan(
 		&i.CommentID,

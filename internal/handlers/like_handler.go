@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
+	"github.com/nycholasmarques/socialdev/internal/middlewares"
 	"github.com/nycholasmarques/socialdev/internal/services"
 	"github.com/nycholasmarques/socialdev/utils"
 )
@@ -25,7 +26,15 @@ func NewLikeHandler(likeService *services.LikeService) *LikeHandler {
 }
 
 func (h *LikeHandler) CreateLikeHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.PathValue("user_id")
+	w.Header().Set("Content-Type", "application/json")
+	defer r.Body.Close()
+
+	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+		return
+	}
+
 	postID := r.PathValue("post_id")
 
 	if userID == "" || postID == "" {
@@ -76,7 +85,15 @@ func (h *LikeHandler) CreateLikeHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *LikeHandler) DeleteLikeHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.PathValue("user_id")
+	w.Header().Set("Content-Type", "application/json")
+	defer r.Body.Close()
+
+	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+		return
+	}
+
 	postID := r.PathValue("post_id")
 
 	if userID == "" || postID == "" {
@@ -107,6 +124,5 @@ func (h *LikeHandler) DeleteLikeHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	utils.NewMessageResponse(w, http.StatusOK, "Like deleted successfully")
 }
