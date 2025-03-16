@@ -8,10 +8,10 @@ import (
 type ErrorResponse struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
-	Error   string `json:"error"`
+	Error   interface{} `json:"error"`
 }
 
-func NewErrorResponse(w http.ResponseWriter, status int, message string, err string) {
+func NewErrorResponse(w http.ResponseWriter, status int, message string, err interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 

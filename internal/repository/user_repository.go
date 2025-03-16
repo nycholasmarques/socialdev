@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"log"
 
 	"github.com/google/uuid"
@@ -103,7 +104,9 @@ func (r *UserRepository) DeleteUser(ctx context.Context, user_id uuid.UUID) (err
 
 func (r *UserRepository) LoginUser(ctx context.Context, email string) (entity.UserResponse, error) {
 	user, err := r.queries.GetUserByEmail(ctx, email)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return entity.UserResponse{}, entity.ErrUserNotFound
+	} else if err != nil {
 		log.Printf("%v", err)
 	}
 
