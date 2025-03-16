@@ -324,10 +324,17 @@ func (q *Queries) GetAllComments(ctx context.Context, postID uuid.UUID) ([]Comme
 
 const getAllPosts = `-- name: GetAllPosts :many
 SELECT post_id, user_id, category_id, title, content, photo, video, created_at, updated_at FROM posts
+WHERE (title ILIKE '%' || $1 || '%' OR $1 IS NULL)
+AND (content ILIKE '%' || $2 || '%' OR $2 IS NULL)
 `
 
-func (q *Queries) GetAllPosts(ctx context.Context) ([]Post, error) {
-	rows, err := q.db.QueryContext(ctx, getAllPosts)
+type GetAllPostsParams struct {
+	Title   sql.NullString
+	Content sql.NullString
+}
+
+func (q *Queries) GetAllPosts(ctx context.Context, arg GetAllPostsParams) ([]Post, error) {
+	rows, err := q.db.QueryContext(ctx, getAllPosts, arg.Title, arg.Content)
 	if err != nil {
 		return nil, err
 	}

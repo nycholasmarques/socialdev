@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"log"
 
 	"github.com/google/uuid"
@@ -62,31 +63,38 @@ func (r *PostRepository) GetPost(ctx context.Context, post_id uuid.UUID) (entity
 	return postResponse, err
 }
 
-func (r *PostRepository) GetAllPosts(ctx context.Context) ([]entity.Post, error) {
-	posts, err := r.queries.GetAllPosts(ctx)
+func (r *PostRepository) GetAllPosts(ctx context.Context, title, content *string) ([]entity.Post, error) {
+	var titleFilter, contentFilter sql.NullString
+	if title != nil {
+		titleFilter = sql.NullString{String: *title, Valid: true}
+	}
+	if content != nil {
+		contentFilter = sql.NullString{String: *content, Valid: true}
+	}
+
+	posts, err := r.queries.GetAllPosts(ctx, db.GetAllPostsParams{
+		Title:   titleFilter,
+		Content: contentFilter,
+	})
 	if err != nil {
 		log.Printf("%v", err)
 		return nil, err
 	}
 
 	var postsResponse []entity.Post
-
 	for _, post := range posts {
-		var postResponse entity.Post
-
-		postResponse.PostID = post.PostID.String()
-		postResponse.UserID = post.UserID.String()
-		postResponse.Title = post.Title.String
-		postResponse.Content = post.Content
-		postResponse.Photo = post.Photo.String
-		postResponse.Video = post.Video.String
-		postResponse.CreatedAt = post.CreatedAt.Time.String()
-		postResponse.UpdatedAt = post.UpdatedAt.Time.String()
-
-		postsResponse = append(postsResponse, postResponse)
+		postsResponse = append(postsResponse, entity.Post{
+			PostID:    post.PostID.String(),
+			UserID:    post.UserID.String(),
+			Title:     post.Title.String,
+			Content:   post.Content,
+			Photo:     post.Photo.String,
+			Video:     post.Video.String,
+			CreatedAt: post.CreatedAt.Time.String(),
+			UpdatedAt: post.UpdatedAt.Time.String(),
+		})
 	}
-
-	return postsResponse, err
+	return postsResponse, nil
 }
 
 func (r *PostRepository) UpdatePost(ctx context.Context, params db.UpdatePostParams) (entity.Post, error) {

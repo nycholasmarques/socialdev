@@ -103,7 +103,18 @@ func (ph *PostHandler) GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	defer r.Body.Close()
 
-	posts, err := ph.postService.GetAllPosts()
+	title := r.URL.Query().Get("title")
+	content := r.URL.Query().Get("content")
+
+	var titleFilter, contentFilter *string
+	if title != "" {
+		titleFilter = &title
+	}
+	if content != "" {
+		contentFilter = &content
+	}
+
+	posts, err := ph.postService.GetAllPosts(titleFilter, contentFilter)
 	if err != nil {
 		http.Error(w, "Failed to get posts", http.StatusInternalServerError)
 		return
@@ -157,7 +168,6 @@ func (ph *PostHandler) GetUserPostsHandler(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
 }
-
 
 func (ph *PostHandler) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")

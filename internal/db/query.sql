@@ -82,7 +82,10 @@ WHERE user_id = $1 AND
 role_id = $2;
 
 -- name: GetAllPosts :many
-SELECT * FROM posts;
+SELECT * FROM posts
+WHERE (title ILIKE '%' || sqlc.narg('title') || '%' OR sqlc.narg('title') IS NULL)
+AND (content ILIKE '%' || sqlc.narg('content') || '%' OR sqlc.narg('content') IS NULL);
+
 
 -- name: GetPost :one
 SELECT * FROM posts
