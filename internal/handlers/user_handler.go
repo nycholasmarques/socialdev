@@ -3,8 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 	"strings"
 
@@ -12,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	configs "github.com/nycholasmarques/socialdev/config"
 	"github.com/nycholasmarques/socialdev/internal/entity"
+	"github.com/nycholasmarques/socialdev/internal/middlewares"
 	"github.com/nycholasmarques/socialdev/internal/services"
 	"github.com/nycholasmarques/socialdev/utils"
 	"golang.org/x/crypto/bcrypt"
@@ -33,32 +32,9 @@ type UserWithUsername struct {
 	Username string
 }
 
-type LoginUserRequest struct {
-	Email    string `json:"email" validator:"required,email"`
-	Password string `json:"password" validator:"required,min=6,max=12"`
-}
-
-type UpdateUserRequest struct {
-	UserID   string `json:"user_id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Avatar   string `json:"avatar"`
-	Bio      string `json:"bio"`
-	Github   string `json:"github"`
-	Linkedin string `json:"linkedin"`
-	Website  string `json:"website"`
-}
-
-type RegisterUserRequest struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 type UserResponse struct {
-	User entity.UserResponse `json:"user"`
-	Token string               `json:"token"`
+	User  entity.UserResponse `json:"user"`
+	Token string              `json:"token"`
 }
 
 var (
@@ -69,77 +45,57 @@ var (
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"},
 		Endpoint:     google.Endpoint,
 	}
-	randomState = "random" 
+	randomState = "random"
 )
 
 func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	rb := r.Body
-	reader, err := io.ReadAll(rb)
-	if err != nil {
-		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
-		return
-	}
-	rb.Close()
+	var registerUser entity.RegisterUserRequest
 
-	var registerUser *RegisterUserRequest
-	err = json.Unmarshal(reader, &registerUser)
-	if err != nil {
-		http.Error(w, "Failed to unmarshal request body", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&registerUser); err != nil {
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid request body", err.Error())
 		return
 	}
 
 	validate = validator.New()
-	// Parsear os dados da requisição
-	username := registerUser.Username
-	email := registerUser.Email
-	password := registerUser.Password
 
-	// Validar os dados
-	err = validate.Var(username, "required,min=3,max=30")
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Invalid username: %v", err), http.StatusBadRequest)
+	if err := validate.Struct(registerUser); err != nil {
+		errorMessages := entity.GetValidationUserErrors(err)
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid request body", errorMessages)
 		return
 	}
 
-	err = validate.Var(email, "required,email")
+	userResponse, err := h.userService.CreateUser(registerUser.Username, registerUser.Email, registerUser.Password)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Invalid email: %v", err), http.StatusBadRequest)
-		return
-	}
-
-	err = validate.Var(password, "required,min=6,max=12")
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Invalid password: %v", err), http.StatusBadRequest)
-		return
-	}
-	
-	// Chamar o serviço para criar o usuário
-	userResponse, err := h.userService.CreateUser(username, email, password)
-	if err != nil {
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		switch err {
+		case entity.ErrEmailAlreadyExists:
+			utils.NewErrorResponse(w, http.StatusConflict, "Email already exists", err.Error())
+		case entity.ErrUsernameAlreadyExists:
+			utils.NewErrorResponse(w, http.StatusConflict, "Username already exists", err.Error())
+		default:
+			utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to create user", err.Error())
+		}
 		return
 	}
 
 	token, err := configs.CreateToken(userResponse.UserID)
 	if err != nil {
-		http.Error(w, "Failed to create token", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to create token", err.Error())
 		return
 	}
 
 	response := UserResponse{
-		User: userResponse,
+		User:  userResponse,
 		Token: token,
 	}
 
 	res, err := json.Marshal(response)
 	if err != nil {
-		http.Error(w, "Failed to marshal user", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to marshal response", err.Error())
 		return
 	}
 
-	// Retornar a resposta
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(res))
 }
@@ -150,23 +106,27 @@ func (h *UserHandler) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	uuid, err := uuid.Parse(userID)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Invalid user ID: %v", err), http.StatusBadRequest)
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", err.Error())
 		return
 	}
 
 	user, err := h.userService.GetUser(uuid)
 	if err != nil {
-		http.Error(w, "Failed to get user", http.StatusInternalServerError)
+		switch err {
+		case entity.ErrUserNotFound:
+			utils.NewErrorResponse(w, http.StatusNotFound, "User not found", err.Error())
+		default:
+			utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to get user", err.Error())
+		}
 		return
 	}
 
 	res, err := json.Marshal(user)
 	if err != nil {
-		http.Error(w, "Failed to marshal user", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to marshal user", err.Error())
 		return
 	}
 
-	// Retornar a resposta
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(res))
 }
@@ -175,231 +135,205 @@ func (h *UserHandler) GetAllUsersHandler(w http.ResponseWriter, r *http.Request)
 
 	users, err := h.userService.GetAllUsers()
 	if err != nil {
-		http.Error(w, "Failed to get users", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to get users", err.Error())
 		return
 	}
 
 	res, err := json.Marshal(users)
 	if err != nil {
-		http.Error(w, "Failed to marshal users", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to marshal users", err.Error())
 		return
 	}
 
-	// Retornar a resposta
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(res))
-}
-
-func (h *UserHandler) GetUserWithUsernameHandler(w http.ResponseWriter, r *http.Request) {
-
-	username := r.URL.Query().Get("username")
-
-	validate = validator.New()
-
-	err := validate.Var(username, "required,max=30")
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Invalid username: %v", err), http.StatusBadRequest)
-		return
-	}
-
-	user, err := h.userService.GetUserWithUsername(username)
-	if err != nil {
-		http.Error(w, "Failed to get user", http.StatusInternalServerError)
-		return
-	}
-
-	res, err := json.Marshal(user)
-	if err != nil {
-		http.Error(w, "Failed to marshal users", http.StatusInternalServerError)
-		return
-	}
-	// Retornar a resposta
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(res))
 }
 
 func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Path
-	userID := strings.TrimPrefix(id, "/users/")
+	w.Header().Set("Content-Type", "application/json")
+
+	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
+	if !ok || userID == "" {
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "")
+		return
+	}
 
 	convertUUID, err := uuid.Parse(userID)
 	if err != nil {
-			http.Error(w, fmt.Sprintf("Invalid user ID: %v", err), http.StatusBadRequest)
-			return
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", err.Error())
+		return
 	}
 
 	user, err := h.userService.GetUser(convertUUID)
 	if err != nil {
-			http.Error(w, "User does not exist", http.StatusNotFound)
-			return
+		utils.NewErrorResponse(w, http.StatusNotFound, "User not found", err.Error())
+		return
 	}
 
-	rb := r.Body
-	reader, err := io.ReadAll(rb)
+	var userUpdate entity.UpdateUserRequest
+	err = json.NewDecoder(r.Body).Decode(&userUpdate)
 	if err != nil {
-			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
-			return
-	}
-	rb.Close()
-
-	var userUpdate UpdateUserRequest
-	err = json.Unmarshal(reader, &userUpdate)
-	if err != nil {
-			http.Error(w, "Failed to unmarshal request body", http.StatusBadRequest)
-			return
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid request body", err.Error())
+		return
 	}
 
 	validate := validator.New()
-
-	// Atualiza apenas os campos fornecidos
-	if userUpdate.Username != "" {
-			err = validate.Var(userUpdate.Username, "min=3,max=30")
-			if err != nil {
-					http.Error(w, fmt.Sprintf("Invalid username: %v", err), http.StatusBadRequest)
-					return
-			}
-	} else {
-			userUpdate.Username = user.Username
-	}
-
-	if userUpdate.Email != "" {
-			err = validate.Var(userUpdate.Email, "email")
-			if err != nil {
-					http.Error(w, fmt.Sprintf("Invalid email: %v", err), http.StatusBadRequest)
-					return
-			}
-	} else {
-			userUpdate.Email = user.Email
-	}
-
-	if userUpdate.Password != "" {
-			err = validate.Var(userUpdate.Password, "min=6,max=12")
-			if err != nil {
-					http.Error(w, fmt.Sprintf("Invalid password: %v", err), http.StatusBadRequest)
-					return
-			}
-			passwordHash, err := bcrypt.GenerateFromPassword([]byte(userUpdate.Password), bcrypt.DefaultCost)
-			if err != nil {
-				http.Error(w, "Failed to encrypt password", http.StatusInternalServerError)
-				return
-			}
-			userUpdate.Password = string(passwordHash)
-	} else {
-			userUpdate.Password = user.Password
-	}
-
-	// Atualiza o usuário com os novos valores
-	updatedUser, err := h.userService.UpdateUser(convertUUID, userUpdate.Username, userUpdate.Email, userUpdate.Password, userUpdate.Avatar, userUpdate.Bio, userUpdate.Github, userUpdate.Linkedin, userUpdate.Website)
+	err = validate.Struct(userUpdate)
 	if err != nil {
-			http.Error(w, "Failed to update user", http.StatusInternalServerError)
+		errorMessages := entity.GetValidationUserErrors(err)
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid request body", errorMessages)
+		return
+	}
+
+	if userUpdate.Username == nil {
+		userUpdate.Username = &user.Username
+	}
+	if userUpdate.Email == nil {
+		userUpdate.Email = &user.Email
+	}
+	if userUpdate.Password == nil {
+		userUpdate.Password = &user.Password
+	} else {
+		passwordHash, err := bcrypt.GenerateFromPassword([]byte(*userUpdate.Password), bcrypt.DefaultCost)
+		if err != nil {
+			utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to hash password", err.Error())
 			return
+		}
+		hashedPassword := string(passwordHash)
+		userUpdate.Password = &hashedPassword
+	}
+	if userUpdate.Avatar == nil {
+		userUpdate.Avatar = &user.Avatar
+	}
+	if userUpdate.Bio == nil {
+		userUpdate.Bio = &user.Bio
+	}
+	if userUpdate.Github == nil {
+		userUpdate.Github = &user.Github
+	}
+	if userUpdate.Linkedin == nil {
+		userUpdate.Linkedin = &user.Linkedin
+	}
+	if userUpdate.Website == nil {
+		userUpdate.Website = &user.Website
+	}
+
+	updatedUser, err := h.userService.UpdateUser(convertUUID,
+		*userUpdate.Username,
+		*userUpdate.Email,
+		*userUpdate.Password,
+		*userUpdate.Avatar,
+		*userUpdate.Bio,
+		*userUpdate.Github,
+		*userUpdate.Linkedin,
+		*userUpdate.Website,
+	)
+
+	if err != nil {
+		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to update user", err.Error())
+		return
 	}
 
 	res, err := json.Marshal(updatedUser)
 	if err != nil {
-			http.Error(w, "Failed to marshal user", http.StatusInternalServerError)
-			return
+		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to marshal user", err.Error())
+		return
 	}
 
-	// Retornar a resposta
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
 }
 
 func (h *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
-	user_id := r.URL.Path
-	userID := strings.TrimPrefix(user_id, "/users/")
+	w.Header().Set("Content-Type", "application/json")
 
-	uuid, err := uuid.Parse(userID)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Invalid user ID: %v", err), http.StatusBadRequest)
+	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
+	if !ok || userID == "" {
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "")
 		return
 	}
 
-	_, err = h.userService.GetUser(uuid)
+	convertUUID, err := uuid.Parse(userID)
 	if err != nil {
-		http.Error(w, "User does not exist", http.StatusNotFound)
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", err.Error())
 		return
 	}
 
-	err = h.userService.DeleteUser(uuid)
+	_, err = h.userService.GetUser(convertUUID)
 	if err != nil {
-		http.Error(w, "Failed delete user", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusNotFound, "User not found", err.Error())
 		return
 	}
 
-	// Retornar a resposta
+	err = h.userService.DeleteUser(convertUUID)
+	if err != nil {
+		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to delete user", err.Error())
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("User deleted successfully!"))
 }
 
 func (h *UserHandler) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
-	rb := r.Body
-	reader, err := io.ReadAll(rb)
+	w.Header().Set("Content-Type", "application/json")
+
+	var loginUser entity.LoginUserRequest
+	err := json.NewDecoder(r.Body).Decode(&loginUser)
 	if err != nil {
-		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
-		return
-	}
-	rb.Close()
-	fmt.Println("ok")
-	var userLogin *LoginUserRequest
-	err = json.Unmarshal(reader, &userLogin)
-	if err != nil {
-		http.Error(w, "Failed to unmarshal request body", http.StatusBadRequest)
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid request body", err.Error())
 		return
 	}
 
 	validate = validator.New()
 
-	err = validate.Var(userLogin.Email, "required,email")
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Invalid email: %v", err), http.StatusBadRequest)
+	if err := validate.Struct(loginUser); err != nil {
+		errorMessages := entity.GetValidationUserErrors(err)
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid request body", errorMessages)
 		return
 	}
 
-	err = validate.Var(userLogin.Password, "required,min=6,max=12")
+	user, err := h.userService.LoginUser(loginUser.Email)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Invalid password: %v", err), http.StatusBadRequest)
+		switch err {
+		case entity.ErrUserNotFound:
+			utils.NewErrorResponse(w, http.StatusNotFound, "User not found", "")
+		default:
+			utils.NewErrorResponse(w, http.StatusInternalServerError, "Invalid email or password", "")
+		}
 		return
 	}
 
-	user, err := h.userService.LoginUser(userLogin.Email)
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginUser.Password))
 	if err != nil {
-		http.Error(w, "User does not exist", http.StatusNotFound)
-		return
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userLogin.Password))
-	if err != nil {
-		http.Error(w, "Invalid password", http.StatusUnauthorized)
+		utils.NewErrorResponse(w, http.StatusUnauthorized, "Invalid email or password", "")
 		return
 	}
 
 	token, err := configs.CreateToken(user.UserID)
 	if err != nil {
-		http.Error(w, "Failed to create token", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to create token", err.Error())
 		return
 	}
 
 	response := UserResponse{
-		User: user,
+		User:  user,
 		Token: token,
 	}
 
 	res, err := json.Marshal(response)
 	if err != nil {
-		http.Error(w, "Failed to marshal user", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to marshal user", err.Error())
 		return
 	}
 
-	// Retornar a posta
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(res))
 }
 
 func (h *UserHandler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
+		utils.NewErrorResponse(w, http.StatusMethodNotAllowed, "Método não permitido", "")
 		return
 	}
 
