@@ -61,10 +61,17 @@ func (r *UserRepository) GetAllUsers(ctx context.Context) ([]db.User, error) {
 func (r *UserRepository) GetUserWithUsername(ctx context.Context, username string) ([]db.GetUserWithUsernameRow, error) {
 	usernamePattern := username + "%"
 	getUserWithUsername, err := r.queries.GetUserWithUsername(ctx, usernamePattern)
+
 	if err != nil {
 		log.Printf("%v", err)
+		return nil, err
 	}
-	return getUserWithUsername, err
+
+	if len(getUserWithUsername) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	return getUserWithUsername, nil
 }
 
 func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (entity.UserResponse, error) {
@@ -121,6 +128,8 @@ func (r *UserRepository) LoginUser(ctx context.Context, email string) (entity.Us
 	userResponse.Github = user.Github.String
 	userResponse.Linkedin = user.Linkedin.String
 	userResponse.Website = user.Website.String
+	userResponse.CreatedAt = user.CreatedAt.Time.String()
+	userResponse.UpdatedAt = user.UpdatedAt.Time.String()
 
 	return userResponse, err
 	}

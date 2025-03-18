@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
@@ -36,8 +37,8 @@ func (r *PostRepository) CreatePost(ctx context.Context, params db.CreatePostPar
 	postResponse.Content = post.Content
 	postResponse.Photo = post.Photo.String
 	postResponse.Video = post.Video.String
-	postResponse.CreatedAt = post.CreatedAt.Time.String()
-	postResponse.UpdatedAt = post.UpdatedAt.Time.String()
+	postResponse.CreatedAt = post.CreatedAt.Time.UTC().Format(time.RFC3339)
+	postResponse.UpdatedAt = post.UpdatedAt.Time.UTC().Format(time.RFC3339)
 
 	return postResponse, err
 }
@@ -72,7 +73,7 @@ func (r *PostRepository) GetAllPosts(ctx context.Context, title, content *string
 		contentFilter = sql.NullString{String: *content, Valid: true}
 	}
 
-	posts, err := r.queries.GetAllPosts(ctx, db.GetAllPostsParams{
+	posts, err := r.queries.GetAllPostsWithRelations(ctx, db.GetAllPostsWithRelationsParams{
 		Title:   titleFilter,
 		Content: contentFilter,
 	})
@@ -81,19 +82,51 @@ func (r *PostRepository) GetAllPosts(ctx context.Context, title, content *string
 		return nil, err
 	}
 
-	var postsResponse []entity.Post
+	postMap := make(map[string]*entity.Post)
+
 	for _, post := range posts {
-		postsResponse = append(postsResponse, entity.Post{
-			PostID:    post.PostID.String(),
-			UserID:    post.UserID.String(),
-			Title:     post.Title.String,
-			Content:   post.Content,
-			Photo:     post.Photo.String,
-			Video:     post.Video.String,
-			CreatedAt: post.CreatedAt.Time.String(),
-			UpdatedAt: post.UpdatedAt.Time.String(),
-		})
+		postID := post.PostID.String()
+
+		if _, exists := postMap[postID]; !exists {
+			postMap[postID] = &entity.Post{
+				PostID:    postID,
+				UserID:    post.UserID.String(),
+				Title:     post.Title.String,
+				Content:   post.Content,
+				Photo:     post.Photo.String,
+				Video:     post.Video.String,
+				CreatedAt: post.CreatedAt.Time.UTC().Format(time.RFC3339),
+				UpdatedAt: post.UpdatedAt.Time.UTC().Format(time.RFC3339),
+				Like:      int(post.LikeCount),
+				Views:     int(post.ViewsCount),
+				User: entity.UserPost{
+					UserID:   post.UserID.String(),
+					Username: post.UserName.String,
+					Avatar:   post.UserAvatar.String,
+				},
+				Comments: []entity.CommentPost{},
+			}
+		}
+
+		if post.CommentID.Valid {
+			postMap[postID].Comments = append(postMap[postID].Comments, entity.CommentPost{
+				CommentID: post.CommentID.UUID.String(),
+				Content:   post.CommentContent.String,
+				CreatedAt: post.CommentCreatedAt.Time.String(),
+				User: entity.UserPost{
+					UserID:   post.CommentUserID.UUID.String(),
+					Username: post.CommentUserName.String,
+					Avatar:   post.CommentUserAvatar.String,
+				},
+			})
+		}
 	}
+
+	var postsResponse []entity.Post
+	for _, post := range postMap {
+		postsResponse = append(postsResponse, *post)
+	}
+
 	return postsResponse, nil
 }
 
