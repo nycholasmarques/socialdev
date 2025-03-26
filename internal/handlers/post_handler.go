@@ -105,6 +105,15 @@ func (ph *PostHandler) GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	title := r.URL.Query().Get("title")
 	content := r.URL.Query().Get("content")
+	orderBy := r.URL.Query().Get("order_by")
+	likes := r.URL.Query().Get("likes")
+	views := r.URL.Query().Get("views")
+
+	if orderBy != "asc" && orderBy != "desc" {
+		orderBy = "desc" 
+	}
+
+	fmt.Println("title", title, "content", content, "order_by", orderBy, "likes", likes, "views", views)
 
 	var titleFilter, contentFilter *string
 	if title != "" {
@@ -114,7 +123,7 @@ func (ph *PostHandler) GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 		contentFilter = &content
 	}
 
-	posts, err := ph.postService.GetAllPosts(titleFilter, contentFilter)
+	posts, err := ph.postService.GetAllPosts(titleFilter, contentFilter, orderBy, likes, views)
 	if err != nil {
 		http.Error(w, "Failed to get posts", http.StatusInternalServerError)
 		return

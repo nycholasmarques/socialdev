@@ -297,16 +297,16 @@ func (h *UserHandler) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case entity.ErrUserNotFound:
-			utils.NewErrorResponse(w, http.StatusNotFound, "User not found", "")
+			utils.NewErrorResponse(w, http.StatusNotFound, "User not found", true)
 		default:
-			utils.NewErrorResponse(w, http.StatusInternalServerError, "Invalid email or password", "")
+			utils.NewErrorResponse(w, http.StatusInternalServerError, "email ou senha inválido", true)
 		}
 		return
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginUser.Password))
 	if err != nil {
-		utils.NewErrorResponse(w, http.StatusUnauthorized, "Invalid email or password", "")
+		utils.NewErrorResponse(w, http.StatusUnauthorized, "email ou senha inválido", true)
 		return
 	}
 

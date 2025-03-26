@@ -64,7 +64,7 @@ func (r *PostRepository) GetPost(ctx context.Context, post_id uuid.UUID) (entity
 	return postResponse, err
 }
 
-func (r *PostRepository) GetAllPosts(ctx context.Context, title, content *string) ([]entity.Post, error) {
+func (r *PostRepository) GetAllPosts(ctx context.Context, title, content *string, order_by, views, likes string) ([]entity.Post, error) {
 	var titleFilter, contentFilter sql.NullString
 	if title != nil {
 		titleFilter = sql.NullString{String: *title, Valid: true}
@@ -165,23 +165,52 @@ func (r *PostRepository) GetAllUserPosts(ctx context.Context, user_id uuid.UUID)
 		return nil, err
 	}
 
-	var postsResponse []entity.Post
+	postMap := make(map[string]*entity.Post)
 
 	for _, post := range posts {
-		var postResponse entity.Post
-		postResponse.PostID = post.PostID.String()
-		postResponse.UserID = post.UserID.String()
-		postResponse.Title = post.Title.String
-		postResponse.Content = post.Content
-		postResponse.Photo = post.Photo.String
-		postResponse.Video = post.Video.String
-		postResponse.CreatedAt = post.CreatedAt.Time.String()
-		postResponse.UpdatedAt = post.UpdatedAt.Time.String()
+		postID := post.PostID.String()
 
-		postsResponse = append(postsResponse, postResponse)
+		if _, exists := postMap[postID]; !exists {
+			postMap[postID] = &entity.Post{
+				PostID:    postID,
+				UserID:    post.UserID.String(),
+				Title:     post.Title.String,
+				Content:   post.Content,
+				Photo:     post.Photo.String,
+				Video:     post.Video.String,
+				CreatedAt: post.CreatedAt.Time.UTC().Format(time.RFC3339),
+				UpdatedAt: post.UpdatedAt.Time.UTC().Format(time.RFC3339),
+				Like:      int(post.LikeCount),
+				Views:     int(post.ViewsCount),
+				User: entity.UserPost{
+					UserID:   post.UserID.String(),
+					Username: post.UserName.String,
+					Avatar:   post.UserAvatar.String,
+				},
+				Comments: []entity.CommentPost{},
+			}
+		}
+
+		if post.CommentID.Valid {
+			postMap[postID].Comments = append(postMap[postID].Comments, entity.CommentPost{
+				CommentID: post.CommentID.UUID.String(),
+				Content:   post.CommentContent.String,
+				CreatedAt: post.CommentCreatedAt.Time.String(),
+				User: entity.UserPost{
+					UserID:   post.CommentUserID.UUID.String(),
+					Username: post.CommentUserName.String,
+					Avatar:   post.CommentUserAvatar.String,
+				},
+			})
+		}
 	}
 
-	return postsResponse, err
+	var postsResponse []entity.Post
+	for _, post := range postMap {
+		postsResponse = append(postsResponse, *post)
+	}
+
+	return postsResponse, nil
 }
 
 func (r *PostRepository) GetUserPost(ctx context.Context, params db.GetUserPostParams) (entity.Post, error) {

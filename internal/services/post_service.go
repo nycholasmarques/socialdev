@@ -47,9 +47,9 @@ func (p *PostService) GetPost(post_id string) (entity.Post, error) {
 	return p.postRepo.GetPost(ctx, post_id_UUID)
 }
 
-func (p *PostService) GetAllPosts(title, content *string) ([]entity.Post, error) {
+func (p *PostService) GetAllPosts(title, content *string, order_by, likes, views string) ([]entity.Post, error) {
 	ctx := context.Background()
-	return p.postRepo.GetAllPosts(ctx, title, content)
+	return p.postRepo.GetAllPosts(ctx, title, content, order_by, views, likes)
 }
 
 func (p *PostService) GetAllUserPosts(user_id string) ([]entity.Post, error) {
