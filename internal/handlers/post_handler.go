@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	// configs "github.com/nycholasmarques/socialdev/config"
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/nycholasmarques/socialdev/internal/entity"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
@@ -27,56 +28,90 @@ func NewPostHandler(postService *services.PostService) *PostHandler {
 
 var validate *validator.Validate
 
-func (ph *PostHandler) CreatePostHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	defer r.Body.Close()
-
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
-	if !ok || userID == "" {
-		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
-		return
-	}
-
-	reader, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+func (ph *PostHandler) CreatePostHandler(c *gin.Context) {
+	userID, exists := c.Get(string(middlewares.UserIDKey))
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User ID not found in context"})
 		return
 	}
 
 	var postCreate entity.Post
-	err = json.Unmarshal(reader, &postCreate)
-	if err != nil {
-		http.Error(w, "Failed to unmarshal request body", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&postCreate); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse request body"})
 		return
 	}
 
-	validate = validator.New()
-	err = validate.Struct(postCreate)
-	if err != nil {
-		errors := err.(validator.ValidationErrors)
-		var validationErrors []string
-		for _, e := range errors {
-			validationErrors = append(validationErrors, fmt.Sprintf("Field '%s' is invalid: %s", e.Field(), e.Tag()))
+	if err := validate.Struct(postCreate); err != nil {
+		var errors []string
+		for _, e := range err.(validator.ValidationErrors) {
+			errors = append(errors, "Field '"+e.Field()+"' is invalid: "+e.Tag())
 		}
-		response, _ := json.Marshal(map[string]interface{}{"errors": validationErrors})
-		http.Error(w, string(response), http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"errors": errors})
 		return
 	}
 
-	createPost, err := ph.postService.CreatePost(userID, postCreate.Title, postCreate.Content, postCreate.Photo, postCreate.Video)
+	createdPost, err := ph.postService.CreatePost(userID.(string), postCreate.Title, postCreate.Content, postCreate.Photo, postCreate.Video)
 	if err != nil {
-		http.Error(w, "Failed to create post", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post"})
 		return
 	}
 
-	response := map[string]interface{}{
+	c.JSON(http.StatusCreated, gin.H{
 		"message": "Post created successfully",
-		"post":    createPost,
-	}
-
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+		"post":    createdPost,
+	})
 }
+
+// func (ph *PostHandler) CreatePostHandler(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "application/json")
+// 	defer r.Body.Close()
+
+// 	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
+// 	if !ok || userID == "" {
+// 		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	reader, err := io.ReadAll(r.Body)
+// 	if err != nil {
+// 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	var postCreate entity.Post
+// 	err = json.Unmarshal(reader, &postCreate)
+// 	if err != nil {
+// 		http.Error(w, "Failed to unmarshal request body", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	validate = validator.New()
+// 	err = validate.Struct(postCreate)
+// 	if err != nil {
+// 		errors := err.(validator.ValidationErrors)
+// 		var validationErrors []string
+// 		for _, e := range errors {
+// 			validationErrors = append(validationErrors, fmt.Sprintf("Field '%s' is invalid: %s", e.Field(), e.Tag()))
+// 		}
+// 		response, _ := json.Marshal(map[string]interface{}{"errors": validationErrors})
+// 		http.Error(w, string(response), http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	createPost, err := ph.postService.CreatePost(userID, postCreate.Title, postCreate.Content, postCreate.Photo, postCreate.Video)
+// 	if err != nil {
+// 		http.Error(w, "Failed to create post", http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	response := map[string]interface{}{
+// 		"message": "Post created successfully",
+// 		"post":    createPost,
+// 	}
+
+// 	w.WriteHeader(http.StatusCreated)
+// 	json.NewEncoder(w).Encode(response)
+// }
 
 func (ph *PostHandler) GetPostHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")

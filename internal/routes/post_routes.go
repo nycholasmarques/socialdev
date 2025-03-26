@@ -1,24 +1,25 @@
 package routes
 
 import (
-	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/nycholasmarques/socialdev/internal/db"
 	"github.com/nycholasmarques/socialdev/internal/handlers"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
 	"github.com/nycholasmarques/socialdev/internal/repository"
 	"github.com/nycholasmarques/socialdev/internal/services"
+	"gorm.io/gorm"
 )
 
-func SetupPostRoutes(r *http.ServeMux, queries *db.Queries) {
+func SetupPostRoutes(r *gin.RouterGroup, queries *db.Queries, gormDB *gorm.DB) {
 	postRepo := repository.NewPostRepository(queries)
 	postService := services.NewPostSerivice(postRepo)
 	postHandler := handlers.NewPostHandler(postService)
 
-	r.HandleFunc("POST /posts", middlewares.ProtectedRoutes(postHandler.CreatePostHandler))
-	r.HandleFunc("PATCH /posts/{post_id}", middlewares.ProtectedRoutes(postHandler.UpdatePostHandler))
-	r.HandleFunc("GET /posts/{post_id}", postHandler.GetPostHandler)
-	r.HandleFunc("GET /posts", postHandler.GetPostsHandler)
-	r.HandleFunc("GET /users/{user_id}/posts", middlewares.ProtectedRoutes(postHandler.GetUserPostsHandler))
-	r.HandleFunc("DELETE /posts/{post_id}", middlewares.ProtectedRoutes(postHandler.DeletePostHandler))
+	r.POST("/posts", middlewares.ProtectedRoutes(), postHandler.CreatePostHandler)
+	// r.PATCH("/posts/:post_id", middlewares.ProtectedRoutes(), postHandler.UpdatePostHandler)
+	// r.GET("/posts/:post_id", postHandler.GetPostHandler)
+	// r.GET("/posts", postHandler.GetPostsHandler)
+	// r.GET("/users/:user_id/posts", middlewares.ProtectedRoutes(), postHandler.GetUserPostsHandler)
+	// r.DELETE("/posts/:post_id", middlewares.ProtectedRoutes(), postHandler.DeletePostHandler)
 }

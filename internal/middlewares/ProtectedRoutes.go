@@ -1,30 +1,31 @@
 package middlewares
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte("x")
+var jwtSecret = []byte("x") // Considere mover isso para a configuração
 
 type contextKey string
+
 const UserIDKey contextKey = "user_id"
 
-func ProtectedRoutes(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
+func ProtectedRoutes() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			http.Error(w, "Missing token", http.StatusUnauthorized)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing token"})
 			return
 		}
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		if tokenString == authHeader {
-			http.Error(w, "Invalid token format", http.StatusUnauthorized)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
 			return
 		}
 
@@ -36,13 +37,13 @@ func ProtectedRoutes(next http.HandlerFunc) http.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			return
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
 			return
 		}
 
@@ -51,14 +52,15 @@ func ProtectedRoutes(next http.HandlerFunc) http.HandlerFunc {
 			if userIDFloat, ok := claims["user_id"].(float64); ok {
 				userID = fmt.Sprintf("%.0f", userIDFloat)
 			} else {
-				http.Error(w, "user_id not found", http.StatusUnauthorized)
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "user_id not found"})
 				return
 			}
 		}
 
-		ctx := context.WithValue(r.Context(), UserIDKey, userID)
-		r = r.WithContext(ctx)
+		// Adicionar o userID ao contexto do Gin
+		c.Set(string(UserIDKey), userID)
 
-		next(w, r)
+		// Continuar para o próximo handler
+		c.Next()
 	}
 }
