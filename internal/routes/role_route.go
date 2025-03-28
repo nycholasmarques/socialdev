@@ -21,5 +21,5 @@ func SetupRoleRoutes(r *http.ServeMux, queries *db.Queries) {
 	r.HandleFunc("DELETE /roles/{role_id}", roleHandler.DeleteRoleHandler)
 
 	r.HandleFunc("POST /users/{user_id}/roles/{role_id}", roleHandler.CreateUserWithRoleHandler)
-	r.HandleFunc("DELETE /users/{user_id}/roles/{role_id}", roleHandler.DeleteUserWithRoleHandler)	
+	r.HandleFunc("DELETE /users/{user_id}/roles/{role_id}", roleHandler.DeleteUserWithRoleHandler)
 }

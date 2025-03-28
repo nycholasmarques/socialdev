@@ -102,7 +102,7 @@ func (h *RoleHandler) GetAllRolesHandler(w http.ResponseWriter, r *http.Request)
 
 func (h *RoleHandler) GetRoleWithNameHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("name")
-	fmt.Println(name)	
+	fmt.Println(name)
 	roles, err := h.roleService.GetRoleWithName(name)
 	if err != nil {
 		http.Error(w, "Failed to get role", http.StatusInternalServerError)

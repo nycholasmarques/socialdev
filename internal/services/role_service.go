@@ -45,7 +45,7 @@ func (r *RoleService) UpdateRole(role_id uuid.UUID, name string) (db.Role, error
 	return r.roleRepo.UpdateRole(ctx, params)
 }
 
-func (r *RoleService) DeleteRole(role_id uuid.UUID) (error) {
+func (r *RoleService) DeleteRole(role_id uuid.UUID) error {
 	ctx := context.Background()
 	return r.roleRepo.DeleteRole(ctx, role_id)
 }
@@ -57,7 +57,7 @@ func (r *RoleService) CreateUserWithRole(user_id uuid.UUID, role_id uuid.UUID) (
 	return r.roleRepo.CreateUserWithRole(ctx, params)
 }
 
-func (r *RoleService) DeleteUserWithRole(user_id uuid.UUID, role_id uuid.UUID) (error) {
+func (r *RoleService) DeleteUserWithRole(user_id uuid.UUID, role_id uuid.UUID) error {
 	ctx := context.Background()
 
 	params := db.DeleteUserWithRolesParams{UserID: user_id, RoleID: role_id}

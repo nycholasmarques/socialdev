@@ -35,12 +35,10 @@ func (r *LikeRepository) GetLike(ctx context.Context, params db.GetLikeParams) (
 	return like, err
 }
 
-func (r *LikeRepository) DeleteLike(ctx context.Context, params db.DeleteLikeParams) (error) {
+func (r *LikeRepository) DeleteLike(ctx context.Context, params db.DeleteLikeParams) error {
 	err := r.queries.DeleteLike(ctx, params)
 	if err != nil {
 		log.Printf("%v", err)
 	}
 	return err
 }
-
-

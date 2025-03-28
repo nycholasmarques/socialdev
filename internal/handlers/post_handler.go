@@ -110,7 +110,7 @@ func (ph *PostHandler) GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 	views := r.URL.Query().Get("views")
 
 	if orderBy != "asc" && orderBy != "desc" {
-		orderBy = "desc" 
+		orderBy = "desc"
 	}
 
 	fmt.Println("title", title, "content", content, "order_by", orderBy, "likes", likes, "views", views)

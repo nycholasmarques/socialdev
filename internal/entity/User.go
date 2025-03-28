@@ -45,10 +45,10 @@ type RegisterUserRequest struct {
 
 // definindo erros
 var (
-	ErrUserNotFound = errors.New("user not found")
-	ErrUserExists   = errors.New("user already exists")
-	ErrInternalServer = errors.New("internal server error")
-	ErrEmailAlreadyExists = errors.New("email already exists")
+	ErrUserNotFound          = errors.New("user not found")
+	ErrUserExists            = errors.New("user already exists")
+	ErrInternalServer        = errors.New("internal server error")
+	ErrEmailAlreadyExists    = errors.New("email already exists")
 	ErrUsernameAlreadyExists = errors.New("username already exists")
 )
 

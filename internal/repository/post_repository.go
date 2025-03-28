@@ -74,67 +74,66 @@ func (r *PostRepository) GetAllPosts(ctx context.Context, title, content *string
 	}
 
 	posts, err := r.queries.GetAllPostsWithRelations(ctx, db.GetAllPostsWithRelationsParams{
-		Title:     titleFilter,
-		Content:   contentFilter,
+		Title:   titleFilter,
+		Content: contentFilter,
 	})
 	if err != nil {
 		log.Printf("%v", err)
 		return nil, err
 	}
 
-	
 	var postsResponse []entity.Post
 
 	for _, post := range posts {
-			postID := post.PostID.String()
-			
-			postExists := false
-			for _, existingPost := range postsResponse {
-					if existingPost.PostID == postID {
-							postExists = true
-							break
-					}
+		postID := post.PostID.String()
+
+		postExists := false
+		for _, existingPost := range postsResponse {
+			if existingPost.PostID == postID {
+				postExists = true
+				break
 			}
-	
-			if !postExists {
-					postsResponse = append(postsResponse, entity.Post{
-							PostID:    postID,
-							UserID:    post.UserID.String(),
-							Title:     post.Title.String,
-							Content:   post.Content,
-							Photo:     post.Photo.String,
-							Video:     post.Video.String,
-							CreatedAt: post.CreatedAt.Time.UTC().Format(time.RFC3339),
-							UpdatedAt: post.UpdatedAt.Time.UTC().Format(time.RFC3339),
-							Like:      int(post.LikeCount),
-							Views:     int(post.ViewsCount),
-							User: entity.UserPost{
-									UserID:   post.UserID.String(),
-									Username: post.UserName.String,
-									Avatar:   post.UserAvatar.String,
-							},
-							Comments: []entity.CommentPost{},
+		}
+
+		if !postExists {
+			postsResponse = append(postsResponse, entity.Post{
+				PostID:    postID,
+				UserID:    post.UserID.String(),
+				Title:     post.Title.String,
+				Content:   post.Content,
+				Photo:     post.Photo.String,
+				Video:     post.Video.String,
+				CreatedAt: post.CreatedAt.Time.UTC().Format(time.RFC3339),
+				UpdatedAt: post.UpdatedAt.Time.UTC().Format(time.RFC3339),
+				Like:      int(post.LikeCount),
+				Views:     int(post.ViewsCount),
+				User: entity.UserPost{
+					UserID:   post.UserID.String(),
+					Username: post.UserName.String,
+					Avatar:   post.UserAvatar.String,
+				},
+				Comments: []entity.CommentPost{},
+			})
+		}
+
+		if post.CommentID.Valid {
+			for i, p := range postsResponse {
+				if p.PostID == postID {
+					postsResponse[i].Comments = append(postsResponse[i].Comments, entity.CommentPost{
+						CommentID: post.CommentID.UUID.String(),
+						Content:   post.CommentContent.String,
+						CreatedAt: post.CommentCreatedAt.Time.String(),
+						User: entity.UserPost{
+							UserID:   post.CommentUserID.UUID.String(),
+							Username: post.CommentUserName.String,
+							Avatar:   post.CommentUserAvatar.String,
+						},
 					})
+				}
 			}
-	
-			if post.CommentID.Valid {
-					for i, p := range postsResponse {
-							if p.PostID == postID {
-									postsResponse[i].Comments = append(postsResponse[i].Comments, entity.CommentPost{
-											CommentID: post.CommentID.UUID.String(),
-											Content:   post.CommentContent.String,
-											CreatedAt: post.CommentCreatedAt.Time.String(),
-											User: entity.UserPost{
-													UserID:   post.CommentUserID.UUID.String(),
-													Username: post.CommentUserName.String,
-													Avatar:   post.CommentUserAvatar.String,
-											},
-									})
-							}
-					}
-			}
+		}
 	}
-	
+
 	return postsResponse, nil
 }
 
@@ -176,55 +175,55 @@ func (r *PostRepository) GetAllUserPosts(ctx context.Context, user_id uuid.UUID)
 	var postsResponse []entity.Post
 
 	for _, post := range posts {
-			postID := post.PostID.String()
-			
-			postExists := false
-			for _, existingPost := range postsResponse {
-					if existingPost.PostID == postID {
-							postExists = true
-							break
-					}
+		postID := post.PostID.String()
+
+		postExists := false
+		for _, existingPost := range postsResponse {
+			if existingPost.PostID == postID {
+				postExists = true
+				break
 			}
-	
-			if !postExists {
-					postsResponse = append(postsResponse, entity.Post{
-							PostID:    postID,
-							UserID:    post.UserID.String(),
-							Title:     post.Title.String,
-							Content:   post.Content,
-							Photo:     post.Photo.String,
-							Video:     post.Video.String,
-							CreatedAt: post.CreatedAt.Time.UTC().Format(time.RFC3339),
-							UpdatedAt: post.UpdatedAt.Time.UTC().Format(time.RFC3339),
-							Like:      int(post.LikeCount),
-							Views:     int(post.ViewsCount),
-							User: entity.UserPost{
-									UserID:   post.UserID.String(),
-									Username: post.UserName.String,
-									Avatar:   post.UserAvatar.String,
-							},
-							Comments: []entity.CommentPost{},
+		}
+
+		if !postExists {
+			postsResponse = append(postsResponse, entity.Post{
+				PostID:    postID,
+				UserID:    post.UserID.String(),
+				Title:     post.Title.String,
+				Content:   post.Content,
+				Photo:     post.Photo.String,
+				Video:     post.Video.String,
+				CreatedAt: post.CreatedAt.Time.UTC().Format(time.RFC3339),
+				UpdatedAt: post.UpdatedAt.Time.UTC().Format(time.RFC3339),
+				Like:      int(post.LikeCount),
+				Views:     int(post.ViewsCount),
+				User: entity.UserPost{
+					UserID:   post.UserID.String(),
+					Username: post.UserName.String,
+					Avatar:   post.UserAvatar.String,
+				},
+				Comments: []entity.CommentPost{},
+			})
+		}
+
+		if post.CommentID.Valid {
+			for i, p := range postsResponse {
+				if p.PostID == postID {
+					postsResponse[i].Comments = append(postsResponse[i].Comments, entity.CommentPost{
+						CommentID: post.CommentID.UUID.String(),
+						Content:   post.CommentContent.String,
+						CreatedAt: post.CommentCreatedAt.Time.String(),
+						User: entity.UserPost{
+							UserID:   post.CommentUserID.UUID.String(),
+							Username: post.CommentUserName.String,
+							Avatar:   post.CommentUserAvatar.String,
+						},
 					})
+				}
 			}
-	
-			if post.CommentID.Valid {
-					for i, p := range postsResponse {
-							if p.PostID == postID {
-									postsResponse[i].Comments = append(postsResponse[i].Comments, entity.CommentPost{
-											CommentID: post.CommentID.UUID.String(),
-											Content:   post.CommentContent.String,
-											CreatedAt: post.CommentCreatedAt.Time.String(),
-											User: entity.UserPost{
-													UserID:   post.CommentUserID.UUID.String(),
-													Username: post.CommentUserName.String,
-													Avatar:   post.CommentUserAvatar.String,
-											},
-									})
-							}
-					}
-			}
+		}
 	}
-	
+
 	return postsResponse, nil
 }
 

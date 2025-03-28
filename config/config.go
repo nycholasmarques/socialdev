@@ -9,20 +9,20 @@ import (
 )
 
 type Config struct {
-	Port              string 
-	JWTSecret         string 
-	Database          DatabaseConfig 
-	GoogleClientID    string 
-	GoogleClientSecret string 
-	GoogleRedirectURL  string 
+	Port               string
+	JWTSecret          string
+	Database           DatabaseConfig
+	GoogleClientID     string
+	GoogleClientSecret string
+	GoogleRedirectURL  string
 }
 
 type DatabaseConfig struct {
-	Host     string 
-	Port     int    
-	User     string 
-	Password string 
-	DBName   string 
+	Host     string
+	Port     int
+	User     string
+	Password string
+	DBName   string
 	SSLMode  string
 }
 
@@ -33,11 +33,11 @@ func LoadConfig() *Config {
 	}
 
 	return &Config{
-		Port:              getEnv("PORT", "8080"),
-		JWTSecret:         getEnv("JWT_SECRET", ""),
+		Port:      getEnv("PORT", "8080"),
+		JWTSecret: getEnv("JWT_SECRET", ""),
 		Database: DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     getEnvAsInt("DB_PORT", 5432), 
+			Port:     getEnvAsInt("DB_PORT", 5432),
 			User:     getEnv("DB_USER", ""),
 			Password: getEnv("DB_PASSWORD", ""),
 			DBName:   getEnv("DB_NAME", ""),

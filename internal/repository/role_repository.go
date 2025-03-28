@@ -61,7 +61,7 @@ func (r *RoleRepository) UpdateRole(ctx context.Context, params db.UpdateRolePar
 	return role, err
 }
 
-func (r *RoleRepository) DeleteRole(ctx context.Context, role_id uuid.UUID) (error) {
+func (r *RoleRepository) DeleteRole(ctx context.Context, role_id uuid.UUID) error {
 	err := r.queries.DeleteRole(ctx, role_id)
 	if err != nil {
 		log.Printf("%v", err)
@@ -77,7 +77,7 @@ func (r *RoleRepository) CreateUserWithRole(ctx context.Context, params db.Creat
 	return user, err
 }
 
-func (r *RoleRepository) DeleteUserWithRole(ctx context.Context, params db.DeleteUserWithRolesParams) (error) {
+func (r *RoleRepository) DeleteUserWithRole(ctx context.Context, params db.DeleteUserWithRolesParams) error {
 	err := r.queries.DeleteUserWithRoles(ctx, params)
 	if err != nil {
 		log.Printf("%v", err)

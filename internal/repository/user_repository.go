@@ -101,7 +101,7 @@ func (r *UserRepository) UpdateUser(ctx context.Context, params db.UpdateUserPar
 	return user, err
 }
 
-func (r *UserRepository) DeleteUser(ctx context.Context, user_id uuid.UUID) (error) {
+func (r *UserRepository) DeleteUser(ctx context.Context, user_id uuid.UUID) error {
 	err := r.queries.DeleteUser(ctx, user_id)
 	if err != nil {
 		log.Printf("%v", err)
@@ -132,4 +132,4 @@ func (r *UserRepository) LoginUser(ctx context.Context, email string) (entity.Us
 	userResponse.UpdatedAt = user.UpdatedAt.Time.String()
 
 	return userResponse, err
-	}
+}

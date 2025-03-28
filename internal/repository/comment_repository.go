@@ -38,7 +38,7 @@ func (r *CommentRepository) UpdateComment(ctx context.Context, userID uuid.UUID,
 	params := db.UpdateCommentParams{
 		CommentID: commentID,
 		Content:   content,
-		UserID: userID,
+		UserID:    userID,
 	}
 	comment, err := r.queries.UpdateComment(ctx, params)
 	if err != nil {

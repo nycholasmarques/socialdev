@@ -78,8 +78,6 @@ func (p *PostService) GetUserPost(post_id, user_id string) (entity.Post, error) 
 
 	return p.postRepo.GetUserPost(ctx, db.GetUserPostParams{PostID: post_id_UUID, UserID: user_id_UUID})
 }
-	
-
 
 func (p *PostService) UpdatePost(post_id, user_id, title, content, photo, video string) (entity.Post, error) {
 	ctx := context.Background()
@@ -111,7 +109,7 @@ func (p *PostService) DeletePost(post_id, user_id string) error {
 
 	post_id_UUID, err := uuid.Parse(post_id)
 	if err != nil {
-		return  err
+		return err
 	}
 
 	user_id_UUID, err := uuid.Parse(user_id)

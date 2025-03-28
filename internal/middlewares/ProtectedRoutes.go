@@ -12,6 +12,7 @@ import (
 var jwtSecret = []byte("x")
 
 type contextKey string
+
 const UserIDKey contextKey = "user_id"
 
 func ProtectedRoutes(next http.HandlerFunc) http.HandlerFunc {

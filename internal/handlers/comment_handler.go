@@ -157,7 +157,7 @@ func (h *CommentHandler) GetAllCommentsHandler(w http.ResponseWriter, r *http.Re
 			PostID:    comment.PostID,
 			Content:   comment.Content,
 			CreatedAt: comment.CreatedAt.Time.String(),
-	})
+		})
 	}
 
 	res, err := json.Marshal(reponseComment)
