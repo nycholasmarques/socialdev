@@ -77,4 +77,8 @@ go run cmd/main.go
 Rodar as migrações (se necessário):
 ```
 make migrate
+
+ou
+
+docker-compose exec app migrate -path internal/db/migrations -database "postgresql://user:password@db:5432/app?sslmode=disable" up
 ```
