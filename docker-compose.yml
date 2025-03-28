@@ -1,5 +1,7 @@
+name: socialdev
 services:
   db:
+    container_name: socialdev-db
     image: postgres:15-alpine
     restart: always
     environment:
@@ -7,11 +9,12 @@ services:
       POSTGRES_PASSWORD: root
       POSTGRES_DB: socialdev
     ports:
-      - "5432"
+      - "5432:5432"
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - db-socialdev:/var/lib/postgresql/data
 
   app:
+    container_name: socialdev
     build: 
       context: .
       target: builder
@@ -27,4 +30,4 @@ services:
       - "8080:8080"
 
 volumes:
-  db-data:
+  db-socialdev:

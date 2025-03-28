@@ -27,7 +27,7 @@ type DatabaseConfig struct {
 }
 
 func LoadConfig() *Config {
-	err := godotenv.Load()
+	err := godotenv.Load("cmd/server/.env")
 	if err != nil {
 		log.Println("Arquivo .env não encontrado. Usando variáveis de ambiente do sistema.")
 	}
