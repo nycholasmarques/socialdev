@@ -398,7 +398,8 @@ LEFT JOIN (
 LEFT JOIN comments c ON c.post_id = p.post_id
 LEFT JOIN users cu ON c.user_id = cu.user_id
 WHERE (p.title ILIKE '%' || $1 || '%' OR $1 IS NULL)
-AND (p.content ILIKE '%' || $2 || '%' OR $2 IS NULL)
+OR (p.content ILIKE '%' || $2 || '%' OR $2 IS NULL)
+ORDER BY p.created_at DESC
 `
 
 type GetAllPostsWithRelationsParams struct {
