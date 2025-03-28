@@ -82,12 +82,6 @@ WHERE user_id = $1 AND
 role_id = $2;
 
 -- name: GetAllPosts :many
-SELECT * FROM posts
-WHERE (title ILIKE '%' || sqlc.narg('title') || '%' OR sqlc.narg('title') IS NULL)
-AND (content ILIKE '%' || sqlc.narg('content') || '%' OR sqlc.narg('content') IS NULL)
-ORDER BY created_at DESC;
-
--- name: GetAllPostsWithRelations :many
 SELECT 
     p.post_id,
     p.user_id,
@@ -101,25 +95,36 @@ SELECT
     u.avatar AS user_avatar,
     COALESCE(l.likes_count, 0) AS like_count,
     COALESCE(v.views_count, 0) AS views_count,
-    c.comment_id,
-    c.content AS comment_content,
-    c.created_at AS comment_created_at,
-    cu.user_id AS comment_user_id,
-    cu.username AS comment_user_name,
-    cu.avatar AS comment_user_avatar
+    COALESCE(c.comments_count, 0) AS comment_count,
+    COUNT(*) OVER() AS total_count
 FROM posts p
 LEFT JOIN users u ON p.user_id = u.user_id
 LEFT JOIN (
-    SELECT post_id, COUNT(*) AS likes_count FROM likes GROUP BY post_id
+    SELECT post_id, COUNT(*) AS likes_count 
+    FROM likes 
+    GROUP BY post_id
 ) l ON p.post_id = l.post_id
 LEFT JOIN (
-    SELECT post_id, COUNT(*) AS views_count FROM views GROUP BY post_id
+    SELECT post_id, COUNT(*) AS views_count 
+    FROM views 
+    GROUP BY post_id
 ) v ON p.post_id = v.post_id
-LEFT JOIN comments c ON c.post_id = p.post_id
-LEFT JOIN users cu ON c.user_id = cu.user_id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) AS comments_count 
+    FROM comments 
+    GROUP BY post_id
+) c ON p.post_id = c.post_id
 WHERE (p.title ILIKE '%' || sqlc.narg('title') || '%' OR sqlc.narg('title') IS NULL)
-OR (p.content ILIKE '%' || sqlc.narg('content') || '%' OR sqlc.narg('content') IS NULL)
-ORDER BY p.created_at DESC;
+AND (p.content ILIKE '%' || sqlc.narg('content') || '%' OR sqlc.narg('content') IS NULL)
+ORDER BY 
+    CASE 
+        WHEN sqlc.narg('order_by') = 'likes' THEN COALESCE(l.likes_count, 0)
+        WHEN sqlc.narg('order_by') = 'comments' THEN COALESCE(c.comments_count, 0)
+        ELSE 0
+    END DESC,
+    p.created_at DESC
+LIMIT sqlc.narg('limit')
+OFFSET sqlc.narg('offset');
 
 -- name: GetPost :one
 SELECT * FROM posts

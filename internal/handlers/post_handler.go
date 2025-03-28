@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	// configs "github.com/nycholasmarques/socialdev/config"
@@ -103,39 +104,46 @@ func (ph *PostHandler) GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	defer r.Body.Close()
 
+	// Pegar parâmetros da query string
 	title := r.URL.Query().Get("title")
 	content := r.URL.Query().Get("content")
-	orderBy := r.URL.Query().Get("order_by")
-	likes := r.URL.Query().Get("likes")
-	views := r.URL.Query().Get("views")
-
-	if orderBy != "asc" && orderBy != "desc" {
-		orderBy = "desc"
+	orderBy := r.URL.Query().Get("order_by") // "likes" ou "comments"
+	limitStr := r.URL.Query().Get("limit")
+	offsetStr := r.URL.Query().Get("offset")
+	
+	// Definir valores padrão
+	limit := int32(10)  // default limit
+	offset := int32(0)  // default offset
+	if limitStr != "" {
+			if l, err := strconv.ParseInt(limitStr, 10, 32); err == nil {
+					limit = int32(l)
+			}
+	}
+	if offsetStr != "" {
+			if o, err := strconv.ParseInt(offsetStr, 10, 32); err == nil {
+					offset = int32(o)
+			}
 	}
 
-	fmt.Println("title", title, "content", content, "order_by", orderBy, "likes", likes, "views", views)
-
-	var titleFilter, contentFilter *string
+	var titlePtr, contentPtr *string
 	if title != "" {
-		titleFilter = &title
+			titlePtr = &title
 	}
 	if content != "" {
-		contentFilter = &content
+			contentPtr = &content
 	}
 
-	posts, err := ph.postService.GetAllPosts(titleFilter, contentFilter, orderBy, likes, views)
+	posts, totalCount, err := ph.postService.GetAllPosts(titlePtr, contentPtr, orderBy, limit, offset)
 	if err != nil {
-		http.Error(w, "Failed to get posts", http.StatusInternalServerError)
-		return
+			http.Error(w, "Failed to get top posts", http.StatusInternalServerError)
+			return
 	}
 
-	if len(posts) == 0 {
-		http.Error(w, "No posts found", http.StatusNotFound)
-		return
-	}
-
-	response := map[string]interface{}{
-		"posts": posts,
+	response := entity.Response{
+			Posts:  posts,
+			Limit:  limit,
+			Offset: offset,
+			Total:  totalCount,
 	}
 
 	w.WriteHeader(http.StatusOK)

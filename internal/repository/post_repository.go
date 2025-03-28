@@ -64,77 +64,54 @@ func (r *PostRepository) GetPost(ctx context.Context, post_id uuid.UUID) (entity
 	return postResponse, err
 }
 
-func (r *PostRepository) GetAllPosts(ctx context.Context, title, content *string, order_by, views, likes string) ([]entity.Post, error) {
+func (r *PostRepository) GetAllPosts(ctx context.Context, title, content *string, orderBy string, limit, offset int32) ([]entity.Post, int64, error) {
 	var titleFilter, contentFilter sql.NullString
 	if title != nil {
-		titleFilter = sql.NullString{String: *title, Valid: true}
+			titleFilter = sql.NullString{String: *title, Valid: true}
 	}
 	if content != nil {
-		contentFilter = sql.NullString{String: *content, Valid: true}
+			contentFilter = sql.NullString{String: *content, Valid: true}
 	}
 
-	posts, err := r.queries.GetAllPostsWithRelations(ctx, db.GetAllPostsWithRelationsParams{
-		Title:   titleFilter,
-		Content: contentFilter,
+	posts, err := r.queries.GetAllPosts(ctx, db.GetAllPostsParams{
+			Title:   titleFilter,
+			Content: contentFilter,
+			OrderBy: sql.NullString{String: orderBy, Valid: true},
+			Limit:   sql.NullInt32{Int32: limit, Valid: true},
+			Offset:  sql.NullInt32{Int32: offset, Valid: true},
 	})
 	if err != nil {
-		log.Printf("%v", err)
-		return nil, err
+			log.Printf("%v", err)
+			return nil, 0, err
 	}
 
 	var postsResponse []entity.Post
-
-	for _, post := range posts {
-		postID := post.PostID.String()
-
-		postExists := false
-		for _, existingPost := range postsResponse {
-			if existingPost.PostID == postID {
-				postExists = true
-				break
-			}
+	var totalCount int64
+	for i, post := range posts {
+			if i == 0 { // Pegamos o total_count da primeira linha
+				totalCount = post.TotalCount
 		}
-
-		if !postExists {
 			postsResponse = append(postsResponse, entity.Post{
-				PostID:    postID,
-				UserID:    post.UserID.String(),
-				Title:     post.Title.String,
-				Content:   post.Content,
-				Photo:     post.Photo.String,
-				Video:     post.Video.String,
-				CreatedAt: post.CreatedAt.Time.UTC().Format(time.RFC3339),
-				UpdatedAt: post.UpdatedAt.Time.UTC().Format(time.RFC3339),
-				Like:      int(post.LikeCount),
-				Views:     int(post.ViewsCount),
-				User: entity.UserPost{
-					UserID:   post.UserID.String(),
-					Username: post.UserName.String,
-					Avatar:   post.UserAvatar.String,
-				},
-				Comments: []entity.CommentPost{},
+					PostID:      post.PostID.String(),
+					UserID:      post.UserID.String(),
+					Title:       post.Title.String,
+					Content:     post.Content,
+					Photo:       post.Photo.String,
+					Video:       post.Video.String,
+					CreatedAt:   post.CreatedAt.Time.UTC().Format(time.RFC3339),
+					UpdatedAt:   post.UpdatedAt.Time.UTC().Format(time.RFC3339),
+					Like:        int(post.LikeCount),
+					Views:       int(post.ViewsCount),
+					Comments:    []entity.CommentPost{},
+					User: entity.UserPost{
+							UserID:   post.UserID.String(),
+							Username: post.UserName.String,
+							Avatar:   post.UserAvatar.String,
+					},
 			})
-		}
-
-		if post.CommentID.Valid {
-			for i, p := range postsResponse {
-				if p.PostID == postID {
-					postsResponse[i].Comments = append(postsResponse[i].Comments, entity.CommentPost{
-						CommentID: post.CommentID.UUID.String(),
-						Content:   post.CommentContent.String,
-						CreatedAt: post.CommentCreatedAt.Time.String(),
-						User: entity.UserPost{
-							UserID:   post.CommentUserID.UUID.String(),
-							Username: post.CommentUserName.String,
-							Avatar:   post.CommentUserAvatar.String,
-						},
-					})
-				}
-			}
-		}
 	}
 
-	return postsResponse, nil
+	return postsResponse, totalCount, nil
 }
 
 func (r *PostRepository) UpdatePost(ctx context.Context, params db.UpdatePostParams) (entity.Post, error) {

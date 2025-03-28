@@ -27,3 +27,11 @@ type CommentPost struct {
 	Content   string   `json:"content"`
 	CreatedAt string   `json:"created_at"`
 }
+
+// Response representa a estrutura da resposta JSON
+type Response struct {
+	Posts  []Post `json:"posts"`
+	Limit  int32         `json:"limit"`
+	Offset int32         `json:"offset"`
+	Total  int64         `json:"total"`
+}

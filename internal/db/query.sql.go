@@ -323,51 +323,6 @@ func (q *Queries) GetAllComments(ctx context.Context, postID uuid.UUID) ([]Comme
 }
 
 const getAllPosts = `-- name: GetAllPosts :many
-SELECT post_id, user_id, category_id, title, content, photo, video, created_at, updated_at FROM posts
-WHERE (title ILIKE '%' || $1 || '%' OR $1 IS NULL)
-AND (content ILIKE '%' || $2 || '%' OR $2 IS NULL)
-ORDER BY created_at DESC
-`
-
-type GetAllPostsParams struct {
-	Title   sql.NullString
-	Content sql.NullString
-}
-
-func (q *Queries) GetAllPosts(ctx context.Context, arg GetAllPostsParams) ([]Post, error) {
-	rows, err := q.db.QueryContext(ctx, getAllPosts, arg.Title, arg.Content)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Post
-	for rows.Next() {
-		var i Post
-		if err := rows.Scan(
-			&i.PostID,
-			&i.UserID,
-			&i.CategoryID,
-			&i.Title,
-			&i.Content,
-			&i.Photo,
-			&i.Video,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getAllPostsWithRelations = `-- name: GetAllPostsWithRelations :many
 SELECT 
     p.post_id,
     p.user_id,
@@ -381,62 +336,78 @@ SELECT
     u.avatar AS user_avatar,
     COALESCE(l.likes_count, 0) AS like_count,
     COALESCE(v.views_count, 0) AS views_count,
-    c.comment_id,
-    c.content AS comment_content,
-    c.created_at AS comment_created_at,
-    cu.user_id AS comment_user_id,
-    cu.username AS comment_user_name,
-    cu.avatar AS comment_user_avatar
+    COALESCE(c.comments_count, 0) AS comment_count,
+    COUNT(*) OVER() AS total_count
 FROM posts p
 LEFT JOIN users u ON p.user_id = u.user_id
 LEFT JOIN (
-    SELECT post_id, COUNT(*) AS likes_count FROM likes GROUP BY post_id
+    SELECT post_id, COUNT(*) AS likes_count 
+    FROM likes 
+    GROUP BY post_id
 ) l ON p.post_id = l.post_id
 LEFT JOIN (
-    SELECT post_id, COUNT(*) AS views_count FROM views GROUP BY post_id
+    SELECT post_id, COUNT(*) AS views_count 
+    FROM views 
+    GROUP BY post_id
 ) v ON p.post_id = v.post_id
-LEFT JOIN comments c ON c.post_id = p.post_id
-LEFT JOIN users cu ON c.user_id = cu.user_id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) AS comments_count 
+    FROM comments 
+    GROUP BY post_id
+) c ON p.post_id = c.post_id
 WHERE (p.title ILIKE '%' || $1 || '%' OR $1 IS NULL)
-OR (p.content ILIKE '%' || $2 || '%' OR $2 IS NULL)
-ORDER BY p.created_at DESC
+AND (p.content ILIKE '%' || $2 || '%' OR $2 IS NULL)
+ORDER BY 
+    CASE 
+        WHEN $3 = 'likes' THEN COALESCE(l.likes_count, 0)
+        WHEN $3 = 'comments' THEN COALESCE(c.comments_count, 0)
+        ELSE 0
+    END DESC,
+    p.created_at DESC
+LIMIT $5
+OFFSET $4
 `
 
-type GetAllPostsWithRelationsParams struct {
+type GetAllPostsParams struct {
 	Title   sql.NullString
 	Content sql.NullString
+	OrderBy interface{}
+	Offset  sql.NullInt32
+	Limit   sql.NullInt32
 }
 
-type GetAllPostsWithRelationsRow struct {
-	PostID            uuid.UUID
-	UserID            uuid.UUID
-	Title             sql.NullString
-	Content           string
-	Photo             sql.NullString
-	Video             sql.NullString
-	CreatedAt         sql.NullTime
-	UpdatedAt         sql.NullTime
-	UserName          sql.NullString
-	UserAvatar        sql.NullString
-	LikeCount         int64
-	ViewsCount        int64
-	CommentID         uuid.NullUUID
-	CommentContent    sql.NullString
-	CommentCreatedAt  sql.NullTime
-	CommentUserID     uuid.NullUUID
-	CommentUserName   sql.NullString
-	CommentUserAvatar sql.NullString
+type GetAllPostsRow struct {
+	PostID       uuid.UUID
+	UserID       uuid.UUID
+	Title        sql.NullString
+	Content      string
+	Photo        sql.NullString
+	Video        sql.NullString
+	CreatedAt    sql.NullTime
+	UpdatedAt    sql.NullTime
+	UserName     sql.NullString
+	UserAvatar   sql.NullString
+	LikeCount    int64
+	ViewsCount   int64
+	CommentCount int64
+	TotalCount   int64
 }
 
-func (q *Queries) GetAllPostsWithRelations(ctx context.Context, arg GetAllPostsWithRelationsParams) ([]GetAllPostsWithRelationsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getAllPostsWithRelations, arg.Title, arg.Content)
+func (q *Queries) GetAllPosts(ctx context.Context, arg GetAllPostsParams) ([]GetAllPostsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllPosts,
+		arg.Title,
+		arg.Content,
+		arg.OrderBy,
+		arg.Offset,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetAllPostsWithRelationsRow
+	var items []GetAllPostsRow
 	for rows.Next() {
-		var i GetAllPostsWithRelationsRow
+		var i GetAllPostsRow
 		if err := rows.Scan(
 			&i.PostID,
 			&i.UserID,
@@ -450,12 +421,8 @@ func (q *Queries) GetAllPostsWithRelations(ctx context.Context, arg GetAllPostsW
 			&i.UserAvatar,
 			&i.LikeCount,
 			&i.ViewsCount,
-			&i.CommentID,
-			&i.CommentContent,
-			&i.CommentCreatedAt,
-			&i.CommentUserID,
-			&i.CommentUserName,
-			&i.CommentUserAvatar,
+			&i.CommentCount,
+			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}
