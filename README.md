@@ -72,6 +72,10 @@ JWT_SECRET=sua_chave_secreta
 Execute o projeto:
 ```
 go run cmd/main.go
+
+ou
+
+air
 ```
 
 Rodar as migrações (se necessário):
