@@ -34,33 +34,28 @@ func (ph *PostHandler) CreatePostHandler(w http.ResponseWriter, r *http.Request)
 
 	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
 	if !ok || userID == "" {
-		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "")
 		return
 	}
 
 	reader, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Failed to read request body", "")
 		return
 	}
 
 	var postCreate entity.Post
 	err = json.Unmarshal(reader, &postCreate)
 	if err != nil {
-		http.Error(w, "Failed to unmarshal request body", http.StatusBadRequest)
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Failed to unmarshal request body", "")
 		return
 	}
 
 	validate = validator.New()
 	err = validate.Struct(postCreate)
 	if err != nil {
-		errors := err.(validator.ValidationErrors)
-		var validationErrors []string
-		for _, e := range errors {
-			validationErrors = append(validationErrors, fmt.Sprintf("Field '%s' is invalid: %s", e.Field(), e.Tag()))
-		}
-		response, _ := json.Marshal(map[string]interface{}{"errors": validationErrors})
-		http.Error(w, string(response), http.StatusBadRequest)
+		errorMessages := entity.GetValidationPostErrors(err)
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid request body", errorMessages)
 		return
 	}
 
@@ -88,7 +83,7 @@ func (ph *PostHandler) GetPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	post, err := ph.postService.GetPost(postID)
 	if err != nil {
-		http.Error(w, "Failed to get post", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusNotFound, "Post not found", "")
 		return
 	}
 
@@ -103,6 +98,12 @@ func (ph *PostHandler) GetPostHandler(w http.ResponseWriter, r *http.Request) {
 func (ph *PostHandler) GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	defer r.Body.Close()
+
+	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
+	if !ok || userID == "" {
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "")
+		return
+	}
 
 	// Pegar parâmetros da query string
 	title := r.URL.Query().Get("title")
@@ -133,9 +134,9 @@ func (ph *PostHandler) GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 			contentPtr = &content
 	}
 
-	posts, totalCount, err := ph.postService.GetAllPosts(titlePtr, contentPtr, orderBy, limit, offset)
+	posts, totalCount, err := ph.postService.GetAllPosts(titlePtr, contentPtr, orderBy, limit, offset, userID)
 	if err != nil {
-			http.Error(w, "Failed to get top posts", http.StatusInternalServerError)
+			utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to get posts", "")
 			return
 	}
 
@@ -156,14 +157,14 @@ func (ph *PostHandler) GetUserPostsHandler(w http.ResponseWriter, r *http.Reques
 
 	accessToken, ok := r.Context().Value(middlewares.UserIDKey).(string)
 	if !ok || accessToken == "" {
-		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "")
 		return
 	}
 
 	// Extrai o user_id da URL
 	vars := r.PathValue("user_id")
 	if vars == "" {
-		http.Error(w, "User ID is required", http.StatusBadRequest)
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Missing user_id in URL", "")
 		return
 	}
 
@@ -172,7 +173,7 @@ func (ph *PostHandler) GetUserPostsHandler(w http.ResponseWriter, r *http.Reques
 	// Busca as postagens do usuário
 	posts, err := ph.postService.GetAllUserPosts(userID)
 	if err != nil {
-		http.Error(w, "Failed to get user posts", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to get user posts", "")
 		return
 	}
 
@@ -195,20 +196,20 @@ func (ph *PostHandler) UpdatePostHandler(w http.ResponseWriter, r *http.Request)
 
 	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
 	if !ok || userID == "" {
-		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "")
 		return
 	}
 
 	reader, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Failed to read request body", "")
 		return
 	}
 
 	var postUpdate entity.Post
 	err = json.Unmarshal(reader, &postUpdate)
 	if err != nil {
-		http.Error(w, "Failed to unmarshal request body", http.StatusBadRequest)
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Failed to unmarshal request body", "")
 		return
 	}
 
@@ -227,12 +228,12 @@ func (ph *PostHandler) UpdatePostHandler(w http.ResponseWriter, r *http.Request)
 
 	createPost, err := ph.postService.UpdatePost(postID, userID, postUpdate.Title, postUpdate.Content, postUpdate.Photo, postUpdate.Video)
 	if err != nil {
-		http.Error(w, "Failed to create post", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to update post", "")
 		return
 	}
 
 	response := map[string]interface{}{
-		"message": "Post created successfully",
+		"message": "Post updated successfully",
 		"post":    createPost,
 	}
 
@@ -249,13 +250,13 @@ func (ph *PostHandler) DeletePostHandler(w http.ResponseWriter, r *http.Request)
 
 	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
 	if !ok || userID == "" {
-		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "")
 		return
 	}
 
 	err := ph.postService.DeletePost(postID, userID)
 	if err != nil {
-		http.Error(w, "Failed to delete post", http.StatusInternalServerError)
+		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to delete post", "")
 		return
 	}
 

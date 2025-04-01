@@ -337,6 +337,11 @@ SELECT
     COALESCE(l.likes_count, 0) AS like_count,
     COALESCE(v.views_count, 0) AS views_count,
     COALESCE(c.comments_count, 0) AS comment_count,
+    EXISTS (
+        SELECT 1 FROM likes 
+        WHERE likes.post_id = p.post_id 
+        AND likes.user_id = $1
+    ) AS liked_by_user, -- Adiciona se o usuário curtiu
     COUNT(*) OVER() AS total_count
 FROM posts p
 LEFT JOIN users u ON p.user_id = u.user_id
@@ -355,20 +360,21 @@ LEFT JOIN (
     FROM comments 
     GROUP BY post_id
 ) c ON p.post_id = c.post_id
-WHERE (p.title ILIKE '%' || $1 || '%' OR $1 IS NULL)
-AND (p.content ILIKE '%' || $2 || '%' OR $2 IS NULL)
+WHERE (p.title ILIKE '%' || $2 || '%' OR $2 IS NULL)
+AND (p.content ILIKE '%' || $3 || '%' OR $3 IS NULL)
 ORDER BY 
     CASE 
-        WHEN $3 = 'likes' THEN COALESCE(l.likes_count, 0)
-        WHEN $3 = 'comments' THEN COALESCE(c.comments_count, 0)
+        WHEN $4 = 'likes' THEN COALESCE(l.likes_count, 0)
+        WHEN $4 = 'comments' THEN COALESCE(c.comments_count, 0)
         ELSE 0
     END DESC,
     p.created_at DESC
-LIMIT $5
-OFFSET $4
+LIMIT $6
+OFFSET $5
 `
 
 type GetAllPostsParams struct {
+	UserID  uuid.NullUUID
 	Title   sql.NullString
 	Content sql.NullString
 	OrderBy interface{}
@@ -390,11 +396,13 @@ type GetAllPostsRow struct {
 	LikeCount    int64
 	ViewsCount   int64
 	CommentCount int64
+	LikedByUser  bool
 	TotalCount   int64
 }
 
 func (q *Queries) GetAllPosts(ctx context.Context, arg GetAllPostsParams) ([]GetAllPostsRow, error) {
 	rows, err := q.db.QueryContext(ctx, getAllPosts,
+		arg.UserID,
 		arg.Title,
 		arg.Content,
 		arg.OrderBy,
@@ -422,6 +430,7 @@ func (q *Queries) GetAllPosts(ctx context.Context, arg GetAllPostsParams) ([]Get
 			&i.LikeCount,
 			&i.ViewsCount,
 			&i.CommentCount,
+			&i.LikedByUser,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err

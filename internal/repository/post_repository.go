@@ -64,7 +64,7 @@ func (r *PostRepository) GetPost(ctx context.Context, post_id uuid.UUID) (entity
 	return postResponse, err
 }
 
-func (r *PostRepository) GetAllPosts(ctx context.Context, title, content *string, orderBy string, limit, offset int32) ([]entity.Post, int64, error) {
+func (r *PostRepository) GetAllPosts(ctx context.Context, title, content *string, orderBy string, limit, offset int32, user_id string) ([]entity.Post, int64, error) {
 	var titleFilter, contentFilter sql.NullString
 	if title != nil {
 			titleFilter = sql.NullString{String: *title, Valid: true}
@@ -79,6 +79,7 @@ func (r *PostRepository) GetAllPosts(ctx context.Context, title, content *string
 			OrderBy: sql.NullString{String: orderBy, Valid: true},
 			Limit:   sql.NullInt32{Int32: limit, Valid: true},
 			Offset:  sql.NullInt32{Int32: offset, Valid: true},
+			UserID: uuid.NullUUID{UUID: uuid.MustParse(user_id), Valid: true},
 	})
 	if err != nil {
 			log.Printf("%v", err)
@@ -100,6 +101,7 @@ func (r *PostRepository) GetAllPosts(ctx context.Context, title, content *string
 					Video:       post.Video.String,
 					CreatedAt:   post.CreatedAt.Time.UTC().Format(time.RFC3339),
 					UpdatedAt:   post.UpdatedAt.Time.UTC().Format(time.RFC3339),
+					LikedBy:     post.LikedByUser,
 					Like:        int(post.LikeCount),
 					Views:       int(post.ViewsCount),
 					Comments:    []entity.CommentPost{},

@@ -24,4 +24,5 @@ func SetupUserRoutes(r *http.ServeMux, queries *db.Queries) {
 	r.HandleFunc("POST /auth/login", userHandler.LoginUserHandler)
 	r.HandleFunc("GET /auth/google", userHandler.HandleGoogleLogin)
 	r.HandleFunc("GET /auth/google/callback", userHandler.HandleGoogleCallback)
+	r.HandleFunc("GET /auth/verify", middlewares.ProtectedRoutes(userHandler.VerifyTokenInSession))
 }

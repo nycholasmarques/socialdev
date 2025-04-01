@@ -407,3 +407,30 @@ func (h *UserHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Reques
 		"user":  user,
 	})
 }
+
+func (h *UserHandler) VerifyTokenInSession(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(middlewares.UserIDKey).(string)
+	if userID == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	user, err := h.userService.GetUser(userUUID)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+    "message": "Token valid",
+    "user":    user,
+  });
+}

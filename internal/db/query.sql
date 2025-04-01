@@ -96,6 +96,11 @@ SELECT
     COALESCE(l.likes_count, 0) AS like_count,
     COALESCE(v.views_count, 0) AS views_count,
     COALESCE(c.comments_count, 0) AS comment_count,
+    EXISTS (
+        SELECT 1 FROM likes 
+        WHERE likes.post_id = p.post_id 
+        AND likes.user_id = sqlc.narg('user_id')
+    ) AS liked_by_user, -- Adiciona se o usuário curtiu
     COUNT(*) OVER() AS total_count
 FROM posts p
 LEFT JOIN users u ON p.user_id = u.user_id
@@ -125,6 +130,7 @@ ORDER BY
     p.created_at DESC
 LIMIT sqlc.narg('limit')
 OFFSET sqlc.narg('offset');
+
 
 -- name: GetPost :one
 SELECT * FROM posts
