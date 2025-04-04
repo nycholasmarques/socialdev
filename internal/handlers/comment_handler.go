@@ -249,5 +249,5 @@ func (h *CommentHandler) DeleteCommentHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	utils.NewMessageResponse(w, http.StatusOK, "Comment deleted successfully")
+	utils.NewMessageResponse(w, http.StatusOK, "Comment deleted successfully", nil)
 }

@@ -65,7 +65,11 @@ func (h *LikeHandler) CreateLikeHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	utils.NewMessageResponse(w, http.StatusOK, "Like created successfully!")
+	responseData := map[string]interface{}{
+		"liked": true,
+	}
+
+	utils.NewMessageResponse(w, http.StatusOK, "Like created successfully!", responseData)
 }
 
 func (h *LikeHandler) GetLikeHandler(w http.ResponseWriter, r *http.Request) {
@@ -103,7 +107,11 @@ func (h *LikeHandler) GetLikeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.NewMessageResponse(w, http.StatusOK, "Like found successfully!")
+	responseData := map[string]interface{}{
+		"liked": true,
+	}
+
+	utils.NewMessageResponse(w, http.StatusOK, "Like found successfully!", responseData)
 }	
 
 func (h *LikeHandler) DeleteLikeHandler(w http.ResponseWriter, r *http.Request) {
@@ -146,5 +154,9 @@ func (h *LikeHandler) DeleteLikeHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	utils.NewMessageResponse(w, http.StatusOK, "Like deleted successfully")
+	responseData := map[string]interface{}{
+		"liked": false,
+	}
+
+	utils.NewMessageResponse(w, http.StatusOK, "Like deleted successfully", responseData)
 }

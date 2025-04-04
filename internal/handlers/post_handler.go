@@ -260,5 +260,5 @@ func (ph *PostHandler) DeletePostHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	utils.NewMessageResponse(w, http.StatusOK, "Post deleted successfully")
+	utils.NewMessageResponse(w, http.StatusOK, "Post deleted successfully", nil)
 }
