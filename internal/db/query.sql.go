@@ -659,23 +659,88 @@ func (q *Queries) GetLike(ctx context.Context, arg GetLikeParams) (Like, error) 
 }
 
 const getPost = `-- name: GetPost :one
-SELECT post_id, user_id, category_id, title, content, photo, video, created_at, updated_at FROM posts
-WHERE post_id = $1
+SELECT 
+    p.post_id,
+    p.user_id,
+    p.title,
+    p.content,
+    p.photo,
+    p.video,
+    p.created_at,
+    p.updated_at,
+    u.username AS user_name,
+    u.avatar AS user_avatar,
+    COALESCE(l.likes_count, 0) AS like_count,
+    COALESCE(v.views_count, 0) AS views_count,
+    COALESCE(c.comments_count, 0) AS comment_count,
+    EXISTS (
+        SELECT 1 FROM likes 
+        WHERE likes.post_id = p.post_id 
+        AND likes.user_id = $2
+    ) AS liked_by_user, 
+    COUNT(*) OVER() AS total_count
+FROM posts p
+LEFT JOIN users u ON p.user_id = u.user_id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) AS likes_count 
+    FROM likes 
+    GROUP BY post_id
+) l ON p.post_id = l.post_id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) AS views_count 
+    FROM views 
+    GROUP BY post_id
+) v ON p.post_id = v.post_id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) AS comments_count 
+    FROM comments 
+    GROUP BY post_id
+) c ON p.post_id = c.post_id
+WHERE p.post_id = $1
 `
 
-func (q *Queries) GetPost(ctx context.Context, postID uuid.UUID) (Post, error) {
-	row := q.db.QueryRowContext(ctx, getPost, postID)
-	var i Post
+type GetPostParams struct {
+	PostID uuid.UUID
+	UserID uuid.NullUUID
+}
+
+type GetPostRow struct {
+	PostID       uuid.UUID
+	UserID       uuid.UUID
+	Title        sql.NullString
+	Content      string
+	Photo        sql.NullString
+	Video        sql.NullString
+	CreatedAt    sql.NullTime
+	UpdatedAt    sql.NullTime
+	UserName     sql.NullString
+	UserAvatar   sql.NullString
+	LikeCount    int64
+	ViewsCount   int64
+	CommentCount int64
+	LikedByUser  bool
+	TotalCount   int64
+}
+
+func (q *Queries) GetPost(ctx context.Context, arg GetPostParams) (GetPostRow, error) {
+	row := q.db.QueryRowContext(ctx, getPost, arg.PostID, arg.UserID)
+	var i GetPostRow
 	err := row.Scan(
 		&i.PostID,
 		&i.UserID,
-		&i.CategoryID,
 		&i.Title,
 		&i.Content,
 		&i.Photo,
 		&i.Video,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UserName,
+		&i.UserAvatar,
+		&i.LikeCount,
+		&i.ViewsCount,
+		&i.CommentCount,
+		&i.LikedByUser,
+		&i.TotalCount,
 	)
 	return i, err
 }

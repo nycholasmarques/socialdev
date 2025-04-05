@@ -36,7 +36,7 @@ func (p *PostService) CreatePost(user_id, title, content, photo, video string) (
 	return p.postRepo.CreatePost(ctx, params)
 }
 
-func (p *PostService) GetPost(post_id string) (entity.Post, error) {
+func (p *PostService) GetPost(post_id, user_id string) (entity.Post, error) {
 	ctx := context.Background()
 
 	post_id_UUID, err := uuid.Parse(post_id)
@@ -44,7 +44,7 @@ func (p *PostService) GetPost(post_id string) (entity.Post, error) {
 		return entity.Post{}, err
 	}
 
-	return p.postRepo.GetPost(ctx, post_id_UUID)
+	return p.postRepo.GetPost(ctx, post_id_UUID, user_id)
 }
 
 

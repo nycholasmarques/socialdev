@@ -78,16 +78,23 @@ func (ph *PostHandler) GetPostHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	defer r.Body.Close()
 
+	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
+	if !ok || userID == "" {
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "")
+		return
+	}
+
 	id := r.URL.Path
 	postID := strings.TrimPrefix(id, "/posts/")
 
-	post, err := ph.postService.GetPost(postID)
+	post, err := ph.postService.GetPost(postID, userID)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusNotFound, "Post not found", "")
 		return
 	}
 
 	response := map[string]interface{}{
+		"user_id": userID,
 		"post": post,
 	}
 

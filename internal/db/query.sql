@@ -133,8 +133,44 @@ OFFSET sqlc.narg('offset');
 
 
 -- name: GetPost :one
-SELECT * FROM posts
-WHERE post_id = $1;
+SELECT 
+    p.post_id,
+    p.user_id,
+    p.title,
+    p.content,
+    p.photo,
+    p.video,
+    p.created_at,
+    p.updated_at,
+    u.username AS user_name,
+    u.avatar AS user_avatar,
+    COALESCE(l.likes_count, 0) AS like_count,
+    COALESCE(v.views_count, 0) AS views_count,
+    COALESCE(c.comments_count, 0) AS comment_count,
+    EXISTS (
+        SELECT 1 FROM likes 
+        WHERE likes.post_id = p.post_id 
+        AND likes.user_id = sqlc.narg('user_id')
+    ) AS liked_by_user, 
+    COUNT(*) OVER() AS total_count
+FROM posts p
+LEFT JOIN users u ON p.user_id = u.user_id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) AS likes_count 
+    FROM likes 
+    GROUP BY post_id
+) l ON p.post_id = l.post_id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) AS views_count 
+    FROM views 
+    GROUP BY post_id
+) v ON p.post_id = v.post_id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) AS comments_count 
+    FROM comments 
+    GROUP BY post_id
+) c ON p.post_id = c.post_id
+WHERE p.post_id = $1;
 
 -- name: CreatePost :one
 INSERT INTO posts (
