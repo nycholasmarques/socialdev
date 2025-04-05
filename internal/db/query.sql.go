@@ -287,27 +287,50 @@ func (q *Queries) DeleteUserWithRoles(ctx context.Context, arg DeleteUserWithRol
 }
 
 const getAllComments = `-- name: GetAllComments :many
-SELECT comment_id, user_id, post_id, content, visible, created_at, updated_at FROM comments
-WHERE post_id = $1
+SELECT 
+    c.comment_id,
+    c.user_id,
+    c.post_id,
+    c.content,
+    c.created_at,
+    c.updated_at,
+    u.username,
+    u.avatar
+FROM comments c
+JOIN users u ON c.user_id = u.user_id
+WHERE c.post_id = $1
+ORDER BY c.created_at DESC
 `
 
-func (q *Queries) GetAllComments(ctx context.Context, postID uuid.UUID) ([]Comment, error) {
+type GetAllCommentsRow struct {
+	CommentID uuid.UUID
+	UserID    uuid.UUID
+	PostID    uuid.UUID
+	Content   string
+	CreatedAt sql.NullTime
+	UpdatedAt sql.NullTime
+	Username  string
+	Avatar    sql.NullString
+}
+
+func (q *Queries) GetAllComments(ctx context.Context, postID uuid.UUID) ([]GetAllCommentsRow, error) {
 	rows, err := q.db.QueryContext(ctx, getAllComments, postID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Comment
+	var items []GetAllCommentsRow
 	for rows.Next() {
-		var i Comment
+		var i GetAllCommentsRow
 		if err := rows.Scan(
 			&i.CommentID,
 			&i.UserID,
 			&i.PostID,
 			&i.Content,
-			&i.Visible,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Username,
+			&i.Avatar,
 		); err != nil {
 			return nil, err
 		}
@@ -616,21 +639,43 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 }
 
 const getComment = `-- name: GetComment :one
-SELECT comment_id, user_id, post_id, content, visible, created_at, updated_at FROM comments
-WHERE comment_id = $1
+SELECT 
+    c.comment_id,
+    c.user_id,
+    c.post_id,
+    c.content,
+    c.created_at,
+    c.updated_at,
+    u.username,
+    u.avatar
+FROM comments c
+JOIN users u ON c.user_id = u.user_id
+WHERE c.comment_id = $1
 `
 
-func (q *Queries) GetComment(ctx context.Context, commentID uuid.UUID) (Comment, error) {
+type GetCommentRow struct {
+	CommentID uuid.UUID
+	UserID    uuid.UUID
+	PostID    uuid.UUID
+	Content   string
+	CreatedAt sql.NullTime
+	UpdatedAt sql.NullTime
+	Username  string
+	Avatar    sql.NullString
+}
+
+func (q *Queries) GetComment(ctx context.Context, commentID uuid.UUID) (GetCommentRow, error) {
 	row := q.db.QueryRowContext(ctx, getComment, commentID)
-	var i Comment
+	var i GetCommentRow
 	err := row.Scan(
 		&i.CommentID,
 		&i.UserID,
 		&i.PostID,
 		&i.Content,
-		&i.Visible,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Username,
+		&i.Avatar,
 	)
 	return i, err
 }

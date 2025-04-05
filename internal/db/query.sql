@@ -234,12 +234,33 @@ WHERE user_id = $1 AND
 post_id = $2;
 
 -- name: GetAllComments :many
-SELECT * FROM comments
-WHERE post_id = $1;
+SELECT 
+    c.comment_id,
+    c.user_id,
+    c.post_id,
+    c.content,
+    c.created_at,
+    c.updated_at,
+    u.username,
+    u.avatar
+FROM comments c
+JOIN users u ON c.user_id = u.user_id
+WHERE c.post_id = $1
+ORDER BY c.created_at DESC;
 
 -- name: GetComment :one
-SELECT * FROM comments
-WHERE comment_id = $1;
+SELECT 
+    c.comment_id,
+    c.user_id,
+    c.post_id,
+    c.content,
+    c.created_at,
+    c.updated_at,
+    u.username,
+    u.avatar
+FROM comments c
+JOIN users u ON c.user_id = u.user_id
+WHERE c.comment_id = $1;
 
 -- name: CreateComment :one
 INSERT INTO comments (

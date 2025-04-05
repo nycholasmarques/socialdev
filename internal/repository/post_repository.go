@@ -62,8 +62,8 @@ func (r *PostRepository) GetPost(ctx context.Context, post_id uuid.UUID, user_id
 	postResponse.Photo = post.Photo.String
 	postResponse.Video = post.Video.String
 	postResponse.LikedBy = post.LikedByUser
-	postResponse.CreatedAt = post.CreatedAt.Time.String()
-	postResponse.UpdatedAt = post.UpdatedAt.Time.String()
+	postResponse.CreatedAt = post.CreatedAt.Time.UTC().Format(time.RFC3339)
+	postResponse.UpdatedAt = post.UpdatedAt.Time.UTC().Format(time.RFC3339)
 	postResponse.Like = int(post.LikeCount)
 	postResponse.Comments = []entity.CommentPost{}
 	postResponse.Views = int(post.ViewsCount)

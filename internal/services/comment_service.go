@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
+	"github.com/nycholasmarques/socialdev/internal/entity"
 	"github.com/nycholasmarques/socialdev/internal/repository"
 )
 
@@ -29,7 +30,7 @@ func (s *CommentService) CreateComment(userID uuid.UUID, postID uuid.UUID, conte
 	return s.commentRepo.CreateComment(ctx, params)
 }
 
-func (s *CommentService) GetComment(commentID uuid.UUID) (db.Comment, error) {
+func (s *CommentService) GetComment(commentID uuid.UUID) (entity.Comment, error) {
 	ctx := context.Background()
 	return s.commentRepo.GetComment(ctx, commentID)
 }
@@ -50,7 +51,7 @@ func (s *CommentService) DeleteComment(userID, commentID uuid.UUID) error {
 	return s.commentRepo.DeleteComment(ctx, params)
 }
 
-func (s *CommentService) GetAllComments(post_id uuid.UUID) ([]db.Comment, error) {
+func (s *CommentService) GetAllComments(post_id uuid.UUID) ([]entity.Comment, error) {
 	ctx := context.Background()
 	return s.commentRepo.GetAllComments(ctx, post_id)
 }
