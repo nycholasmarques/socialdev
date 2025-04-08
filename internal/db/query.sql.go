@@ -299,7 +299,7 @@ SELECT
 FROM comments c
 JOIN users u ON c.user_id = u.user_id
 WHERE c.post_id = $1
-ORDER BY c.created_at DESC
+ORDER BY c.created_at ASC
 `
 
 type GetAllCommentsRow struct {

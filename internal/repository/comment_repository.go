@@ -87,6 +87,7 @@ func (r *CommentRepository) GetAllComments(ctx context.Context, post_id uuid.UUI
 					PostID:    row.PostID,
 					Content:   row.Content,
 					CreatedAt: row.CreatedAt.Time.UTC().Format(time.RFC3339),
+					UpdatedAt: row.UpdatedAt.Time.UTC().Format(time.RFC3339),
 					User: entity.User{
 							UserID:   row.UserID,
 							Username: row.Username,

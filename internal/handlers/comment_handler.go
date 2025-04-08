@@ -154,6 +154,7 @@ func (h *CommentHandler) GetAllCommentsHandler(w http.ResponseWriter, r *http.Re
 					"post_id":    comment.PostID,
 					"content":    comment.Content,
 					"created_at": comment.CreatedAt,
+					"updated_at": comment.UpdatedAt,
 					"user": map[string]interface{}{
 							"user_id":   comment.User.UserID,
 							"username":  comment.User.Username,

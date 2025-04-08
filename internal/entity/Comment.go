@@ -12,6 +12,7 @@ type Comment struct {
 	PostID    uuid.UUID `json:"post_id"`
 	Content   string    `json:"content" validate:"required"`
 	CreatedAt string    `json:"created_at"`
+	UpdatedAt string    `json:"updated_at"`
 	User      User      `json:"user"`
 }
 
