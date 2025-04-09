@@ -559,45 +559,43 @@ SELECT
     u.avatar AS user_avatar,
     COALESCE(l.likes_count, 0) AS like_count,
     COALESCE(v.views_count, 0) AS views_count,
-    c.comment_id,
-    c.content AS comment_content,
-    c.created_at AS comment_created_at,
-    cu.user_id AS comment_user_id,
-    cu.username AS comment_user_name,
-    cu.avatar AS comment_user_avatar
+    COALESCE(c.comments_count, 0) AS comment_count
 FROM posts p
 LEFT JOIN users u ON p.user_id = u.user_id
 LEFT JOIN (
-    SELECT post_id, COUNT(*) AS likes_count FROM likes GROUP BY post_id
+    SELECT post_id, COUNT(*) AS likes_count 
+    FROM likes 
+    GROUP BY post_id
 ) l ON p.post_id = l.post_id
 LEFT JOIN (
-    SELECT post_id, COUNT(*) AS views_count FROM views GROUP BY post_id
+    SELECT post_id, COUNT(*) AS views_count 
+    FROM views 
+    GROUP BY post_id
 ) v ON p.post_id = v.post_id
-LEFT JOIN comments c ON c.post_id = p.post_id
-LEFT JOIN users cu ON c.user_id = cu.user_id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) AS comments_count 
+    FROM comments 
+    WHERE visible = TRUE
+    GROUP BY post_id
+) c ON p.post_id = c.post_id
 WHERE p.user_id = $1
 ORDER BY p.created_at DESC
 `
 
 type GetAllUserPostsRow struct {
-	PostID            uuid.UUID
-	UserID            uuid.UUID
-	Title             sql.NullString
-	Content           string
-	Photo             sql.NullString
-	Video             sql.NullString
-	CreatedAt         sql.NullTime
-	UpdatedAt         sql.NullTime
-	UserName          sql.NullString
-	UserAvatar        sql.NullString
-	LikeCount         int64
-	ViewsCount        int64
-	CommentID         uuid.NullUUID
-	CommentContent    sql.NullString
-	CommentCreatedAt  sql.NullTime
-	CommentUserID     uuid.NullUUID
-	CommentUserName   sql.NullString
-	CommentUserAvatar sql.NullString
+	PostID       uuid.UUID
+	UserID       uuid.UUID
+	Title        sql.NullString
+	Content      string
+	Photo        sql.NullString
+	Video        sql.NullString
+	CreatedAt    sql.NullTime
+	UpdatedAt    sql.NullTime
+	UserName     sql.NullString
+	UserAvatar   sql.NullString
+	LikeCount    int64
+	ViewsCount   int64
+	CommentCount int64
 }
 
 func (q *Queries) GetAllUserPosts(ctx context.Context, userID uuid.UUID) ([]GetAllUserPostsRow, error) {
@@ -622,12 +620,7 @@ func (q *Queries) GetAllUserPosts(ctx context.Context, userID uuid.UUID) ([]GetA
 			&i.UserAvatar,
 			&i.LikeCount,
 			&i.ViewsCount,
-			&i.CommentID,
-			&i.CommentContent,
-			&i.CommentCreatedAt,
-			&i.CommentUserID,
-			&i.CommentUserName,
-			&i.CommentUserAvatar,
+			&i.CommentCount,
 		); err != nil {
 			return nil, err
 		}
