@@ -1,5 +1,9 @@
 -- name: GetAllUsers :many
-SELECT * FROM users;
+SELECT * FROM users
+WHERE (username ILIKE '%' || sqlc.narg('username') || '%' OR sqlc.narg('username') IS NULL)
+ORDER BY created_at DESC
+LIMIT sqlc.narg('limit')
+OFFSET sqlc.narg('offset');
 
 -- name: GetUser :one
 SELECT * FROM users

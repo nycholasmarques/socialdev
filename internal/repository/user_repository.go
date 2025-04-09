@@ -50,8 +50,8 @@ func (r *UserRepository) GetUser(ctx context.Context, user_id uuid.UUID) (db.Use
 	return user, err
 }
 
-func (r *UserRepository) GetAllUsers(ctx context.Context) ([]db.User, error) {
-	allUsers, err := r.queries.GetAllUsers(ctx)
+func (r *UserRepository) GetAllUsers(ctx context.Context, params db.GetAllUsersParams) ([]db.User, error) {
+	allUsers, err := r.queries.GetAllUsers(ctx, params)
 	if err != nil {
 		log.Printf("%v", err)
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -132,8 +133,33 @@ func (h *UserHandler) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	defer r.Body.Close()
 
-	users, err := h.userService.GetAllUsers()
+	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
+	if !ok || userID == "" {
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "")
+		return
+	}
+
+	username := r.URL.Query().Get("username")
+	limitStr := r.URL.Query().Get("limit")
+	offsetStr := r.URL.Query().Get("offset")
+	
+	limit := int32(10) 
+	offset := int32(0)  
+	if limitStr != "" {
+			if l, err := strconv.ParseInt(limitStr, 10, 32); err == nil {
+					limit = int32(l)
+			}
+	}
+	if offsetStr != "" {
+			if o, err := strconv.ParseInt(offsetStr, 10, 32); err == nil {
+					offset = int32(o)
+			}
+	}
+
+	users, err := h.userService.GetAllUsers(username, limit, offset)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to get users", err.Error())
 		return

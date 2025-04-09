@@ -151,14 +151,22 @@ func (s *UserService) GetUser(user_id uuid.UUID) (entity.UserResponse, error) {
 	return entityUser, nil
 }
 
-func (s *UserService) GetAllUsers() ([]entity.UserResponse, error) {
+func (s *UserService) GetAllUsers(username string, limit, offset int32) ([]entity.UserResponseSafe, error) {
 	ctx := context.Background()
-	users, err := s.userRepo.GetAllUsers(ctx)
 
-	var usersResponse []entity.UserResponse
+	params := db.GetAllUsersParams{
+		Username: sql.NullString{String: username, Valid: username != ""},
+		Limit:   sql.NullInt32{Int32: limit, Valid: true},
+		Offset:  sql.NullInt32{Int32: offset, Valid: true},
+	}
+
+	users, err := s.userRepo.GetAllUsers(ctx, params)
+
+
+	var usersResponse []entity.UserResponseSafe
 
 	for _, user := range users {
-		var userResponse entity.UserResponse
+		var userResponse entity.UserResponseSafe
 
 		userResponse.UserID = user.UserID.String()
 		userResponse.Username = user.Username

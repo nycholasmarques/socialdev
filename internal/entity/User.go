@@ -21,6 +21,21 @@ type UserResponse struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
+type UserResponseSafe struct {
+	UserID    string `json:"user_id"`
+	GoogleID  string `json:"-"`
+	Username  string `json:"username" validate:"required,min=3,max=30"`
+	Password  string `json:"-" validate:"required,min=6,max=12"`
+	Email     string `json:"-" validate:"required,email"`
+	Avatar    string `json:"avatar"`
+	Bio       string `json:"bio"`
+	Github    string `json:"-"`
+	Linkedin  string `json:"-"`
+	Website   string `json:"-"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
 type UpdateUserRequest struct {
 	Username *string `json:"username" validate:"omitempty,min=3,max=30"`
 	Password *string `json:"password" validate:"omitempty,min=6,max=12"`

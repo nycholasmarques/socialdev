@@ -600,10 +600,20 @@ func (q *Queries) GetAllUserPosts(ctx context.Context, userID uuid.UUID) ([]GetA
 
 const getAllUsers = `-- name: GetAllUsers :many
 SELECT user_id, google_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
+WHERE (username ILIKE '%' || $1 || '%' OR $1 IS NULL)
+ORDER BY created_at DESC
+LIMIT $3
+OFFSET $2
 `
 
-func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
-	rows, err := q.db.QueryContext(ctx, getAllUsers)
+type GetAllUsersParams struct {
+	Username sql.NullString
+	Offset   sql.NullInt32
+	Limit    sql.NullInt32
+}
+
+func (q *Queries) GetAllUsers(ctx context.Context, arg GetAllUsersParams) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, getAllUsers, arg.Username, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
