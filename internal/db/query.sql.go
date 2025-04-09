@@ -12,6 +12,49 @@ import (
 	"github.com/google/uuid"
 )
 
+const addFavorite = `-- name: AddFavorite :one
+INSERT INTO favorites (user_id, post_id)
+VALUES ($1, $2)
+RETURNING user_id, post_id, created_at, updated_at
+`
+
+type AddFavoriteParams struct {
+	UserID uuid.UUID
+	PostID uuid.UUID
+}
+
+func (q *Queries) AddFavorite(ctx context.Context, arg AddFavoriteParams) (Favorite, error) {
+	row := q.db.QueryRowContext(ctx, addFavorite, arg.UserID, arg.PostID)
+	var i Favorite
+	err := row.Scan(
+		&i.UserID,
+		&i.PostID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const checkFavoriteExists = `-- name: CheckFavoriteExists :one
+SELECT EXISTS (
+    SELECT 1 
+    FROM favorites 
+    WHERE user_id = $1 AND post_id = $2
+) AS exists
+`
+
+type CheckFavoriteExistsParams struct {
+	UserID uuid.UUID
+	PostID uuid.UUID
+}
+
+func (q *Queries) CheckFavoriteExists(ctx context.Context, arg CheckFavoriteExistsParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, checkFavoriteExists, arg.UserID, arg.PostID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const createComment = `-- name: CreateComment :one
 INSERT INTO comments (
   comment_id, user_id, post_id, content
@@ -900,6 +943,114 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	return i, err
 }
 
+const getUserFavorites = `-- name: GetUserFavorites :many
+SELECT 
+    p.post_id,
+    p.user_id,
+    p.title,
+    p.content,
+    p.photo,
+    p.video,
+    p.created_at AS post_created_at,
+    p.updated_at,
+    f.created_at AS favorite_created_at,
+    u.username AS user_name,
+    u.avatar AS user_avatar,
+    COALESCE(l.likes_count, 0) AS like_count,
+    COALESCE(v.views_count, 0) AS views_count,
+    COALESCE(c.comments_count, 0) AS comment_count,
+    EXISTS (
+        SELECT 1 FROM likes 
+        WHERE likes.post_id = p.post_id 
+        AND likes.user_id = f.user_id
+    ) AS liked_by_user
+FROM favorites f
+JOIN posts p ON f.post_id = p.post_id
+JOIN users u ON p.user_id = u.user_id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) AS likes_count 
+    FROM likes 
+    GROUP BY post_id
+) l ON p.post_id = l.post_id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) AS views_count 
+    FROM views 
+    GROUP BY post_id
+) v ON p.post_id = v.post_id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) AS comments_count 
+    FROM comments 
+    GROUP BY post_id
+) c ON p.post_id = c.post_id
+WHERE f.user_id = $1
+ORDER BY f.created_at DESC
+LIMIT $2
+OFFSET $3
+`
+
+type GetUserFavoritesParams struct {
+	UserID uuid.UUID
+	Limit  int32
+	Offset int32
+}
+
+type GetUserFavoritesRow struct {
+	PostID            uuid.UUID
+	UserID            uuid.UUID
+	Title             sql.NullString
+	Content           string
+	Photo             sql.NullString
+	Video             sql.NullString
+	PostCreatedAt     sql.NullTime
+	UpdatedAt         sql.NullTime
+	FavoriteCreatedAt sql.NullTime
+	UserName          string
+	UserAvatar        sql.NullString
+	LikeCount         int64
+	ViewsCount        int64
+	CommentCount      int64
+	LikedByUser       bool
+}
+
+func (q *Queries) GetUserFavorites(ctx context.Context, arg GetUserFavoritesParams) ([]GetUserFavoritesRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserFavorites, arg.UserID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUserFavoritesRow
+	for rows.Next() {
+		var i GetUserFavoritesRow
+		if err := rows.Scan(
+			&i.PostID,
+			&i.UserID,
+			&i.Title,
+			&i.Content,
+			&i.Photo,
+			&i.Video,
+			&i.PostCreatedAt,
+			&i.UpdatedAt,
+			&i.FavoriteCreatedAt,
+			&i.UserName,
+			&i.UserAvatar,
+			&i.LikeCount,
+			&i.ViewsCount,
+			&i.CommentCount,
+			&i.LikedByUser,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserPost = `-- name: GetUserPost :one
 SELECT post_id, user_id, category_id, title, content, photo, video, created_at, updated_at FROM posts
 WHERE user_id = $1 AND
@@ -959,6 +1110,21 @@ func (q *Queries) GetUserWithUsername(ctx context.Context, username string) ([]G
 		return nil, err
 	}
 	return items, nil
+}
+
+const removeFavorite = `-- name: RemoveFavorite :exec
+DELETE FROM favorites
+WHERE user_id = $1 AND post_id = $2
+`
+
+type RemoveFavoriteParams struct {
+	UserID uuid.UUID
+	PostID uuid.UUID
+}
+
+func (q *Queries) RemoveFavorite(ctx context.Context, arg RemoveFavoriteParams) error {
+	_, err := q.db.ExecContext(ctx, removeFavorite, arg.UserID, arg.PostID)
+	return err
 }
 
 const updateComment = `-- name: UpdateComment :one

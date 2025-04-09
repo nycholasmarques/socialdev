@@ -305,3 +305,63 @@ post_id = $2;
 SELECT * FROM likes
 WHERE user_id = $1 AND
 post_id = $2;
+
+-- name: AddFavorite :one
+INSERT INTO favorites (user_id, post_id)
+VALUES ($1, $2)
+RETURNING *;
+
+-- name: RemoveFavorite :exec
+DELETE FROM favorites
+WHERE user_id = $1 AND post_id = $2;
+
+-- name: GetUserFavorites :many
+SELECT 
+    p.post_id,
+    p.user_id,
+    p.title,
+    p.content,
+    p.photo,
+    p.video,
+    p.created_at AS post_created_at,
+    p.updated_at,
+    f.created_at AS favorite_created_at,
+    u.username AS user_name,
+    u.avatar AS user_avatar,
+    COALESCE(l.likes_count, 0) AS like_count,
+    COALESCE(v.views_count, 0) AS views_count,
+    COALESCE(c.comments_count, 0) AS comment_count,
+    EXISTS (
+        SELECT 1 FROM likes 
+        WHERE likes.post_id = p.post_id 
+        AND likes.user_id = f.user_id
+    ) AS liked_by_user
+FROM favorites f
+JOIN posts p ON f.post_id = p.post_id
+JOIN users u ON p.user_id = u.user_id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) AS likes_count 
+    FROM likes 
+    GROUP BY post_id
+) l ON p.post_id = l.post_id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) AS views_count 
+    FROM views 
+    GROUP BY post_id
+) v ON p.post_id = v.post_id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) AS comments_count 
+    FROM comments 
+    GROUP BY post_id
+) c ON p.post_id = c.post_id
+WHERE f.user_id = $1
+ORDER BY f.created_at DESC
+LIMIT $2
+OFFSET $3;
+
+-- name: CheckFavoriteExists :one
+SELECT EXISTS (
+    SELECT 1 
+    FROM favorites 
+    WHERE user_id = $1 AND post_id = $2
+) AS exists;

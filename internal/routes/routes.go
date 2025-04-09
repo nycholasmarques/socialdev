@@ -9,15 +9,14 @@ import (
 func SetupRoutes(queries *db.Queries) *http.ServeMux {
 	r := http.NewServeMux()
 
-	// Criar um grupo de rotas com o prefixo /api
 	apiRouter := http.NewServeMux()
 	SetupAPIRoutes(apiRouter, queries)
 	SetupRoleRoutes(apiRouter, queries)
 	SetupPostRoutes(apiRouter, queries)
 	SetupLikeRoutes(apiRouter, queries)
 	SetupCommentRoutes(apiRouter, queries)
+	SetupFavoriteRoutes(apiRouter, queries)
 
-	// Registrar o grupo de rotas /api no ServeMux principal
 	r.Handle("/api/", http.StripPrefix("/api", apiRouter))
 
 	return r
