@@ -112,7 +112,7 @@ func (h *LikeHandler) GetLikeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.NewMessageResponse(w, http.StatusOK, "Like found successfully!", responseData)
-}	
+}
 
 func (h *LikeHandler) DeleteLikeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")

@@ -145,18 +145,18 @@ func (h *UserHandler) GetAllUsersHandler(w http.ResponseWriter, r *http.Request)
 	username := r.URL.Query().Get("username")
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
-	
-	limit := int32(10) 
-	offset := int32(0)  
+
+	limit := int32(10)
+	offset := int32(0)
 	if limitStr != "" {
-			if l, err := strconv.ParseInt(limitStr, 10, 32); err == nil {
-					limit = int32(l)
-			}
+		if l, err := strconv.ParseInt(limitStr, 10, 32); err == nil {
+			limit = int32(l)
+		}
 	}
 	if offsetStr != "" {
-			if o, err := strconv.ParseInt(offsetStr, 10, 32); err == nil {
-					offset = int32(o)
-			}
+		if o, err := strconv.ParseInt(offsetStr, 10, 32); err == nil {
+			offset = int32(o)
+		}
 	}
 
 	users, err := h.userService.GetAllUsers(username, limit, offset)
@@ -453,10 +453,9 @@ func (h *UserHandler) VerifyTokenInSession(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
-    "message": "Token valid",
-    "user":    user,
-  });
+		"message": "Token valid",
+		"user":    user,
+	})
 }

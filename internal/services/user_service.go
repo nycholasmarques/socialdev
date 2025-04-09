@@ -156,12 +156,11 @@ func (s *UserService) GetAllUsers(username string, limit, offset int32) ([]entit
 
 	params := db.GetAllUsersParams{
 		Username: sql.NullString{String: username, Valid: username != ""},
-		Limit:   sql.NullInt32{Int32: limit, Valid: true},
-		Offset:  sql.NullInt32{Int32: offset, Valid: true},
+		Limit:    sql.NullInt32{Int32: limit, Valid: true},
+		Offset:   sql.NullInt32{Int32: offset, Valid: true},
 	}
 
 	users, err := s.userRepo.GetAllUsers(ctx, params)
-
 
 	var usersResponse []entity.UserResponseSafe
 

@@ -82,40 +82,40 @@ func (s *favoriteService) GetUserFavorites(userID string, limit, offset int32) (
 
 	userIDUUID, err := uuid.Parse(userID)
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 
 	params := db.GetUserFavoritesParams{
-			UserID: userIDUUID,
-			Limit:  limit,
-			Offset: offset,
+		UserID: userIDUUID,
+		Limit:  limit,
+		Offset: offset,
 	}
 
 	favorites, err := s.favoriteRepo.GetUserFavorites(ctx, params)
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 
 	var favoritesResponse []entity.FavoriteResponse
 	for _, fav := range favorites {
-			favResponse := entity.FavoriteResponse{
-					PostID:            fav.PostID.String(),
-					UserID:            fav.UserID.String(),
-					Title:             fav.Title.String,
-					Content:           fav.Content,
-					Photo:             fav.Photo.String,
-					Video:             fav.Video.String,
-					PostCreatedAt:     fav.PostCreatedAt.Time.UTC().Format(time.RFC3339),
-					UpdatedAt:         fav.UpdatedAt.Time.UTC().Format(time.RFC3339),
-					FavoriteCreatedAt: fav.FavoriteCreatedAt.Time.UTC().Format(time.RFC3339),
-					UserName:          fav.UserName,
-					UserAvatar:        fav.UserAvatar.String,
-					LikeCount:         fav.LikeCount,
-					ViewsCount:        fav.ViewsCount,
-					CommentCount:      fav.CommentCount,
-					LikedByUser:       fav.LikedByUser,
-			}
-			favoritesResponse = append(favoritesResponse, favResponse)
+		favResponse := entity.FavoriteResponse{
+			PostID:            fav.PostID.String(),
+			UserID:            fav.UserID.String(),
+			Title:             fav.Title.String,
+			Content:           fav.Content,
+			Photo:             fav.Photo.String,
+			Video:             fav.Video.String,
+			PostCreatedAt:     fav.PostCreatedAt.Time.UTC().Format(time.RFC3339),
+			UpdatedAt:         fav.UpdatedAt.Time.UTC().Format(time.RFC3339),
+			FavoriteCreatedAt: fav.FavoriteCreatedAt.Time.UTC().Format(time.RFC3339),
+			UserName:          fav.UserName,
+			UserAvatar:        fav.UserAvatar.String,
+			LikeCount:         fav.LikeCount,
+			ViewsCount:        fav.ViewsCount,
+			CommentCount:      fav.CommentCount,
+			LikedByUser:       fav.LikedByUser,
+		}
+		favoritesResponse = append(favoritesResponse, favResponse)
 	}
 
 	return favoritesResponse, nil

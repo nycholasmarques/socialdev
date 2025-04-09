@@ -95,7 +95,7 @@ func (ph *PostHandler) GetPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	response := map[string]interface{}{
 		"user_id": userID,
-		"post": post,
+		"post":    post,
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -118,40 +118,40 @@ func (ph *PostHandler) GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 	orderBy := r.URL.Query().Get("order_by") // "likes" ou "comments"
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
-	
+
 	// Definir valores padrão
-	limit := int32(10)  // default limit
-	offset := int32(0)  // default offset
+	limit := int32(10) // default limit
+	offset := int32(0) // default offset
 	if limitStr != "" {
-			if l, err := strconv.ParseInt(limitStr, 10, 32); err == nil {
-					limit = int32(l)
-			}
+		if l, err := strconv.ParseInt(limitStr, 10, 32); err == nil {
+			limit = int32(l)
+		}
 	}
 	if offsetStr != "" {
-			if o, err := strconv.ParseInt(offsetStr, 10, 32); err == nil {
-					offset = int32(o)
-			}
+		if o, err := strconv.ParseInt(offsetStr, 10, 32); err == nil {
+			offset = int32(o)
+		}
 	}
 
 	var titlePtr, contentPtr *string
 	if title != "" {
-			titlePtr = &title
+		titlePtr = &title
 	}
 	if content != "" {
-			contentPtr = &content
+		contentPtr = &content
 	}
 
 	posts, totalCount, err := ph.postService.GetAllPosts(titlePtr, contentPtr, orderBy, limit, offset, userID)
 	if err != nil {
-			utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to get posts", "")
-			return
+		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to get posts", "")
+		return
 	}
 
 	response := entity.Response{
-			Posts:  posts,
-			Limit:  limit,
-			Offset: offset,
-			Total:  totalCount,
+		Posts:  posts,
+		Limit:  limit,
+		Offset: offset,
+		Total:  totalCount,
 	}
 
 	w.WriteHeader(http.StatusOK)

@@ -11,7 +11,7 @@ type FavoriteRepository interface {
 	AddFavorite(ctx context.Context, params db.AddFavoriteParams) (db.Favorite, error)
 	RemoveFavorite(ctx context.Context, params db.RemoveFavoriteParams) error
 	GetUserFavorites(ctx context.Context, params db.GetUserFavoritesParams) ([]db.GetUserFavoritesRow, error)
-    CheckFavoriteExists(ctx context.Context, params db.CheckFavoriteExistsParams) (bool, error)
+	CheckFavoriteExists(ctx context.Context, params db.CheckFavoriteExistsParams) (bool, error)
 }
 
 type favoriteRepository struct {
@@ -49,10 +49,10 @@ func (r *favoriteRepository) GetUserFavorites(ctx context.Context, params db.Get
 }
 
 func (r *favoriteRepository) CheckFavoriteExists(ctx context.Context, params db.CheckFavoriteExistsParams) (bool, error) {
-    exists, err := r.queries.CheckFavoriteExists(ctx, params)
-    if err != nil {
-        log.Printf("Erro ao verificar favorito existente: %v", err)
-        return false, err
-    }
-    return exists, nil
+	exists, err := r.queries.CheckFavoriteExists(ctx, params)
+	if err != nil {
+		log.Printf("Erro ao verificar favorito existente: %v", err)
+		return false, err
+	}
+	return exists, nil
 }
