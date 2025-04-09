@@ -407,7 +407,7 @@ SELECT
         SELECT 1 FROM likes 
         WHERE likes.post_id = p.post_id 
         AND likes.user_id = $1
-    ) AS liked_by_user, -- Adiciona se o usuário curtiu
+    ) AS liked_by_user,
     COUNT(*) OVER() AS total_count
 FROM posts p
 LEFT JOIN users u ON p.user_id = u.user_id
@@ -422,8 +422,9 @@ LEFT JOIN (
     GROUP BY post_id
 ) v ON p.post_id = v.post_id
 LEFT JOIN (
-    SELECT post_id, COUNT(*) AS comments_count 
+    SELECT post_id::uuid, COUNT(*) AS comments_count 
     FROM comments 
+    WHERE visible = TRUE
     GROUP BY post_id
 ) c ON p.post_id = c.post_id
 WHERE (p.title ILIKE '%' || $2 || '%' OR $2 IS NULL)

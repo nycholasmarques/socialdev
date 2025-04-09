@@ -116,7 +116,7 @@ func (r *PostRepository) GetAllPosts(ctx context.Context, title, content *string
 			LikedBy:   post.LikedByUser,
 			Like:      int(post.LikeCount),
 			Views:     int(post.ViewsCount),
-			Comments:  []entity.CommentPost{},
+			CommentsCount:  int(post.CommentCount),
 			User: entity.UserPost{
 				UserID:   post.UserID.String(),
 				Username: post.UserName.String,
