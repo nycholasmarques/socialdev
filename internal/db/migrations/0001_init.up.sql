@@ -164,6 +164,8 @@ CREATE TABLE themes (
 CREATE TABLE user_themes (
   user_id UUID NOT NULL,
   theme_id UUID NOT NULL,
+  active BOOLEAN DEFAULT FALSE,
+  expires_in TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, theme_id),
   CONSTRAINT fk_user_themes_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,

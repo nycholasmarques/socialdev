@@ -38,22 +38,35 @@ func (q *Queries) AddFavorite(ctx context.Context, arg AddFavoriteParams) (Favor
 
 const addUserTheme = `-- name: AddUserTheme :one
 INSERT INTO user_themes (
-  user_id, theme_id
+  user_id, theme_id, active, expires_in
 ) VALUES (
-  $1, $2
+  $1, $2, $3, $4
 )
-RETURNING user_id, theme_id, created_at
+RETURNING user_id, theme_id, active, expires_in, created_at
 `
 
 type AddUserThemeParams struct {
-	UserID  uuid.UUID
-	ThemeID uuid.UUID
+	UserID    uuid.UUID
+	ThemeID   uuid.UUID
+	Active    sql.NullBool
+	ExpiresIn sql.NullTime
 }
 
 func (q *Queries) AddUserTheme(ctx context.Context, arg AddUserThemeParams) (UserTheme, error) {
-	row := q.db.QueryRowContext(ctx, addUserTheme, arg.UserID, arg.ThemeID)
+	row := q.db.QueryRowContext(ctx, addUserTheme,
+		arg.UserID,
+		arg.ThemeID,
+		arg.Active,
+		arg.ExpiresIn,
+	)
 	var i UserTheme
-	err := row.Scan(&i.UserID, &i.ThemeID, &i.CreatedAt)
+	err := row.Scan(
+		&i.UserID,
+		&i.ThemeID,
+		&i.Active,
+		&i.ExpiresIn,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
@@ -1540,6 +1553,32 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.Website,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateUserTheme = `-- name: UpdateUserTheme :one
+UPDATE user_themes
+SET active = $2
+WHERE user_id = $1 AND theme_id = $3
+RETURNING user_id, theme_id, active, expires_in, created_at
+`
+
+type UpdateUserThemeParams struct {
+	UserID  uuid.UUID
+	Active  sql.NullBool
+	ThemeID uuid.UUID
+}
+
+func (q *Queries) UpdateUserTheme(ctx context.Context, arg UpdateUserThemeParams) (UserTheme, error) {
+	row := q.db.QueryRowContext(ctx, updateUserTheme, arg.UserID, arg.Active, arg.ThemeID)
+	var i UserTheme
+	err := row.Scan(
+		&i.UserID,
+		&i.ThemeID,
+		&i.Active,
+		&i.ExpiresIn,
+		&i.CreatedAt,
 	)
 	return i, err
 }

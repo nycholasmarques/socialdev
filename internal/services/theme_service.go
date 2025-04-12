@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -74,11 +76,18 @@ func (r *ThemeService) DeleteTheme(theme_id uuid.UUID) (error) {
 	return r.themeRepo.DeleteTheme(ctx, theme_id)
 }
 
-func (r *ThemeService) AddUserTheme(user_id uuid.UUID, theme_id uuid.UUID) (db.UserTheme, error) {
+func (r *ThemeService) AddUserTheme(user_id uuid.UUID, theme_id uuid.UUID, active bool) (db.UserTheme, error) {
 	ctx := context.Background()
 
-	params := db.AddUserThemeParams{UserID: user_id, ThemeID: theme_id}
+	params := db.AddUserThemeParams{UserID: user_id, ThemeID: theme_id, Active: sql.NullBool{Bool: active, Valid: true}}
 	return r.themeRepo.AddUserTheme(ctx, params)
+}
+
+func (r *ThemeService) UpdateUserTheme(user_id uuid.UUID, theme_id uuid.UUID, active bool) (db.UserTheme, error) {
+	ctx := context.Background()
+
+	params := db.UpdateUserThemeParams{UserID: user_id, ThemeID: theme_id, Active: sql.NullBool{Bool: active, Valid: true}}
+	return r.themeRepo.UpdateUserTheme(ctx, params)
 }
 
 func (r *ThemeService) ListUserThemes(user_id uuid.UUID) ([]db.Theme, error) {
@@ -96,6 +105,18 @@ func (r *ThemeService) UserHasTheme(user_id uuid.UUID, theme_id uuid.UUID) (bool
 
 func (r *ThemeService) DeleteUserTheme(user_id uuid.UUID, theme_id uuid.UUID) (error) {
 	ctx := context.Background()
+
+	userHasTheme, err := r.themeRepo.UserHasTheme(ctx, db.UserHasThemeParams{
+		UserID: user_id,
+		ThemeID: theme_id,
+	})
+	if err != nil {
+		log.Printf("%v", err)
+	}
+
+	if !userHasTheme {
+		return errors.New("user does not have this theme")
+	}
 
 	params := db.DeleteUserThemeParams{UserID: user_id, ThemeID: theme_id}
 	return r.themeRepo.DeleteUserTheme(ctx, params)

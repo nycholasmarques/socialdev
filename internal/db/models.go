@@ -147,6 +147,8 @@ type UserRole struct {
 type UserTheme struct {
 	UserID    uuid.UUID
 	ThemeID   uuid.UUID
+	Active    sql.NullBool
+	ExpiresIn sql.NullTime
 	CreatedAt sql.NullTime
 }
 

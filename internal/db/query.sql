@@ -407,10 +407,16 @@ WHERE theme_id = $1;
 
 -- name: AddUserTheme :one
 INSERT INTO user_themes (
-  user_id, theme_id
+  user_id, theme_id, active, expires_in
 ) VALUES (
-  $1, $2
+  $1, $2, $3, $4
 )
+RETURNING *;
+
+-- name: UpdateUserTheme :one
+UPDATE user_themes
+SET active = $2
+WHERE user_id = $1 AND theme_id = $3
 RETURNING *;
 
 -- name: ListUserThemes :many

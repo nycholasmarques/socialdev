@@ -16,6 +16,7 @@ func SetupRoutes(queries *db.Queries) *http.ServeMux {
 	SetupLikeRoutes(apiRouter, queries)
 	SetupCommentRoutes(apiRouter, queries)
 	SetupFavoriteRoutes(apiRouter, queries)
+	SetupThemeRoutes(apiRouter, queries)
 
 	r.Handle("/api/", http.StripPrefix("/api", apiRouter))
 

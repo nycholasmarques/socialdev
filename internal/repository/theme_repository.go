@@ -68,6 +68,14 @@ func (r *ThemeRepository) AddUserTheme(ctx context.Context, params db.AddUserThe
 	return userTheme, err
 }
 
+func (r *ThemeRepository) UpdateUserTheme(ctx context.Context, params db.UpdateUserThemeParams) (db.UserTheme, error) {
+	userTheme, err := r.queries.UpdateUserTheme(ctx, params)
+	if err != nil {
+		log.Printf("%v", err)
+	}
+	return userTheme, err
+}
+
 func (r *ThemeRepository) ListUserThemes(ctx context.Context, user_id uuid.UUID) ([]db.Theme, error) {
 	listUserTheme, err := r.queries.ListUserThemes(ctx, user_id)
 	if err != nil {
