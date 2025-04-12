@@ -47,7 +47,7 @@ ON CONFLICT DO NOTHING
 
 type AddUserThemeParams struct {
 	UserID  uuid.UUID
-	ThemeID int32
+	ThemeID uuid.UUID
 }
 
 func (q *Queries) AddUserTheme(ctx context.Context, arg AddUserThemeParams) error {
@@ -207,14 +207,15 @@ func (q *Queries) CreateRole(ctx context.Context, arg CreateRoleParams) (Role, e
 
 const createTheme = `-- name: CreateTheme :one
 INSERT INTO themes (
-  name, description, is_premium, preview_image, theme_config, status, active, expires_in
+  theme_id, name, description, is_premium, preview_image, theme_config, status, active, expires_in
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8
+  $1, $2, $3, $4, $5, $6, $7, $8, $9
 )
 RETURNING theme_id, name, description, is_premium, preview_image, theme_config, status, active, expires_in, created_at, updated_at
 `
 
 type CreateThemeParams struct {
+	ThemeID      uuid.UUID
 	Name         sql.NullString
 	Description  sql.NullString
 	IsPremium    sql.NullBool
@@ -227,6 +228,7 @@ type CreateThemeParams struct {
 
 func (q *Queries) CreateTheme(ctx context.Context, arg CreateThemeParams) (Theme, error) {
 	row := q.db.QueryRowContext(ctx, createTheme,
+		arg.ThemeID,
 		arg.Name,
 		arg.Description,
 		arg.IsPremium,
@@ -389,7 +391,7 @@ WHERE user_id = $1 AND theme_id = $2
 
 type DeleteUserThemeParams struct {
 	UserID  uuid.UUID
-	ThemeID int32
+	ThemeID uuid.UUID
 }
 
 func (q *Queries) DeleteUserTheme(ctx context.Context, arg DeleteUserThemeParams) error {
@@ -977,7 +979,7 @@ SELECT theme_id, name, description, is_premium, preview_image, theme_config, sta
 WHERE theme_id = $1
 `
 
-func (q *Queries) GetThemeByID(ctx context.Context, themeID int32) (Theme, error) {
+func (q *Queries) GetThemeByID(ctx context.Context, themeID uuid.UUID) (Theme, error) {
 	row := q.db.QueryRowContext(ctx, getThemeByID, themeID)
 	var i Theme
 	err := row.Scan(
@@ -1429,7 +1431,7 @@ RETURNING theme_id, name, description, is_premium, preview_image, theme_config, 
 `
 
 type UpdateThemeParams struct {
-	ThemeID      int32
+	ThemeID      uuid.UUID
 	Name         sql.NullString
 	Description  sql.NullString
 	IsPremium    sql.NullBool
@@ -1539,7 +1541,7 @@ SELECT EXISTS (
 
 type UserHasThemeParams struct {
 	UserID  uuid.UUID
-	ThemeID int32
+	ThemeID uuid.UUID
 }
 
 func (q *Queries) UserHasTheme(ctx context.Context, arg UserHasThemeParams) (bool, error) {

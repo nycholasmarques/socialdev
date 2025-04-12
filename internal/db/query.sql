@@ -373,9 +373,9 @@ SELECT EXISTS (
 
 -- name: CreateTheme :one
 INSERT INTO themes (
-  name, description, is_premium, preview_image, theme_config, status, active, expires_in
+  theme_id, name, description, is_premium, preview_image, theme_config, status, active, expires_in
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8
+  $1, $2, $3, $4, $5, $6, $7, $8, $9
 )
 RETURNING *;
 

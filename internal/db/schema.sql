@@ -148,7 +148,7 @@ CREATE TABLE notifications (
 );
 
 CREATE TABLE themes (
-  theme_id INT PRIMARY KEY,
+  theme_id UUID PRIMARY KEY,
   name VARCHAR(30),
   description VARCHAR(255),
   is_premium BOOLEAN DEFAULT FALSE,
@@ -163,7 +163,7 @@ CREATE TABLE themes (
 
 CREATE TABLE user_themes (
   user_id UUID NOT NULL,
-  theme_id INT NOT NULL,
+  theme_id UUID NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, theme_id),
   CONSTRAINT fk_user_themes_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,

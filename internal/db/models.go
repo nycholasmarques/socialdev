@@ -103,7 +103,7 @@ type Tag struct {
 }
 
 type Theme struct {
-	ThemeID      int32
+	ThemeID      uuid.UUID
 	Name         sql.NullString
 	Description  sql.NullString
 	IsPremium    sql.NullBool
@@ -146,7 +146,7 @@ type UserRole struct {
 
 type UserTheme struct {
 	UserID    uuid.UUID
-	ThemeID   int32
+	ThemeID   uuid.UUID
 	CreatedAt sql.NullTime
 }
 
