@@ -36,13 +36,13 @@ func (q *Queries) AddFavorite(ctx context.Context, arg AddFavoriteParams) (Favor
 	return i, err
 }
 
-const addUserTheme = `-- name: AddUserTheme :exec
+const addUserTheme = `-- name: AddUserTheme :one
 INSERT INTO user_themes (
   user_id, theme_id
 ) VALUES (
   $1, $2
 )
-ON CONFLICT DO NOTHING
+RETURNING user_id, theme_id, created_at
 `
 
 type AddUserThemeParams struct {
@@ -50,9 +50,11 @@ type AddUserThemeParams struct {
 	ThemeID uuid.UUID
 }
 
-func (q *Queries) AddUserTheme(ctx context.Context, arg AddUserThemeParams) error {
-	_, err := q.db.ExecContext(ctx, addUserTheme, arg.UserID, arg.ThemeID)
-	return err
+func (q *Queries) AddUserTheme(ctx context.Context, arg AddUserThemeParams) (UserTheme, error) {
+	row := q.db.QueryRowContext(ctx, addUserTheme, arg.UserID, arg.ThemeID)
+	var i UserTheme
+	err := row.Scan(&i.UserID, &i.ThemeID, &i.CreatedAt)
+	return i, err
 }
 
 const checkFavoriteExists = `-- name: CheckFavoriteExists :one
@@ -371,6 +373,16 @@ WHERE role_id = $1
 
 func (q *Queries) DeleteRole(ctx context.Context, roleID uuid.UUID) error {
 	_, err := q.db.ExecContext(ctx, deleteRole, roleID)
+	return err
+}
+
+const deleteTheme = `-- name: DeleteTheme :exec
+DELETE FROM themes
+WHERE theme_id = $1
+`
+
+func (q *Queries) DeleteTheme(ctx context.Context, themeID uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteTheme, themeID)
 	return err
 }
 

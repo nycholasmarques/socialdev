@@ -401,13 +401,17 @@ SET name = $2,
 WHERE theme_id = $1
 RETURNING *;
 
--- name: AddUserTheme :exec
+-- name: DeleteTheme :exec
+DELETE FROM themes
+WHERE theme_id = $1;
+
+-- name: AddUserTheme :one
 INSERT INTO user_themes (
   user_id, theme_id
 ) VALUES (
   $1, $2
 )
-ON CONFLICT DO NOTHING;
+RETURNING *;
 
 -- name: ListUserThemes :many
 SELECT t.*
