@@ -10,6 +10,7 @@ import (
 	"database/sql"
 
 	"github.com/google/uuid"
+	"github.com/sqlc-dev/pqtype"
 )
 
 const addFavorite = `-- name: AddFavorite :one
@@ -33,6 +34,25 @@ func (q *Queries) AddFavorite(ctx context.Context, arg AddFavoriteParams) (Favor
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const addUserTheme = `-- name: AddUserTheme :exec
+INSERT INTO user_themes (
+  user_id, theme_id
+) VALUES (
+  $1, $2
+)
+ON CONFLICT DO NOTHING
+`
+
+type AddUserThemeParams struct {
+	UserID  uuid.UUID
+	ThemeID int32
+}
+
+func (q *Queries) AddUserTheme(ctx context.Context, arg AddUserThemeParams) error {
+	_, err := q.db.ExecContext(ctx, addUserTheme, arg.UserID, arg.ThemeID)
+	return err
 }
 
 const checkFavoriteExists = `-- name: CheckFavoriteExists :one
@@ -185,13 +205,61 @@ func (q *Queries) CreateRole(ctx context.Context, arg CreateRoleParams) (Role, e
 	return i, err
 }
 
+const createTheme = `-- name: CreateTheme :one
+INSERT INTO themes (
+  name, description, is_premium, preview_image, theme_config, status, active, expires_in
+) VALUES (
+  $1, $2, $3, $4, $5, $6, $7, $8
+)
+RETURNING theme_id, name, description, is_premium, preview_image, theme_config, status, active, expires_in, created_at, updated_at
+`
+
+type CreateThemeParams struct {
+	Name         sql.NullString
+	Description  sql.NullString
+	IsPremium    sql.NullBool
+	PreviewImage sql.NullString
+	ThemeConfig  pqtype.NullRawMessage
+	Status       sql.NullBool
+	Active       sql.NullBool
+	ExpiresIn    sql.NullTime
+}
+
+func (q *Queries) CreateTheme(ctx context.Context, arg CreateThemeParams) (Theme, error) {
+	row := q.db.QueryRowContext(ctx, createTheme,
+		arg.Name,
+		arg.Description,
+		arg.IsPremium,
+		arg.PreviewImage,
+		arg.ThemeConfig,
+		arg.Status,
+		arg.Active,
+		arg.ExpiresIn,
+	)
+	var i Theme
+	err := row.Scan(
+		&i.ThemeID,
+		&i.Name,
+		&i.Description,
+		&i.IsPremium,
+		&i.PreviewImage,
+		&i.ThemeConfig,
+		&i.Status,
+		&i.Active,
+		&i.ExpiresIn,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
   user_id, username, email, password, google_id, avatar
 ) VALUES (
   $1, $2, $3, $4, $5, $6
 ) ON CONFLICT (username) DO NOTHING
-RETURNING user_id, google_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at
+RETURNING user_id, google_id, username, email, password, avatar, cover_image, bio, github, linkedin, website, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -220,6 +288,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Email,
 		&i.Password,
 		&i.Avatar,
+		&i.CoverImage,
 		&i.Bio,
 		&i.Github,
 		&i.Linkedin,
@@ -310,6 +379,21 @@ WHERE user_id = $1
 
 func (q *Queries) DeleteUser(ctx context.Context, userID uuid.UUID) error {
 	_, err := q.db.ExecContext(ctx, deleteUser, userID)
+	return err
+}
+
+const deleteUserTheme = `-- name: DeleteUserTheme :exec
+DELETE FROM user_themes
+WHERE user_id = $1 AND theme_id = $2
+`
+
+type DeleteUserThemeParams struct {
+	UserID  uuid.UUID
+	ThemeID int32
+}
+
+func (q *Queries) DeleteUserTheme(ctx context.Context, arg DeleteUserThemeParams) error {
+	_, err := q.db.ExecContext(ctx, deleteUserTheme, arg.UserID, arg.ThemeID)
 	return err
 }
 
@@ -636,7 +720,7 @@ func (q *Queries) GetAllUserPosts(ctx context.Context, userID uuid.UUID) ([]GetA
 }
 
 const getAllUsers = `-- name: GetAllUsers :many
-SELECT user_id, google_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
+SELECT user_id, google_id, username, email, password, avatar, cover_image, bio, github, linkedin, website, created_at, updated_at FROM users
 WHERE (username ILIKE '%' || $1 || '%' OR $1 IS NULL)
 ORDER BY created_at DESC
 LIMIT $3
@@ -665,6 +749,7 @@ func (q *Queries) GetAllUsers(ctx context.Context, arg GetAllUsersParams) ([]Use
 			&i.Email,
 			&i.Password,
 			&i.Avatar,
+			&i.CoverImage,
 			&i.Bio,
 			&i.Github,
 			&i.Linkedin,
@@ -887,8 +972,32 @@ func (q *Queries) GetRoleWithName(ctx context.Context, name string) ([]Role, err
 	return items, nil
 }
 
+const getThemeByID = `-- name: GetThemeByID :one
+SELECT theme_id, name, description, is_premium, preview_image, theme_config, status, active, expires_in, created_at, updated_at FROM themes
+WHERE theme_id = $1
+`
+
+func (q *Queries) GetThemeByID(ctx context.Context, themeID int32) (Theme, error) {
+	row := q.db.QueryRowContext(ctx, getThemeByID, themeID)
+	var i Theme
+	err := row.Scan(
+		&i.ThemeID,
+		&i.Name,
+		&i.Description,
+		&i.IsPremium,
+		&i.PreviewImage,
+		&i.ThemeConfig,
+		&i.Status,
+		&i.Active,
+		&i.ExpiresIn,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getUser = `-- name: GetUser :one
-SELECT user_id, google_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
+SELECT user_id, google_id, username, email, password, avatar, cover_image, bio, github, linkedin, website, created_at, updated_at FROM users
 WHERE user_id = $1 LIMIT 1
 `
 
@@ -902,6 +1011,7 @@ func (q *Queries) GetUser(ctx context.Context, userID uuid.UUID) (User, error) {
 		&i.Email,
 		&i.Password,
 		&i.Avatar,
+		&i.CoverImage,
 		&i.Bio,
 		&i.Github,
 		&i.Linkedin,
@@ -913,7 +1023,7 @@ func (q *Queries) GetUser(ctx context.Context, userID uuid.UUID) (User, error) {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT user_id, google_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at FROM users
+SELECT user_id, google_id, username, email, password, avatar, cover_image, bio, github, linkedin, website, created_at, updated_at FROM users
 WHERE email = $1 LIMIT 1
 `
 
@@ -927,6 +1037,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Email,
 		&i.Password,
 		&i.Avatar,
+		&i.CoverImage,
 		&i.Bio,
 		&i.Github,
 		&i.Linkedin,
@@ -1106,6 +1217,88 @@ func (q *Queries) GetUserWithUsername(ctx context.Context, username string) ([]G
 	return items, nil
 }
 
+const listAllThemes = `-- name: ListAllThemes :many
+SELECT theme_id, name, description, is_premium, preview_image, theme_config, status, active, expires_in, created_at, updated_at FROM themes
+ORDER BY created_at DESC
+`
+
+func (q *Queries) ListAllThemes(ctx context.Context) ([]Theme, error) {
+	rows, err := q.db.QueryContext(ctx, listAllThemes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Theme
+	for rows.Next() {
+		var i Theme
+		if err := rows.Scan(
+			&i.ThemeID,
+			&i.Name,
+			&i.Description,
+			&i.IsPremium,
+			&i.PreviewImage,
+			&i.ThemeConfig,
+			&i.Status,
+			&i.Active,
+			&i.ExpiresIn,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUserThemes = `-- name: ListUserThemes :many
+SELECT t.theme_id, t.name, t.description, t.is_premium, t.preview_image, t.theme_config, t.status, t.active, t.expires_in, t.created_at, t.updated_at
+FROM themes t
+JOIN user_themes ut ON t.theme_id = ut.theme_id
+WHERE ut.user_id = $1
+`
+
+func (q *Queries) ListUserThemes(ctx context.Context, userID uuid.UUID) ([]Theme, error) {
+	rows, err := q.db.QueryContext(ctx, listUserThemes, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Theme
+	for rows.Next() {
+		var i Theme
+		if err := rows.Scan(
+			&i.ThemeID,
+			&i.Name,
+			&i.Description,
+			&i.IsPremium,
+			&i.PreviewImage,
+			&i.ThemeConfig,
+			&i.Status,
+			&i.Active,
+			&i.ExpiresIn,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const removeFavorite = `-- name: RemoveFavorite :exec
 DELETE FROM favorites
 WHERE user_id = $1 AND post_id = $2
@@ -1220,6 +1413,62 @@ func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) (Role, e
 	return i, err
 }
 
+const updateTheme = `-- name: UpdateTheme :one
+UPDATE themes
+SET name = $2,
+    description = $3,
+    is_premium = $4,
+    preview_image = $5,
+    theme_config = $6,
+    status = $7,
+    active = $8,
+    expires_in = $9,
+    updated_at = NOW()
+WHERE theme_id = $1
+RETURNING theme_id, name, description, is_premium, preview_image, theme_config, status, active, expires_in, created_at, updated_at
+`
+
+type UpdateThemeParams struct {
+	ThemeID      int32
+	Name         sql.NullString
+	Description  sql.NullString
+	IsPremium    sql.NullBool
+	PreviewImage sql.NullString
+	ThemeConfig  pqtype.NullRawMessage
+	Status       sql.NullBool
+	Active       sql.NullBool
+	ExpiresIn    sql.NullTime
+}
+
+func (q *Queries) UpdateTheme(ctx context.Context, arg UpdateThemeParams) (Theme, error) {
+	row := q.db.QueryRowContext(ctx, updateTheme,
+		arg.ThemeID,
+		arg.Name,
+		arg.Description,
+		arg.IsPremium,
+		arg.PreviewImage,
+		arg.ThemeConfig,
+		arg.Status,
+		arg.Active,
+		arg.ExpiresIn,
+	)
+	var i Theme
+	err := row.Scan(
+		&i.ThemeID,
+		&i.Name,
+		&i.Description,
+		&i.IsPremium,
+		&i.PreviewImage,
+		&i.ThemeConfig,
+		&i.Status,
+		&i.Active,
+		&i.ExpiresIn,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
   SET username = $2,
@@ -1230,21 +1479,23 @@ UPDATE users
   github = $7,
   linkedin = $8,
   website = $9,
+  cover_image = $10,
   updated_at = CURRENT_TIMESTAMP
 WHERE user_id = $1
-RETURNING user_id, google_id, username, email, password, avatar, bio, github, linkedin, website, created_at, updated_at
+RETURNING user_id, google_id, username, email, password, avatar, cover_image, bio, github, linkedin, website, created_at, updated_at
 `
 
 type UpdateUserParams struct {
-	UserID   uuid.UUID
-	Username string
-	Email    string
-	Password string
-	Avatar   sql.NullString
-	Bio      sql.NullString
-	Github   sql.NullString
-	Linkedin sql.NullString
-	Website  sql.NullString
+	UserID     uuid.UUID
+	Username   string
+	Email      string
+	Password   string
+	Avatar     sql.NullString
+	Bio        sql.NullString
+	Github     sql.NullString
+	Linkedin   sql.NullString
+	Website    sql.NullString
+	CoverImage sql.NullString
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
@@ -1258,6 +1509,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.Github,
 		arg.Linkedin,
 		arg.Website,
+		arg.CoverImage,
 	)
 	var i User
 	err := row.Scan(
@@ -1267,6 +1519,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.Email,
 		&i.Password,
 		&i.Avatar,
+		&i.CoverImage,
 		&i.Bio,
 		&i.Github,
 		&i.Linkedin,
@@ -1275,4 +1528,23 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const userHasTheme = `-- name: UserHasTheme :one
+SELECT EXISTS (
+  SELECT 1 FROM user_themes
+  WHERE user_id = $1 AND theme_id = $2
+) AS has_theme
+`
+
+type UserHasThemeParams struct {
+	UserID  uuid.UUID
+	ThemeID int32
+}
+
+func (q *Queries) UserHasTheme(ctx context.Context, arg UserHasThemeParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, userHasTheme, arg.UserID, arg.ThemeID)
+	var has_theme bool
+	err := row.Scan(&has_theme)
+	return has_theme, err
 }

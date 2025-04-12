@@ -8,6 +8,7 @@ import (
 	"database/sql"
 
 	"github.com/google/uuid"
+	"github.com/sqlc-dev/pqtype"
 )
 
 type Category struct {
@@ -101,19 +102,34 @@ type Tag struct {
 	CreatedAt sql.NullTime
 }
 
+type Theme struct {
+	ThemeID      int32
+	Name         sql.NullString
+	Description  sql.NullString
+	IsPremium    sql.NullBool
+	PreviewImage sql.NullString
+	ThemeConfig  pqtype.NullRawMessage
+	Status       sql.NullBool
+	Active       sql.NullBool
+	ExpiresIn    sql.NullTime
+	CreatedAt    sql.NullTime
+	UpdatedAt    sql.NullTime
+}
+
 type User struct {
-	UserID    uuid.UUID
-	GoogleID  sql.NullString
-	Username  string
-	Email     string
-	Password  string
-	Avatar    sql.NullString
-	Bio       sql.NullString
-	Github    sql.NullString
-	Linkedin  sql.NullString
-	Website   sql.NullString
-	CreatedAt sql.NullTime
-	UpdatedAt sql.NullTime
+	UserID     uuid.UUID
+	GoogleID   sql.NullString
+	Username   string
+	Email      string
+	Password   string
+	Avatar     sql.NullString
+	CoverImage sql.NullString
+	Bio        sql.NullString
+	Github     sql.NullString
+	Linkedin   sql.NullString
+	Website    sql.NullString
+	CreatedAt  sql.NullTime
+	UpdatedAt  sql.NullTime
 }
 
 type UserGroup struct {
@@ -125,6 +141,12 @@ type UserGroup struct {
 type UserRole struct {
 	UserID    uuid.UUID
 	RoleID    uuid.UUID
+	CreatedAt sql.NullTime
+}
+
+type UserTheme struct {
+	UserID    uuid.UUID
+	ThemeID   int32
 	CreatedAt sql.NullTime
 }
 

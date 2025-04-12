@@ -5,6 +5,7 @@ CREATE TABLE users (
   email VARCHAR(255) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
   avatar VARCHAR(255),
+  cover_image VARCHAR(255),
   bio VARCHAR(255),
   github VARCHAR(255),
   linkedin VARCHAR(255),
@@ -143,5 +144,28 @@ CREATE TABLE notifications (
   read BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_user_notifications_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-  CONSTRAINT fk_sender_notifications_user FOREIGN KEY (sender_id) REFERENCES roles(sender_id) ON DELETE CASCADE
+  CONSTRAINT fk_sender_notifications_user FOREIGN KEY (sender_id) REFERENCES roles(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE themes (
+  theme_id INT PRIMARY KEY,
+  name VARCHAR(30),
+  description VARCHAR(255),
+  is_premium BOOLEAN DEFAULT FALSE,
+  preview_image VARCHAR(255),
+  theme_config JSON,
+  status BOOLEAN DEFAULT FALSE,
+  active BOOLEAN DEFAULT FALSE,
+  expires_in TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_themes (
+  user_id UUID NOT NULL,
+  theme_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, theme_id),
+  CONSTRAINT fk_user_themes_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+  CONSTRAINT fk_user_themes_theme FOREIGN KEY (theme_id) REFERENCES themes(theme_id) ON DELETE CASCADE
 );

@@ -35,6 +35,7 @@ UPDATE users
   github = $7,
   linkedin = $8,
   website = $9,
+  cover_image = $10,
   updated_at = CURRENT_TIMESTAMP
 WHERE user_id = $1
 RETURNING *;
@@ -369,3 +370,57 @@ SELECT EXISTS (
     FROM favorites 
     WHERE user_id = $1 AND post_id = $2
 ) AS exists;
+
+-- name: CreateTheme :one
+INSERT INTO themes (
+  name, description, is_premium, preview_image, theme_config, status, active, expires_in
+) VALUES (
+  $1, $2, $3, $4, $5, $6, $7, $8
+)
+RETURNING *;
+
+-- name: ListAllThemes :many
+SELECT * FROM themes
+ORDER BY created_at DESC;
+
+-- name: GetThemeByID :one
+SELECT * FROM themes
+WHERE theme_id = $1;
+
+-- name: UpdateTheme :one
+UPDATE themes
+SET name = $2,
+    description = $3,
+    is_premium = $4,
+    preview_image = $5,
+    theme_config = $6,
+    status = $7,
+    active = $8,
+    expires_in = $9,
+    updated_at = NOW()
+WHERE theme_id = $1
+RETURNING *;
+
+-- name: AddUserTheme :exec
+INSERT INTO user_themes (
+  user_id, theme_id
+) VALUES (
+  $1, $2
+)
+ON CONFLICT DO NOTHING;
+
+-- name: ListUserThemes :many
+SELECT t.*
+FROM themes t
+JOIN user_themes ut ON t.theme_id = ut.theme_id
+WHERE ut.user_id = $1;
+
+-- name: UserHasTheme :one
+SELECT EXISTS (
+  SELECT 1 FROM user_themes
+  WHERE user_id = $1 AND theme_id = $2
+) AS has_theme;
+
+-- name: DeleteUserTheme :exec
+DELETE FROM user_themes
+WHERE user_id = $1 AND theme_id = $2;
