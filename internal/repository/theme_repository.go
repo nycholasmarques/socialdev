@@ -76,7 +76,7 @@ func (r *ThemeRepository) UpdateUserTheme(ctx context.Context, params db.UpdateU
 	return userTheme, err
 }
 
-func (r *ThemeRepository) ListUserThemes(ctx context.Context, user_id uuid.UUID) ([]db.Theme, error) {
+func (r *ThemeRepository) ListUserThemes(ctx context.Context, user_id uuid.UUID) ([]db.ListUserThemesRow, error) {
 	listUserTheme, err := r.queries.ListUserThemes(ctx, user_id)
 	if err != nil {
 		log.Printf("%v", err)

@@ -420,7 +420,20 @@ WHERE user_id = $1 AND theme_id = $3
 RETURNING *;
 
 -- name: ListUserThemes :many
-SELECT t.*
+SELECT 
+  t.theme_id,
+  t.name,
+  t.description,
+  t.is_premium,
+  t.preview_image,
+  t.theme_config,
+  t.status,
+  t.active AS theme_active,
+  t.expires_in AS theme_expires_in,
+  t.created_at,
+  t.updated_at,
+  ut.active AS user_active,
+  ut.expires_in AS user_expires_in
 FROM themes t
 JOIN user_themes ut ON t.theme_id = ut.theme_id
 WHERE ut.user_id = $1;

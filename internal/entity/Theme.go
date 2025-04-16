@@ -20,6 +20,13 @@ type Theme struct {
 	ExpiresIn    time.Time       `json:"expires_in"`
 }
 
+type ListUserThemesRow struct {
+	Theme 	 Theme `json:"theme"`	
+	UserID   string `json:"user_id"`
+	Useractive   bool   `json:"user_active_theme"`
+	UserExpiresIn time.Time `json:"user_expires_in_theme"`
+}
+
 type ThemeRequest struct {
 	Name         string          `json:"name" validate:"required,min=3,max=30"`
 	Description  string          `json:"description" validate:"required,min=5,max=255"`

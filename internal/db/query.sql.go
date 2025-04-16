@@ -1285,21 +1285,50 @@ func (q *Queries) ListAllThemes(ctx context.Context) ([]Theme, error) {
 }
 
 const listUserThemes = `-- name: ListUserThemes :many
-SELECT t.theme_id, t.name, t.description, t.is_premium, t.preview_image, t.theme_config, t.status, t.active, t.expires_in, t.created_at, t.updated_at
+SELECT 
+  t.theme_id,
+  t.name,
+  t.description,
+  t.is_premium,
+  t.preview_image,
+  t.theme_config,
+  t.status,
+  t.active AS theme_active,
+  t.expires_in AS theme_expires_in,
+  t.created_at,
+  t.updated_at,
+  ut.active AS user_active,
+  ut.expires_in AS user_expires_in
 FROM themes t
 JOIN user_themes ut ON t.theme_id = ut.theme_id
 WHERE ut.user_id = $1
 `
 
-func (q *Queries) ListUserThemes(ctx context.Context, userID uuid.UUID) ([]Theme, error) {
+type ListUserThemesRow struct {
+	ThemeID        uuid.UUID
+	Name           sql.NullString
+	Description    sql.NullString
+	IsPremium      sql.NullBool
+	PreviewImage   sql.NullString
+	ThemeConfig    pqtype.NullRawMessage
+	Status         sql.NullBool
+	ThemeActive    sql.NullBool
+	ThemeExpiresIn sql.NullTime
+	CreatedAt      sql.NullTime
+	UpdatedAt      sql.NullTime
+	UserActive     sql.NullBool
+	UserExpiresIn  sql.NullTime
+}
+
+func (q *Queries) ListUserThemes(ctx context.Context, userID uuid.UUID) ([]ListUserThemesRow, error) {
 	rows, err := q.db.QueryContext(ctx, listUserThemes, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Theme
+	var items []ListUserThemesRow
 	for rows.Next() {
-		var i Theme
+		var i ListUserThemesRow
 		if err := rows.Scan(
 			&i.ThemeID,
 			&i.Name,
@@ -1308,10 +1337,12 @@ func (q *Queries) ListUserThemes(ctx context.Context, userID uuid.UUID) ([]Theme
 			&i.PreviewImage,
 			&i.ThemeConfig,
 			&i.Status,
-			&i.Active,
-			&i.ExpiresIn,
+			&i.ThemeActive,
+			&i.ThemeExpiresIn,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UserActive,
+			&i.UserExpiresIn,
 		); err != nil {
 			return nil, err
 		}

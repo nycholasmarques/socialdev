@@ -298,19 +298,24 @@ func (h *ThemeHandler) ListUserThemesHandler(w http.ResponseWriter, r *http.Requ
 		return	
 	}
 
-	var userThemesResponse []entity.Theme
+	var userThemesResponse []entity.ListUserThemesRow
 
 	for _, userTheme := range userThemes {
-		userThemeResponse := entity.Theme{
-			ThemeID:      userTheme.ThemeID.String(),
-			Name:         userTheme.Name.String,
-			Description:  userTheme.Description.String,
-			IsPremium:    userTheme.IsPremium.Bool,
-			PreviewImage: userTheme.PreviewImage.String,
-			ThemeConfig:  userTheme.ThemeConfig.RawMessage,
-			Status:       userTheme.Status.Bool,
-			Active:       userTheme.Active.Bool,
-			ExpiresIn:    userTheme.ExpiresIn.Time,
+		userThemeResponse := entity.ListUserThemesRow{
+			Theme: entity.Theme{
+				ThemeID:      userTheme.ThemeID.String(),
+				Name:         userTheme.Name.String,
+				Description:  userTheme.Description.String,
+				IsPremium:    userTheme.IsPremium.Bool,
+				PreviewImage: userTheme.PreviewImage.String,
+				ThemeConfig:  userTheme.ThemeConfig.RawMessage,
+				Status:       userTheme.Status.Bool,
+				Active:       userTheme.ThemeActive.Bool,
+				ExpiresIn:    userTheme.ThemeExpiresIn.Time,
+			},
+			UserID:    userID,
+			Useractive:    userTheme.UserActive.Bool,
+			UserExpiresIn: userTheme.UserExpiresIn.Time,
 		}
 		userThemesResponse = append(userThemesResponse, userThemeResponse)
 	}

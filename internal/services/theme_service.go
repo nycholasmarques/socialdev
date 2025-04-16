@@ -90,7 +90,7 @@ func (r *ThemeService) UpdateUserTheme(user_id uuid.UUID, theme_id uuid.UUID, ac
 	return r.themeRepo.UpdateUserTheme(ctx, params)
 }
 
-func (r *ThemeService) ListUserThemes(user_id uuid.UUID) ([]db.Theme, error) {
+func (r *ThemeService) ListUserThemes(user_id uuid.UUID) ([]db.ListUserThemesRow, error) {
 	ctx := context.Background()
 
 	return r.themeRepo.ListUserThemes(ctx, user_id)
