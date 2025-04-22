@@ -444,6 +444,16 @@ SELECT EXISTS (
   WHERE user_id = $1 AND theme_id = $2
 ) AS has_theme;
 
+-- name: UserHasActiveTheme :one
+SELECT 
+  ut.theme_id,
+  ut.active,
+  t.theme_config,
+  t.name
+FROM user_themes ut
+JOIN themes t ON t.theme_id = ut.theme_id
+WHERE ut.user_id = $1 AND ut.active = true;
+
 -- name: DeleteUserTheme :exec
 DELETE FROM user_themes
 WHERE user_id = $1 AND theme_id = $2;

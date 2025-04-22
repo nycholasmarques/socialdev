@@ -1614,6 +1614,36 @@ func (q *Queries) UpdateUserTheme(ctx context.Context, arg UpdateUserThemeParams
 	return i, err
 }
 
+const userHasActiveTheme = `-- name: UserHasActiveTheme :one
+SELECT 
+  ut.theme_id,
+  ut.active,
+  t.theme_config,
+  t.name
+FROM user_themes ut
+JOIN themes t ON t.theme_id = ut.theme_id
+WHERE ut.user_id = $1 AND ut.active = true
+`
+
+type UserHasActiveThemeRow struct {
+	ThemeID     uuid.UUID
+	Active      sql.NullBool
+	ThemeConfig pqtype.NullRawMessage
+	Name        sql.NullString
+}
+
+func (q *Queries) UserHasActiveTheme(ctx context.Context, userID uuid.UUID) (UserHasActiveThemeRow, error) {
+	row := q.db.QueryRowContext(ctx, userHasActiveTheme, userID)
+	var i UserHasActiveThemeRow
+	err := row.Scan(
+		&i.ThemeID,
+		&i.Active,
+		&i.ThemeConfig,
+		&i.Name,
+	)
+	return i, err
+}
+
 const userHasTheme = `-- name: UserHasTheme :one
 SELECT EXISTS (
   SELECT 1 FROM user_themes

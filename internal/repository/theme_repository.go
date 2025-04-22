@@ -92,6 +92,14 @@ func (r *ThemeRepository) UserHasTheme(ctx context.Context, params db.UserHasThe
 	return userHasTheme, err
 }
 
+func (r *ThemeRepository) UserHasActiveTheme(ctx context.Context, user_id uuid.UUID) (db.UserHasActiveThemeRow, error) {
+	userHasActiveTheme, err := r.queries.UserHasActiveTheme(ctx, user_id)
+	if err != nil {
+		log.Printf("%v", err)
+	}
+	return userHasActiveTheme, err
+}
+
 func (r *ThemeRepository) DeleteUserTheme(ctx context.Context, params db.DeleteUserThemeParams) error {
 	err := r.queries.DeleteUserTheme(ctx, params)
 	if err != nil {

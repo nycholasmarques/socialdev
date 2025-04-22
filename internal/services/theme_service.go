@@ -103,6 +103,12 @@ func (r *ThemeService) UserHasTheme(user_id uuid.UUID, theme_id uuid.UUID) (bool
 	return r.themeRepo.UserHasTheme(ctx, params)
 }
 
+func (r *ThemeService) UserHasActiveTheme(user_id uuid.UUID) (db.UserHasActiveThemeRow, error) {
+	ctx := context.Background()
+
+	return r.themeRepo.UserHasActiveTheme(ctx, user_id)
+}
+
 func (r *ThemeService) DeleteUserTheme(user_id uuid.UUID, theme_id uuid.UUID) (error) {
 	ctx := context.Background()
 

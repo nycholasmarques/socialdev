@@ -23,6 +23,7 @@ func SetupThemeRoutes(r *http.ServeMux, queries *db.Queries) {
 
 	r.HandleFunc("POST /users/themes/{theme_id}", middlewares.ProtectedRoutes(themeHandler.AddUserThemeHandler))
 	r.HandleFunc("GET /users/themes", middlewares.ProtectedRoutes(themeHandler.ListUserThemesHandler))
+	r.HandleFunc("GET /users/themes/active", middlewares.ProtectedRoutes(themeHandler.UserHasActiveThemeHandler))
 	r.HandleFunc("PATCH /users/themes/{theme_id}", middlewares.ProtectedRoutes(themeHandler.UpdateUserThemeHandler))
 	r.HandleFunc("DELETE /users/{user_id}/themes/{theme_id}", themeHandler.RemoveUserThemeHandler)
 }

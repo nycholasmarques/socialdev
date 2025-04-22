@@ -323,6 +323,37 @@ func (h *ThemeHandler) ListUserThemesHandler(w http.ResponseWriter, r *http.Requ
 	utils.NewMessageResponse(w, http.StatusOK, "User themes listed successfully", userThemesResponse)
 }
 
+func (h *ThemeHandler) UserHasActiveThemeHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
+	if !ok || userID == "" {
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "")
+		return
+	}
+
+	userIDUUID, err := uuid.Parse(userID)
+	if err != nil {
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "")
+		return
+	}
+
+	hasTheme, err := h.themeService.UserHasActiveTheme(userIDUUID)
+	if err != nil {
+		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to check if user has active theme", nil)
+		return
+	}
+
+	res := map[string]any{
+		"theme_id": hasTheme.ThemeID.String(),
+		"name":     hasTheme.Name.String,
+		"active":   hasTheme.Active.Bool,
+		"theme_config": hasTheme.ThemeConfig.RawMessage,
+	}
+
+	utils.NewMessageResponse(w, http.StatusOK, "User has active theme", res)
+}
+
 func (h *ThemeHandler) UpdateUserThemeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	defer r.Body.Close()
