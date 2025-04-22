@@ -373,9 +373,9 @@ SELECT EXISTS (
 
 -- name: CreateTheme :one
 INSERT INTO themes (
-  name, description, is_premium, preview_image, theme_config, status, active, expires_in
+  theme_id, name, description, is_premium, preview_image, theme_config, status, active, expires_in
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8
+  $1, $2, $3, $4, $5, $6, $7, $8, $9
 )
 RETURNING *;
 
@@ -401,16 +401,39 @@ SET name = $2,
 WHERE theme_id = $1
 RETURNING *;
 
--- name: AddUserTheme :exec
+-- name: DeleteTheme :exec
+DELETE FROM themes
+WHERE theme_id = $1;
+
+-- name: AddUserTheme :one
 INSERT INTO user_themes (
-  user_id, theme_id
+  user_id, theme_id, active, expires_in
 ) VALUES (
-  $1, $2
+  $1, $2, $3, $4
 )
-ON CONFLICT DO NOTHING;
+RETURNING *;
+
+-- name: UpdateUserTheme :one
+UPDATE user_themes
+SET active = $2
+WHERE user_id = $1 AND theme_id = $3
+RETURNING *;
 
 -- name: ListUserThemes :many
-SELECT t.*
+SELECT 
+  t.theme_id,
+  t.name,
+  t.description,
+  t.is_premium,
+  t.preview_image,
+  t.theme_config,
+  t.status,
+  t.active AS theme_active,
+  t.expires_in AS theme_expires_in,
+  t.created_at,
+  t.updated_at,
+  ut.active AS user_active,
+  ut.expires_in AS user_expires_in
 FROM themes t
 JOIN user_themes ut ON t.theme_id = ut.theme_id
 WHERE ut.user_id = $1;
@@ -420,6 +443,16 @@ SELECT EXISTS (
   SELECT 1 FROM user_themes
   WHERE user_id = $1 AND theme_id = $2
 ) AS has_theme;
+
+-- name: UserHasActiveTheme :one
+SELECT 
+  ut.theme_id,
+  ut.active,
+  t.theme_config,
+  t.name
+FROM user_themes ut
+JOIN themes t ON t.theme_id = ut.theme_id
+WHERE ut.user_id = $1 AND ut.active = true;
 
 -- name: DeleteUserTheme :exec
 DELETE FROM user_themes

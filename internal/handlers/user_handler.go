@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -243,6 +244,19 @@ func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 	if userUpdate.Website == nil {
 		userUpdate.Website = &user.Website
 	}
+
+	fileHandler := NewFileHandler()
+
+	if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+		avatarPath, err := fileHandler.UploadFile(r)
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Erro no upload do avatar", err.Error())
+		return
+	}
+	if avatarPath != "" {
+		userUpdate.Avatar = &avatarPath
+	}
+}
 
 	updatedUser, err := h.userService.UpdateUser(convertUUID,
 		*userUpdate.Username,

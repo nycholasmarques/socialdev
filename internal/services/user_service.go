@@ -139,6 +139,7 @@ func (s *UserService) GetUser(user_id uuid.UUID) (entity.UserResponse, error) {
 		UserID:    user.UserID.String(),
 		Username:  user.Username,
 		Email:     user.Email,
+		Password:  user.Password,
 		Avatar:    user.Avatar.String,
 		Bio:       user.Bio.String,
 		Github:    user.Github.String,
