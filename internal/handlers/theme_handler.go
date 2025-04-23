@@ -344,6 +344,18 @@ func (h *ThemeHandler) UserHasActiveThemeHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
+	if hasTheme == nil {
+		res := map[string]any{
+			"theme_id": nil,
+			"name":     nil,
+			"active":   false,
+			"theme_config": nil,
+		}
+
+		utils.NewMessageResponse(w, http.StatusOK, "User has no active theme", res)
+		return
+		}
+
 	res := map[string]any{
 		"theme_id": hasTheme.ThemeID.String(),
 		"name":     hasTheme.Name.String,

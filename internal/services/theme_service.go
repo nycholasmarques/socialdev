@@ -86,6 +86,18 @@ func (r *ThemeService) AddUserTheme(user_id uuid.UUID, theme_id uuid.UUID, activ
 func (r *ThemeService) UpdateUserTheme(user_id uuid.UUID, theme_id uuid.UUID, active bool) (db.UserTheme, error) {
 	ctx := context.Background()
 
+	userThemeList, err := r.themeRepo.ListUserThemes(ctx, user_id)
+	if err != nil {
+		return db.UserTheme{}, err
+	}
+
+	for _, userTheme := range userThemeList {
+		if userTheme.UserActive.Bool {
+			params := db.UpdateUserThemeParams{UserID: user_id, ThemeID: userTheme.ThemeID, Active: sql.NullBool{Bool: false, Valid: true}}
+			r.themeRepo.UpdateUserTheme(ctx, params)
+		}
+	}
+
 	params := db.UpdateUserThemeParams{UserID: user_id, ThemeID: theme_id, Active: sql.NullBool{Bool: active, Valid: true}}
 	return r.themeRepo.UpdateUserTheme(ctx, params)
 }
@@ -103,7 +115,7 @@ func (r *ThemeService) UserHasTheme(user_id uuid.UUID, theme_id uuid.UUID) (bool
 	return r.themeRepo.UserHasTheme(ctx, params)
 }
 
-func (r *ThemeService) UserHasActiveTheme(user_id uuid.UUID) (db.UserHasActiveThemeRow, error) {
+func (r *ThemeService) UserHasActiveTheme(user_id uuid.UUID) (*db.UserHasActiveThemeRow, error) {
 	ctx := context.Background()
 
 	return r.themeRepo.UserHasActiveTheme(ctx, user_id)
