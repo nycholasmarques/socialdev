@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"log"
 
 	"github.com/google/uuid"
@@ -92,12 +94,16 @@ func (r *ThemeRepository) UserHasTheme(ctx context.Context, params db.UserHasThe
 	return userHasTheme, err
 }
 
-func (r *ThemeRepository) UserHasActiveTheme(ctx context.Context, user_id uuid.UUID) (db.UserHasActiveThemeRow, error) {
+func (r *ThemeRepository) UserHasActiveTheme(ctx context.Context, user_id uuid.UUID) (*db.UserHasActiveThemeRow, error) {
 	userHasActiveTheme, err := r.queries.UserHasActiveTheme(ctx, user_id)
 	if err != nil {
-		log.Printf("%v", err)
+			if errors.Is(err, sql.ErrNoRows) {
+					return nil, nil
+			}
+			log.Printf("Error querying user active theme: %v", err)
+			return nil, err
 	}
-	return userHasActiveTheme, err
+	return &userHasActiveTheme, nil
 }
 
 func (r *ThemeRepository) DeleteUserTheme(ctx context.Context, params db.DeleteUserThemeParams) error {
