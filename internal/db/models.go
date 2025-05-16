@@ -12,150 +12,150 @@ import (
 )
 
 type Category struct {
-	CategoryID int32
-	Name       sql.NullString
-	CreatedAt  sql.NullTime
-	UpdatedAt  sql.NullTime
+	CategoryID int32          `json:"category_id"`
+	Name       sql.NullString `json:"name"`
+	CreatedAt  sql.NullTime   `json:"created_at"`
+	UpdatedAt  sql.NullTime   `json:"updated_at"`
 }
 
 type Comment struct {
-	CommentID uuid.UUID
-	UserID    uuid.UUID
-	PostID    uuid.UUID
-	Content   string
-	Visible   sql.NullBool
-	CreatedAt sql.NullTime
-	UpdatedAt sql.NullTime
+	CommentID uuid.UUID    `json:"comment_id"`
+	UserID    uuid.UUID    `json:"user_id"`
+	PostID    uuid.UUID    `json:"post_id"`
+	Content   string       `json:"content"`
+	Visible   sql.NullBool `json:"visible"`
+	CreatedAt sql.NullTime `json:"created_at"`
+	UpdatedAt sql.NullTime `json:"updated_at"`
 }
 
 type Favorite struct {
-	UserID    uuid.UUID
-	PostID    uuid.UUID
-	CreatedAt sql.NullTime
-	UpdatedAt sql.NullTime
+	UserID    uuid.UUID    `json:"user_id"`
+	PostID    uuid.UUID    `json:"post_id"`
+	CreatedAt sql.NullTime `json:"created_at"`
+	UpdatedAt sql.NullTime `json:"updated_at"`
 }
 
 type Group struct {
-	GroupID     uuid.UUID
-	Name        string
-	Description string
-	Photo       string
-	Tag         string
-	CreatedAt   sql.NullTime
-	UpdatedAt   sql.NullTime
+	GroupID     uuid.UUID    `json:"group_id"`
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Photo       string       `json:"photo"`
+	Tag         string       `json:"tag"`
+	CreatedAt   sql.NullTime `json:"created_at"`
+	UpdatedAt   sql.NullTime `json:"updated_at"`
 }
 
 type Like struct {
-	UserID    uuid.UUID
-	PostID    uuid.UUID
-	CreatedAt sql.NullTime
-	UpdatedAt sql.NullTime
+	UserID    uuid.UUID    `json:"user_id"`
+	PostID    uuid.UUID    `json:"post_id"`
+	CreatedAt sql.NullTime `json:"created_at"`
+	UpdatedAt sql.NullTime `json:"updated_at"`
 }
 
 type Notification struct {
-	NotificationID uuid.UUID
-	UserID         uuid.NullUUID
-	SenderID       uuid.NullUUID
-	Type           string
-	Content        string
-	Read           sql.NullBool
-	CreatedAt      sql.NullTime
+	NotificationID uuid.UUID     `json:"notification_id"`
+	UserID         uuid.NullUUID `json:"user_id"`
+	SenderID       uuid.NullUUID `json:"sender_id"`
+	Type           string        `json:"type"`
+	Content        string        `json:"content"`
+	Read           sql.NullBool  `json:"read"`
+	CreatedAt      sql.NullTime  `json:"created_at"`
 }
 
 type Post struct {
-	PostID     uuid.UUID
-	UserID     uuid.UUID
-	CategoryID sql.NullInt32
-	Title      sql.NullString
-	Content    string
-	Photo      sql.NullString
-	Video      sql.NullString
-	CreatedAt  sql.NullTime
-	UpdatedAt  sql.NullTime
+	PostID     uuid.UUID      `json:"post_id"`
+	UserID     uuid.UUID      `json:"user_id"`
+	CategoryID sql.NullInt32  `json:"category_id"`
+	Title      sql.NullString `json:"title"`
+	Content    string         `json:"content"`
+	Photo      sql.NullString `json:"photo"`
+	Video      sql.NullString `json:"video"`
+	CreatedAt  sql.NullTime   `json:"created_at"`
+	UpdatedAt  sql.NullTime   `json:"updated_at"`
 }
 
 type PostTag struct {
-	PostID uuid.NullUUID
-	TagID  sql.NullInt32
+	PostID uuid.NullUUID `json:"post_id"`
+	TagID  sql.NullInt32 `json:"tag_id"`
 }
 
 type Reply struct {
-	ReplyID   uuid.UUID
-	CommentID uuid.UUID
-	UserID    uuid.UUID
-	Content   string
-	Visible   sql.NullBool
-	CreatedAt sql.NullTime
-	UpdatedAt sql.NullTime
+	ReplyID   uuid.UUID    `json:"reply_id"`
+	CommentID uuid.UUID    `json:"comment_id"`
+	UserID    uuid.UUID    `json:"user_id"`
+	Content   string       `json:"content"`
+	Visible   sql.NullBool `json:"visible"`
+	CreatedAt sql.NullTime `json:"created_at"`
+	UpdatedAt sql.NullTime `json:"updated_at"`
 }
 
 type Role struct {
-	RoleID    uuid.UUID
-	Name      string
-	CreatedAt sql.NullTime
-	UpdatedAt sql.NullTime
+	RoleID    uuid.UUID    `json:"role_id"`
+	Name      string       `json:"name"`
+	CreatedAt sql.NullTime `json:"created_at"`
+	UpdatedAt sql.NullTime `json:"updated_at"`
 }
 
 type Tag struct {
-	TagID     int32
-	Name      sql.NullString
-	CreatedAt sql.NullTime
+	TagID     int32          `json:"tag_id"`
+	Name      sql.NullString `json:"name"`
+	CreatedAt sql.NullTime   `json:"created_at"`
 }
 
 type Theme struct {
-	ThemeID      uuid.UUID
-	Name         sql.NullString
-	Description  sql.NullString
-	IsPremium    sql.NullBool
-	PreviewImage sql.NullString
-	ThemeConfig  pqtype.NullRawMessage
-	Status       sql.NullBool
-	Active       sql.NullBool
-	ExpiresIn    sql.NullTime
-	CreatedAt    sql.NullTime
-	UpdatedAt    sql.NullTime
+	ThemeID      uuid.UUID             `json:"theme_id"`
+	Name         sql.NullString        `json:"name"`
+	Description  sql.NullString        `json:"description"`
+	IsPremium    sql.NullBool          `json:"is_premium"`
+	PreviewImage sql.NullString        `json:"preview_image"`
+	ThemeConfig  pqtype.NullRawMessage `json:"theme_config"`
+	Status       sql.NullBool          `json:"status"`
+	Active       sql.NullBool          `json:"active"`
+	ExpiresIn    sql.NullTime          `json:"expires_in"`
+	CreatedAt    sql.NullTime          `json:"created_at"`
+	UpdatedAt    sql.NullTime          `json:"updated_at"`
 }
 
 type User struct {
-	UserID     uuid.UUID
-	GoogleID   sql.NullString
-	Username   string
-	Email      string
-	Password   string
-	Avatar     sql.NullString
-	CoverImage sql.NullString
-	Bio        sql.NullString
-	Github     sql.NullString
-	Linkedin   sql.NullString
-	Website    sql.NullString
-	CreatedAt  sql.NullTime
-	UpdatedAt  sql.NullTime
+	UserID     uuid.UUID      `json:"user_id"`
+	GoogleID   sql.NullString `json:"google_id"`
+	Username   string         `json:"username"`
+	Email      string         `json:"email"`
+	Password   string         `json:"password"`
+	Avatar     sql.NullString `json:"avatar"`
+	CoverImage sql.NullString `json:"cover_image"`
+	Bio        sql.NullString `json:"bio"`
+	Github     sql.NullString `json:"github"`
+	Linkedin   sql.NullString `json:"linkedin"`
+	Website    sql.NullString `json:"website"`
+	CreatedAt  sql.NullTime   `json:"created_at"`
+	UpdatedAt  sql.NullTime   `json:"updated_at"`
 }
 
 type UserGroup struct {
-	GroupID   uuid.UUID
-	UserID    uuid.UUID
-	CreatedAt sql.NullTime
+	GroupID   uuid.UUID    `json:"group_id"`
+	UserID    uuid.UUID    `json:"user_id"`
+	CreatedAt sql.NullTime `json:"created_at"`
 }
 
 type UserRole struct {
-	UserID    uuid.UUID
-	RoleID    uuid.UUID
-	CreatedAt sql.NullTime
+	UserID    uuid.UUID    `json:"user_id"`
+	RoleID    uuid.UUID    `json:"role_id"`
+	CreatedAt sql.NullTime `json:"created_at"`
 }
 
 type UserTheme struct {
-	UserID    uuid.UUID
-	ThemeID   uuid.UUID
-	Active    sql.NullBool
-	ExpiresIn sql.NullTime
-	CreatedAt sql.NullTime
+	UserID    uuid.UUID    `json:"user_id"`
+	ThemeID   uuid.UUID    `json:"theme_id"`
+	Active    sql.NullBool `json:"active"`
+	ExpiresIn sql.NullTime `json:"expires_in"`
+	CreatedAt sql.NullTime `json:"created_at"`
 }
 
 type View struct {
-	ViewID    uuid.UUID
-	PostID    uuid.UUID
-	UserID    uuid.NullUUID
-	Count     sql.NullInt32
-	CreatedAt sql.NullTime
+	ViewID    uuid.UUID     `json:"view_id"`
+	PostID    uuid.UUID     `json:"post_id"`
+	UserID    uuid.NullUUID `json:"user_id"`
+	Count     sql.NullInt32 `json:"count"`
+	CreatedAt sql.NullTime  `json:"created_at"`
 }

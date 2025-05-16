@@ -20,8 +20,8 @@ RETURNING user_id, post_id, created_at, updated_at
 `
 
 type AddFavoriteParams struct {
-	UserID uuid.UUID
-	PostID uuid.UUID
+	UserID uuid.UUID `json:"user_id"`
+	PostID uuid.UUID `json:"post_id"`
 }
 
 func (q *Queries) AddFavorite(ctx context.Context, arg AddFavoriteParams) (Favorite, error) {
@@ -46,10 +46,10 @@ RETURNING user_id, theme_id, active, expires_in, created_at
 `
 
 type AddUserThemeParams struct {
-	UserID    uuid.UUID
-	ThemeID   uuid.UUID
-	Active    sql.NullBool
-	ExpiresIn sql.NullTime
+	UserID    uuid.UUID    `json:"user_id"`
+	ThemeID   uuid.UUID    `json:"theme_id"`
+	Active    sql.NullBool `json:"active"`
+	ExpiresIn sql.NullTime `json:"expires_in"`
 }
 
 func (q *Queries) AddUserTheme(ctx context.Context, arg AddUserThemeParams) (UserTheme, error) {
@@ -79,8 +79,8 @@ SELECT EXISTS (
 `
 
 type CheckFavoriteExistsParams struct {
-	UserID uuid.UUID
-	PostID uuid.UUID
+	UserID uuid.UUID `json:"user_id"`
+	PostID uuid.UUID `json:"post_id"`
 }
 
 func (q *Queries) CheckFavoriteExists(ctx context.Context, arg CheckFavoriteExistsParams) (bool, error) {
@@ -100,10 +100,10 @@ RETURNING comment_id, user_id, post_id, content, visible, created_at, updated_at
 `
 
 type CreateCommentParams struct {
-	CommentID uuid.UUID
-	UserID    uuid.UUID
-	PostID    uuid.UUID
-	Content   string
+	CommentID uuid.UUID `json:"comment_id"`
+	UserID    uuid.UUID `json:"user_id"`
+	PostID    uuid.UUID `json:"post_id"`
+	Content   string    `json:"content"`
 }
 
 func (q *Queries) CreateComment(ctx context.Context, arg CreateCommentParams) (Comment, error) {
@@ -136,8 +136,8 @@ RETURNING user_id, post_id, created_at, updated_at
 `
 
 type CreateLikeParams struct {
-	UserID uuid.UUID
-	PostID uuid.UUID
+	UserID uuid.UUID `json:"user_id"`
+	PostID uuid.UUID `json:"post_id"`
 }
 
 func (q *Queries) CreateLike(ctx context.Context, arg CreateLikeParams) (Like, error) {
@@ -162,12 +162,12 @@ RETURNING post_id, user_id, category_id, title, content, photo, video, created_a
 `
 
 type CreatePostParams struct {
-	PostID  uuid.UUID
-	UserID  uuid.UUID
-	Title   sql.NullString
-	Content string
-	Photo   sql.NullString
-	Video   sql.NullString
+	PostID  uuid.UUID      `json:"post_id"`
+	UserID  uuid.UUID      `json:"user_id"`
+	Title   sql.NullString `json:"title"`
+	Content string         `json:"content"`
+	Photo   sql.NullString `json:"photo"`
+	Video   sql.NullString `json:"video"`
 }
 
 func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) (Post, error) {
@@ -204,8 +204,8 @@ RETURNING role_id, name, created_at, updated_at
 `
 
 type CreateRoleParams struct {
-	RoleID uuid.UUID
-	Name   string
+	RoleID uuid.UUID `json:"role_id"`
+	Name   string    `json:"name"`
 }
 
 func (q *Queries) CreateRole(ctx context.Context, arg CreateRoleParams) (Role, error) {
@@ -230,15 +230,15 @@ RETURNING theme_id, name, description, is_premium, preview_image, theme_config, 
 `
 
 type CreateThemeParams struct {
-	ThemeID      uuid.UUID
-	Name         sql.NullString
-	Description  sql.NullString
-	IsPremium    sql.NullBool
-	PreviewImage sql.NullString
-	ThemeConfig  pqtype.NullRawMessage
-	Status       sql.NullBool
-	Active       sql.NullBool
-	ExpiresIn    sql.NullTime
+	ThemeID      uuid.UUID             `json:"theme_id"`
+	Name         sql.NullString        `json:"name"`
+	Description  sql.NullString        `json:"description"`
+	IsPremium    sql.NullBool          `json:"is_premium"`
+	PreviewImage sql.NullString        `json:"preview_image"`
+	ThemeConfig  pqtype.NullRawMessage `json:"theme_config"`
+	Status       sql.NullBool          `json:"status"`
+	Active       sql.NullBool          `json:"active"`
+	ExpiresIn    sql.NullTime          `json:"expires_in"`
 }
 
 func (q *Queries) CreateTheme(ctx context.Context, arg CreateThemeParams) (Theme, error) {
@@ -280,12 +280,12 @@ RETURNING user_id, google_id, username, email, password, avatar, cover_image, bi
 `
 
 type CreateUserParams struct {
-	UserID   uuid.UUID
-	Username string
-	Email    string
-	Password string
-	GoogleID sql.NullString
-	Avatar   sql.NullString
+	UserID   uuid.UUID      `json:"user_id"`
+	Username string         `json:"username"`
+	Email    string         `json:"email"`
+	Password string         `json:"password"`
+	GoogleID sql.NullString `json:"google_id"`
+	Avatar   sql.NullString `json:"avatar"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -326,8 +326,8 @@ RETURNING user_id, role_id, created_at
 `
 
 type CreateUserWithRolesParams struct {
-	UserID uuid.UUID
-	RoleID uuid.UUID
+	UserID uuid.UUID `json:"user_id"`
+	RoleID uuid.UUID `json:"role_id"`
 }
 
 func (q *Queries) CreateUserWithRoles(ctx context.Context, arg CreateUserWithRolesParams) (UserRole, error) {
@@ -344,8 +344,8 @@ user_id = $2
 `
 
 type DeleteCommentParams struct {
-	CommentID uuid.UUID
-	UserID    uuid.UUID
+	CommentID uuid.UUID `json:"comment_id"`
+	UserID    uuid.UUID `json:"user_id"`
 }
 
 func (q *Queries) DeleteComment(ctx context.Context, arg DeleteCommentParams) error {
@@ -360,8 +360,8 @@ post_id = $2
 `
 
 type DeleteLikeParams struct {
-	UserID uuid.UUID
-	PostID uuid.UUID
+	UserID uuid.UUID `json:"user_id"`
+	PostID uuid.UUID `json:"post_id"`
 }
 
 func (q *Queries) DeleteLike(ctx context.Context, arg DeleteLikeParams) error {
@@ -415,8 +415,8 @@ WHERE user_id = $1 AND theme_id = $2
 `
 
 type DeleteUserThemeParams struct {
-	UserID  uuid.UUID
-	ThemeID uuid.UUID
+	UserID  uuid.UUID `json:"user_id"`
+	ThemeID uuid.UUID `json:"theme_id"`
 }
 
 func (q *Queries) DeleteUserTheme(ctx context.Context, arg DeleteUserThemeParams) error {
@@ -431,8 +431,8 @@ role_id = $2
 `
 
 type DeleteUserWithRolesParams struct {
-	UserID uuid.UUID
-	RoleID uuid.UUID
+	UserID uuid.UUID `json:"user_id"`
+	RoleID uuid.UUID `json:"role_id"`
 }
 
 func (q *Queries) DeleteUserWithRoles(ctx context.Context, arg DeleteUserWithRolesParams) error {
@@ -457,14 +457,14 @@ ORDER BY c.created_at ASC
 `
 
 type GetAllCommentsRow struct {
-	CommentID uuid.UUID
-	UserID    uuid.UUID
-	PostID    uuid.UUID
-	Content   string
-	CreatedAt sql.NullTime
-	UpdatedAt sql.NullTime
-	Username  string
-	Avatar    sql.NullString
+	CommentID uuid.UUID      `json:"comment_id"`
+	UserID    uuid.UUID      `json:"user_id"`
+	PostID    uuid.UUID      `json:"post_id"`
+	Content   string         `json:"content"`
+	CreatedAt sql.NullTime   `json:"created_at"`
+	UpdatedAt sql.NullTime   `json:"updated_at"`
+	Username  string         `json:"username"`
+	Avatar    sql.NullString `json:"avatar"`
 }
 
 func (q *Queries) GetAllComments(ctx context.Context, postID uuid.UUID) ([]GetAllCommentsRow, error) {
@@ -552,30 +552,30 @@ OFFSET $5
 `
 
 type GetAllPostsParams struct {
-	UserID  uuid.NullUUID
-	Title   sql.NullString
-	Content sql.NullString
-	OrderBy interface{}
-	Offset  sql.NullInt32
-	Limit   sql.NullInt32
+	UserID  uuid.NullUUID  `json:"user_id"`
+	Title   sql.NullString `json:"title"`
+	Content sql.NullString `json:"content"`
+	OrderBy interface{}    `json:"order_by"`
+	Offset  sql.NullInt32  `json:"offset"`
+	Limit   sql.NullInt32  `json:"limit"`
 }
 
 type GetAllPostsRow struct {
-	PostID       uuid.UUID
-	UserID       uuid.UUID
-	Title        sql.NullString
-	Content      string
-	Photo        sql.NullString
-	Video        sql.NullString
-	CreatedAt    sql.NullTime
-	UpdatedAt    sql.NullTime
-	UserName     sql.NullString
-	UserAvatar   sql.NullString
-	LikeCount    int64
-	ViewsCount   int64
-	CommentCount int64
-	LikedByUser  bool
-	TotalCount   int64
+	PostID       uuid.UUID      `json:"post_id"`
+	UserID       uuid.UUID      `json:"user_id"`
+	Title        sql.NullString `json:"title"`
+	Content      string         `json:"content"`
+	Photo        sql.NullString `json:"photo"`
+	Video        sql.NullString `json:"video"`
+	CreatedAt    sql.NullTime   `json:"created_at"`
+	UpdatedAt    sql.NullTime   `json:"updated_at"`
+	UserName     sql.NullString `json:"user_name"`
+	UserAvatar   sql.NullString `json:"user_avatar"`
+	LikeCount    int64          `json:"like_count"`
+	ViewsCount   int64          `json:"views_count"`
+	CommentCount int64          `json:"comment_count"`
+	LikedByUser  bool           `json:"liked_by_user"`
+	TotalCount   int64          `json:"total_count"`
 }
 
 func (q *Queries) GetAllPosts(ctx context.Context, arg GetAllPostsParams) ([]GetAllPostsRow, error) {
@@ -694,19 +694,19 @@ ORDER BY p.created_at DESC
 `
 
 type GetAllUserPostsRow struct {
-	PostID       uuid.UUID
-	UserID       uuid.UUID
-	Title        sql.NullString
-	Content      string
-	Photo        sql.NullString
-	Video        sql.NullString
-	CreatedAt    sql.NullTime
-	UpdatedAt    sql.NullTime
-	UserName     sql.NullString
-	UserAvatar   sql.NullString
-	LikeCount    int64
-	ViewsCount   int64
-	CommentCount int64
+	PostID       uuid.UUID      `json:"post_id"`
+	UserID       uuid.UUID      `json:"user_id"`
+	Title        sql.NullString `json:"title"`
+	Content      string         `json:"content"`
+	Photo        sql.NullString `json:"photo"`
+	Video        sql.NullString `json:"video"`
+	CreatedAt    sql.NullTime   `json:"created_at"`
+	UpdatedAt    sql.NullTime   `json:"updated_at"`
+	UserName     sql.NullString `json:"user_name"`
+	UserAvatar   sql.NullString `json:"user_avatar"`
+	LikeCount    int64          `json:"like_count"`
+	ViewsCount   int64          `json:"views_count"`
+	CommentCount int64          `json:"comment_count"`
 }
 
 func (q *Queries) GetAllUserPosts(ctx context.Context, userID uuid.UUID) ([]GetAllUserPostsRow, error) {
@@ -755,9 +755,9 @@ OFFSET $2
 `
 
 type GetAllUsersParams struct {
-	Username sql.NullString
-	Offset   sql.NullInt32
-	Limit    sql.NullInt32
+	Username sql.NullString `json:"username"`
+	Offset   sql.NullInt32  `json:"offset"`
+	Limit    sql.NullInt32  `json:"limit"`
 }
 
 func (q *Queries) GetAllUsers(ctx context.Context, arg GetAllUsersParams) ([]User, error) {
@@ -813,14 +813,14 @@ WHERE c.comment_id = $1
 `
 
 type GetCommentRow struct {
-	CommentID uuid.UUID
-	UserID    uuid.UUID
-	PostID    uuid.UUID
-	Content   string
-	CreatedAt sql.NullTime
-	UpdatedAt sql.NullTime
-	Username  string
-	Avatar    sql.NullString
+	CommentID uuid.UUID      `json:"comment_id"`
+	UserID    uuid.UUID      `json:"user_id"`
+	PostID    uuid.UUID      `json:"post_id"`
+	Content   string         `json:"content"`
+	CreatedAt sql.NullTime   `json:"created_at"`
+	UpdatedAt sql.NullTime   `json:"updated_at"`
+	Username  string         `json:"username"`
+	Avatar    sql.NullString `json:"avatar"`
 }
 
 func (q *Queries) GetComment(ctx context.Context, commentID uuid.UUID) (GetCommentRow, error) {
@@ -846,8 +846,8 @@ post_id = $2
 `
 
 type GetLikeParams struct {
-	UserID uuid.UUID
-	PostID uuid.UUID
+	UserID uuid.UUID `json:"user_id"`
+	PostID uuid.UUID `json:"post_id"`
 }
 
 func (q *Queries) GetLike(ctx context.Context, arg GetLikeParams) (Like, error) {
@@ -904,26 +904,26 @@ WHERE p.post_id = $1
 `
 
 type GetPostParams struct {
-	PostID uuid.UUID
-	UserID uuid.NullUUID
+	PostID uuid.UUID     `json:"post_id"`
+	UserID uuid.NullUUID `json:"user_id"`
 }
 
 type GetPostRow struct {
-	PostID       uuid.UUID
-	UserID       uuid.UUID
-	Title        sql.NullString
-	Content      string
-	Photo        sql.NullString
-	Video        sql.NullString
-	CreatedAt    sql.NullTime
-	UpdatedAt    sql.NullTime
-	UserName     sql.NullString
-	UserAvatar   sql.NullString
-	LikeCount    int64
-	ViewsCount   int64
-	CommentCount int64
-	LikedByUser  bool
-	TotalCount   int64
+	PostID       uuid.UUID      `json:"post_id"`
+	UserID       uuid.UUID      `json:"user_id"`
+	Title        sql.NullString `json:"title"`
+	Content      string         `json:"content"`
+	Photo        sql.NullString `json:"photo"`
+	Video        sql.NullString `json:"video"`
+	CreatedAt    sql.NullTime   `json:"created_at"`
+	UpdatedAt    sql.NullTime   `json:"updated_at"`
+	UserName     sql.NullString `json:"user_name"`
+	UserAvatar   sql.NullString `json:"user_avatar"`
+	LikeCount    int64          `json:"like_count"`
+	ViewsCount   int64          `json:"views_count"`
+	CommentCount int64          `json:"comment_count"`
+	LikedByUser  bool           `json:"liked_by_user"`
+	TotalCount   int64          `json:"total_count"`
 }
 
 func (q *Queries) GetPost(ctx context.Context, arg GetPostParams) (GetPostRow, error) {
@@ -1121,27 +1121,27 @@ OFFSET $3
 `
 
 type GetUserFavoritesParams struct {
-	UserID uuid.UUID
-	Limit  int32
-	Offset int32
+	UserID uuid.UUID `json:"user_id"`
+	Limit  int32     `json:"limit"`
+	Offset int32     `json:"offset"`
 }
 
 type GetUserFavoritesRow struct {
-	PostID            uuid.UUID
-	UserID            uuid.UUID
-	Title             sql.NullString
-	Content           string
-	Photo             sql.NullString
-	Video             sql.NullString
-	PostCreatedAt     sql.NullTime
-	UpdatedAt         sql.NullTime
-	FavoriteCreatedAt sql.NullTime
-	UserName          string
-	UserAvatar        sql.NullString
-	LikeCount         int64
-	ViewsCount        int64
-	CommentCount      int64
-	LikedByUser       bool
+	PostID            uuid.UUID      `json:"post_id"`
+	UserID            uuid.UUID      `json:"user_id"`
+	Title             sql.NullString `json:"title"`
+	Content           string         `json:"content"`
+	Photo             sql.NullString `json:"photo"`
+	Video             sql.NullString `json:"video"`
+	PostCreatedAt     sql.NullTime   `json:"post_created_at"`
+	UpdatedAt         sql.NullTime   `json:"updated_at"`
+	FavoriteCreatedAt sql.NullTime   `json:"favorite_created_at"`
+	UserName          string         `json:"user_name"`
+	UserAvatar        sql.NullString `json:"user_avatar"`
+	LikeCount         int64          `json:"like_count"`
+	ViewsCount        int64          `json:"views_count"`
+	CommentCount      int64          `json:"comment_count"`
+	LikedByUser       bool           `json:"liked_by_user"`
 }
 
 func (q *Queries) GetUserFavorites(ctx context.Context, arg GetUserFavoritesParams) ([]GetUserFavoritesRow, error) {
@@ -1190,8 +1190,8 @@ post_id = $2
 `
 
 type GetUserPostParams struct {
-	UserID uuid.UUID
-	PostID uuid.UUID
+	UserID uuid.UUID `json:"user_id"`
+	PostID uuid.UUID `json:"post_id"`
 }
 
 func (q *Queries) GetUserPost(ctx context.Context, arg GetUserPostParams) (Post, error) {
@@ -1217,8 +1217,8 @@ WHERE username LIKE $1
 `
 
 type GetUserWithUsernameRow struct {
-	Username string
-	Avatar   sql.NullString
+	Username string         `json:"username"`
+	Avatar   sql.NullString `json:"avatar"`
 }
 
 func (q *Queries) GetUserWithUsername(ctx context.Context, username string) ([]GetUserWithUsernameRow, error) {
@@ -1305,19 +1305,19 @@ WHERE ut.user_id = $1
 `
 
 type ListUserThemesRow struct {
-	ThemeID        uuid.UUID
-	Name           sql.NullString
-	Description    sql.NullString
-	IsPremium      sql.NullBool
-	PreviewImage   sql.NullString
-	ThemeConfig    pqtype.NullRawMessage
-	Status         sql.NullBool
-	ThemeActive    sql.NullBool
-	ThemeExpiresIn sql.NullTime
-	CreatedAt      sql.NullTime
-	UpdatedAt      sql.NullTime
-	UserActive     sql.NullBool
-	UserExpiresIn  sql.NullTime
+	ThemeID        uuid.UUID             `json:"theme_id"`
+	Name           sql.NullString        `json:"name"`
+	Description    sql.NullString        `json:"description"`
+	IsPremium      sql.NullBool          `json:"is_premium"`
+	PreviewImage   sql.NullString        `json:"preview_image"`
+	ThemeConfig    pqtype.NullRawMessage `json:"theme_config"`
+	Status         sql.NullBool          `json:"status"`
+	ThemeActive    sql.NullBool          `json:"theme_active"`
+	ThemeExpiresIn sql.NullTime          `json:"theme_expires_in"`
+	CreatedAt      sql.NullTime          `json:"created_at"`
+	UpdatedAt      sql.NullTime          `json:"updated_at"`
+	UserActive     sql.NullBool          `json:"user_active"`
+	UserExpiresIn  sql.NullTime          `json:"user_expires_in"`
 }
 
 func (q *Queries) ListUserThemes(ctx context.Context, userID uuid.UUID) ([]ListUserThemesRow, error) {
@@ -1363,8 +1363,8 @@ WHERE user_id = $1 AND post_id = $2
 `
 
 type RemoveFavoriteParams struct {
-	UserID uuid.UUID
-	PostID uuid.UUID
+	UserID uuid.UUID `json:"user_id"`
+	PostID uuid.UUID `json:"post_id"`
 }
 
 func (q *Queries) RemoveFavorite(ctx context.Context, arg RemoveFavoriteParams) error {
@@ -1382,9 +1382,9 @@ RETURNING comment_id, user_id, post_id, content, visible, created_at, updated_at
 `
 
 type UpdateCommentParams struct {
-	CommentID uuid.UUID
-	Content   string
-	UserID    uuid.UUID
+	CommentID uuid.UUID `json:"comment_id"`
+	Content   string    `json:"content"`
+	UserID    uuid.UUID `json:"user_id"`
 }
 
 func (q *Queries) UpdateComment(ctx context.Context, arg UpdateCommentParams) (Comment, error) {
@@ -1415,12 +1415,12 @@ RETURNING post_id, user_id, category_id, title, content, photo, video, created_a
 `
 
 type UpdatePostParams struct {
-	PostID  uuid.UUID
-	UserID  uuid.UUID
-	Title   sql.NullString
-	Content string
-	Photo   sql.NullString
-	Video   sql.NullString
+	PostID  uuid.UUID      `json:"post_id"`
+	UserID  uuid.UUID      `json:"user_id"`
+	Title   sql.NullString `json:"title"`
+	Content string         `json:"content"`
+	Photo   sql.NullString `json:"photo"`
+	Video   sql.NullString `json:"video"`
 }
 
 func (q *Queries) UpdatePost(ctx context.Context, arg UpdatePostParams) (Post, error) {
@@ -1455,8 +1455,8 @@ RETURNING role_id, name, created_at, updated_at
 `
 
 type UpdateRoleParams struct {
-	RoleID uuid.UUID
-	Name   string
+	RoleID uuid.UUID `json:"role_id"`
+	Name   string    `json:"name"`
 }
 
 func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) (Role, error) {
@@ -1487,15 +1487,15 @@ RETURNING theme_id, name, description, is_premium, preview_image, theme_config, 
 `
 
 type UpdateThemeParams struct {
-	ThemeID      uuid.UUID
-	Name         sql.NullString
-	Description  sql.NullString
-	IsPremium    sql.NullBool
-	PreviewImage sql.NullString
-	ThemeConfig  pqtype.NullRawMessage
-	Status       sql.NullBool
-	Active       sql.NullBool
-	ExpiresIn    sql.NullTime
+	ThemeID      uuid.UUID             `json:"theme_id"`
+	Name         sql.NullString        `json:"name"`
+	Description  sql.NullString        `json:"description"`
+	IsPremium    sql.NullBool          `json:"is_premium"`
+	PreviewImage sql.NullString        `json:"preview_image"`
+	ThemeConfig  pqtype.NullRawMessage `json:"theme_config"`
+	Status       sql.NullBool          `json:"status"`
+	Active       sql.NullBool          `json:"active"`
+	ExpiresIn    sql.NullTime          `json:"expires_in"`
 }
 
 func (q *Queries) UpdateTheme(ctx context.Context, arg UpdateThemeParams) (Theme, error) {
@@ -1544,16 +1544,16 @@ RETURNING user_id, google_id, username, email, password, avatar, cover_image, bi
 `
 
 type UpdateUserParams struct {
-	UserID     uuid.UUID
-	Username   string
-	Email      string
-	Password   string
-	Avatar     sql.NullString
-	Bio        sql.NullString
-	Github     sql.NullString
-	Linkedin   sql.NullString
-	Website    sql.NullString
-	CoverImage sql.NullString
+	UserID     uuid.UUID      `json:"user_id"`
+	Username   string         `json:"username"`
+	Email      string         `json:"email"`
+	Password   string         `json:"password"`
+	Avatar     sql.NullString `json:"avatar"`
+	Bio        sql.NullString `json:"bio"`
+	Github     sql.NullString `json:"github"`
+	Linkedin   sql.NullString `json:"linkedin"`
+	Website    sql.NullString `json:"website"`
+	CoverImage sql.NullString `json:"cover_image"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
@@ -1596,9 +1596,9 @@ RETURNING user_id, theme_id, active, expires_in, created_at
 `
 
 type UpdateUserThemeParams struct {
-	UserID  uuid.UUID
-	Active  sql.NullBool
-	ThemeID uuid.UUID
+	UserID  uuid.UUID    `json:"user_id"`
+	Active  sql.NullBool `json:"active"`
+	ThemeID uuid.UUID    `json:"theme_id"`
 }
 
 func (q *Queries) UpdateUserTheme(ctx context.Context, arg UpdateUserThemeParams) (UserTheme, error) {
@@ -1626,10 +1626,10 @@ WHERE ut.user_id = $1 AND ut.active = true
 `
 
 type UserHasActiveThemeRow struct {
-	ThemeID     uuid.UUID
-	Active      sql.NullBool
-	ThemeConfig pqtype.NullRawMessage
-	Name        sql.NullString
+	ThemeID     uuid.UUID             `json:"theme_id"`
+	Active      sql.NullBool          `json:"active"`
+	ThemeConfig pqtype.NullRawMessage `json:"theme_config"`
+	Name        sql.NullString        `json:"name"`
 }
 
 func (q *Queries) UserHasActiveTheme(ctx context.Context, userID uuid.UUID) (UserHasActiveThemeRow, error) {
@@ -1652,8 +1652,8 @@ SELECT EXISTS (
 `
 
 type UserHasThemeParams struct {
-	UserID  uuid.UUID
-	ThemeID uuid.UUID
+	UserID  uuid.UUID `json:"user_id"`
+	ThemeID uuid.UUID `json:"theme_id"`
 }
 
 func (q *Queries) UserHasTheme(ctx context.Context, arg UserHasThemeParams) (bool, error) {
