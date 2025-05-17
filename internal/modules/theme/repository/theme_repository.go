@@ -1,4 +1,4 @@
-package repository
+package theme_repository
 
 import (
 	"context"

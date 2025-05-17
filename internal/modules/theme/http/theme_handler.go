@@ -1,4 +1,4 @@
-package handlers
+package theme_handler
 
 import (
 	"encoding/json"
@@ -9,12 +9,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/entity"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
-	"github.com/nycholasmarques/socialdev/internal/services"
+	theme_service "github.com/nycholasmarques/socialdev/internal/modules/theme/service"
 	"github.com/nycholasmarques/socialdev/utils"
 )
 
 type ThemeHandler struct {
-	themeService *services.ThemeService
+	themeService *theme_service.ThemeService
 }
 
 type ThemeWithUser struct {
@@ -22,7 +22,7 @@ type ThemeWithUser struct {
 	UserID uuid.UUID `json:"user_id"`
 }
 
-func NewThemeHandler(themeService *services.ThemeService) *ThemeHandler {
+func NewThemeHandler(themeService *theme_service.ThemeService) *ThemeHandler {
 	return &ThemeHandler{themeService: themeService}
 }
 func (h *ThemeHandler) CreateThemeHandler(w http.ResponseWriter, r *http.Request) {

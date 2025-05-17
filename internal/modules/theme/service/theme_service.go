@@ -1,4 +1,4 @@
-package services
+package theme_service
 
 import (
 	"context"
@@ -10,15 +10,15 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
-	"github.com/nycholasmarques/socialdev/internal/repository"
+	theme_repository "github.com/nycholasmarques/socialdev/internal/modules/theme/repository"
 	"github.com/sqlc-dev/pqtype"
 )
 
 type ThemeService struct {
-	themeRepo *repository.ThemeRepository
+	themeRepo *theme_repository.ThemeRepository
 }
 
-func NewThemeService(themeRepo *repository.ThemeRepository) *ThemeService {
+func NewThemeService(themeRepo *theme_repository.ThemeRepository) *ThemeService {
 	return &ThemeService{themeRepo: themeRepo}
 }
 
