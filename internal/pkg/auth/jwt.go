@@ -1,13 +1,14 @@
-package configs
+package pkg
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	configs "github.com/nycholasmarques/socialdev/config"
 )
 
-var cfg = LoadConfig()
+var cfg = configs.LoadConfig()
 
 func CreateToken(userId string, KeepLogin bool) (string, error) {
 	var expiresIn int64

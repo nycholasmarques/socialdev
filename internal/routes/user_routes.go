@@ -20,9 +20,4 @@ func SetupUserRoutes(r *http.ServeMux, queries *db.Queries) {
 	r.HandleFunc("GET /users", middlewares.ProtectedRoutes(userHandler.GetAllUsersHandler))
 	r.HandleFunc("PATCH /users/{user_id}", middlewares.ProtectedRoutes(userHandler.UpdateUserHandler))
 	r.HandleFunc("DELETE /users/{user_id}", middlewares.ProtectedRoutes(userHandler.DeleteUserHandler))
-
-	r.HandleFunc("POST /auth/login", userHandler.LoginUserHandler)
-	r.HandleFunc("GET /auth/google", userHandler.HandleGoogleLogin)
-	r.HandleFunc("GET /auth/google/callback", userHandler.HandleGoogleCallback)
-	r.HandleFunc("GET /auth/verify", middlewares.ProtectedRoutes(userHandler.VerifyTokenInSession))
 }

@@ -6,6 +6,10 @@ import (
 	"path/filepath"
 
 	"github.com/nycholasmarques/socialdev/internal/db"
+	"github.com/nycholasmarques/socialdev/internal/modules/auth/repository"
+	services "github.com/nycholasmarques/socialdev/internal/modules/auth/service"
+	authHttp "github.com/nycholasmarques/socialdev/internal/modules/auth/http"
+
 )
 
 func SetupRoutes(queries *db.Queries) *http.ServeMux {
@@ -19,7 +23,12 @@ func SetupRoutes(queries *db.Queries) *http.ServeMux {
 	uploadsDir := filepath.Join(wd, "uploads")
 	r.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir(uploadsDir))))
 
+
+
 	apiRouter := http.NewServeMux()
+	authRepository := repository.NewAuthRepository(queries)
+	authService := services.NewAuthService(authRepository)
+	authHttp.SetupAuthRoutes(apiRouter, *authService)
 	SetupAPIRoutes(apiRouter, queries)
 	SetupRoleRoutes(apiRouter, queries)
 	SetupPostRoutes(apiRouter, queries)

@@ -13,6 +13,7 @@ import (
 	configs "github.com/nycholasmarques/socialdev/config"
 	"github.com/nycholasmarques/socialdev/internal/entity"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
+	pkg "github.com/nycholasmarques/socialdev/internal/pkg/auth"
 	"github.com/nycholasmarques/socialdev/internal/services"
 	"github.com/nycholasmarques/socialdev/utils"
 	"golang.org/x/crypto/bcrypt"
@@ -81,7 +82,7 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	token, err := configs.CreateToken(userResponse.UserID, true)
+	token, err := pkg.CreateToken(userResponse.UserID, true)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to create token", err.Error())
 		return
@@ -352,7 +353,7 @@ func (h *UserHandler) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	println(loginUser.KeepLogin)
 
-	token, err := configs.CreateToken(user.UserID, loginUser.KeepLogin)
+	token, err := pkg.CreateToken(user.UserID, loginUser.KeepLogin)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to create token", err.Error())
 		return
@@ -437,7 +438,7 @@ func (h *UserHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	jwtToken, err := configs.CreateToken(user.UserID, true)
+	jwtToken, err := pkg.CreateToken(user.UserID, true)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusInternalServerError, "Erro ao criar token", err.Error())
 		return
