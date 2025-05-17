@@ -1,4 +1,4 @@
-package services
+package comment_service
 
 import (
 	"context"
@@ -6,14 +6,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
 	"github.com/nycholasmarques/socialdev/internal/entity"
-	"github.com/nycholasmarques/socialdev/internal/repository"
+	comment_repository "github.com/nycholasmarques/socialdev/internal/modules/comment/repository"
 )
 
 type CommentService struct {
-	commentRepo *repository.CommentRepository
+	commentRepo *comment_repository.CommentRepository
 }
 
-func NewCommentService(commentRepo *repository.CommentRepository) *CommentService {
+func NewCommentService(commentRepo *comment_repository.CommentRepository) *CommentService {
 	return &CommentService{commentRepo: commentRepo}
 }
 

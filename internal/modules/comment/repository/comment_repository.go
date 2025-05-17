@@ -1,4 +1,4 @@
-package repository
+package comment_repository
 
 import (
 	"context"

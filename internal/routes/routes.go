@@ -7,6 +7,7 @@ import (
 
 	"github.com/nycholasmarques/socialdev/internal/db"
 	authHttp "github.com/nycholasmarques/socialdev/internal/modules/auth/http"
+	comment_handlers "github.com/nycholasmarques/socialdev/internal/modules/comment/http"
 	favorite_handlers "github.com/nycholasmarques/socialdev/internal/modules/favorite/http"
 	liker_handler "github.com/nycholasmarques/socialdev/internal/modules/like/http"
 	post_handler "github.com/nycholasmarques/socialdev/internal/modules/posts/http"
@@ -31,7 +32,7 @@ func SetupRoutes(queries *db.Queries) *http.ServeMux {
 	role_handler.SetupUserRoutes(apiRouter, queries)
 	post_handler.SetupPostRoutes(apiRouter, queries)
 	liker_handler.SetupLikeRoutes(apiRouter, queries)
-	SetupCommentRoutes(apiRouter, queries)
+	comment_handlers.SetupCommentRoutes(apiRouter, queries)
 	favorite_handlers.SetupFavoriteRoutes(apiRouter, queries)
 	SetupThemeRoutes(apiRouter, queries)
 	SetupFileRoutes(apiRouter, queries)

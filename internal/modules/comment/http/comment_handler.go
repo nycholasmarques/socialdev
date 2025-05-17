@@ -1,4 +1,4 @@
-package handlers
+package comment_handlers
 
 import (
 	"database/sql"
@@ -11,15 +11,15 @@ import (
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/entity"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
-	"github.com/nycholasmarques/socialdev/internal/services"
+	comment_service "github.com/nycholasmarques/socialdev/internal/modules/comment/service"
 	"github.com/nycholasmarques/socialdev/utils"
 )
 
 type CommentHandler struct {
-	commentService *services.CommentService
+	commentService *comment_service.CommentService
 }
 
-func NewCommentHandler(commentService *services.CommentService) *CommentHandler {
+func NewCommentHandler(commentService *comment_service.CommentService) *CommentHandler {
 	return &CommentHandler{commentService: commentService}
 }
 
