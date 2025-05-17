@@ -42,7 +42,7 @@ func (h *ThemeHandler) CreateThemeHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	validate = validator.New()
+	validate := validator.New()
 	err = validate.Struct(themeCreate)
 	if err != nil {
 		errorMessages := entity.GetValidationThemeErrors(err)
@@ -164,7 +164,7 @@ func (h *ThemeHandler) UpdateThemeHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	validate = validator.New()
+	validate := validator.New()
 	err = validate.Struct(themeUpdate)
 	if err != nil {
 		errorMessages := entity.GetValidationThemeErrors(err)

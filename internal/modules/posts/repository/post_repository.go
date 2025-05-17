@@ -1,4 +1,4 @@
-package repository
+package post_repository
 
 import (
 	"context"
@@ -16,10 +16,6 @@ type PostRepository struct {
 }
 
 func NewPostRepository(queries *db.Queries) *PostRepository {
-	return &PostRepository{queries: queries}
-}
-
-func GetPostRepository(queries *db.Queries) *PostRepository {
 	return &PostRepository{queries: queries}
 }
 

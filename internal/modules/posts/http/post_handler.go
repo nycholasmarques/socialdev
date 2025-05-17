@@ -1,4 +1,4 @@
-package handlers
+package post_handler
 
 import (
 	"encoding/json"
@@ -8,21 +8,18 @@ import (
 	"strconv"
 	"strings"
 
-	// configs "github.com/nycholasmarques/socialdev/config"
 	"github.com/go-playground/validator/v10"
 	"github.com/nycholasmarques/socialdev/internal/entity"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
-	"github.com/nycholasmarques/socialdev/internal/services"
+	post_services "github.com/nycholasmarques/socialdev/internal/modules/posts/service"
 	"github.com/nycholasmarques/socialdev/utils"
 )
 
-// var cfg = configs.LoadConfig()
-
 type PostHandler struct {
-	postService *services.PostService
+	postService *post_services.PostService
 }
 
-func NewPostHandler(postService *services.PostService) *PostHandler {
+func NewPostHandler(postService *post_services.PostService) *PostHandler {
 	return &PostHandler{postService: postService}
 }
 

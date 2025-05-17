@@ -45,7 +45,7 @@ func (h *CommentHandler) CreateCommentHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	validate = validator.New()
+	validate := validator.New()
 	err := validate.Struct(req)
 	if err != nil {
 		errorMessages := entity.GetValidationCommentErrors(err)

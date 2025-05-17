@@ -1,4 +1,4 @@
-package services
+package post_services
 
 import (
 	"context"
@@ -9,14 +9,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
 	"github.com/nycholasmarques/socialdev/internal/entity"
-	"github.com/nycholasmarques/socialdev/internal/repository"
+	post_repository "github.com/nycholasmarques/socialdev/internal/modules/posts/repository"
 )
 
 type PostService struct {
-	postRepo *repository.PostRepository
+	postRepo *post_repository.PostRepository
 }
 
-func NewPostSerivice(postRepo *repository.PostRepository) *PostService {
+func NewPostSerivice(postRepo *post_repository.PostRepository) *PostService {
 	return &PostService{postRepo: postRepo}
 }
 
