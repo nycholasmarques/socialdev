@@ -1,18 +1,18 @@
-package services
+package like_service
 
 import (
 	"context"
 
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
-	"github.com/nycholasmarques/socialdev/internal/repository"
+	like_repository "github.com/nycholasmarques/socialdev/internal/modules/like/repository"
 )
 
 type LikeService struct {
-	likeRepo *repository.LikeRepository
+	likeRepo *like_repository.LikeRepository
 }
 
-func NewLikeService(likeRepo *repository.LikeRepository) *LikeService {
+func NewLikeService(likeRepo *like_repository.LikeRepository) *LikeService {
 	return &LikeService{likeRepo: likeRepo}
 }
 

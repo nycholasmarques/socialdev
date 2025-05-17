@@ -1,4 +1,4 @@
-package handlers
+package liker_handler
 
 import (
 	"net/http"
@@ -6,12 +6,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
-	"github.com/nycholasmarques/socialdev/internal/services"
+	like_service "github.com/nycholasmarques/socialdev/internal/modules/like/service"
 	"github.com/nycholasmarques/socialdev/utils"
 )
 
 type LikeHandler struct {
-	likeService *services.LikeService
+	likeService *like_service.LikeService
 }
 
 type LikeResponse struct {
@@ -20,7 +20,7 @@ type LikeResponse struct {
 	CreatedAt string    `json:"created_at"`
 }
 
-func NewLikeHandler(likeService *services.LikeService) *LikeHandler {
+func NewLikeHandler(likeService *like_service.LikeService) *LikeHandler {
 	return &LikeHandler{likeService: likeService}
 }
 

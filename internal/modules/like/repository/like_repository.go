@@ -1,4 +1,4 @@
-package repository
+package like_repository
 
 import (
 	"context"
@@ -12,10 +12,6 @@ type LikeRepository struct {
 }
 
 func NewLikeRepository(queries *db.Queries) *LikeRepository {
-	return &LikeRepository{queries: queries}
-}
-
-func GetLikeRepository(queries *db.Queries) *LikeRepository {
 	return &LikeRepository{queries: queries}
 }
 
