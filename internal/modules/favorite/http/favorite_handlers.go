@@ -1,4 +1,4 @@
-package handlers
+package favorite_handlers
 
 import (
 	"encoding/json"
@@ -6,15 +6,15 @@ import (
 	"strconv"
 
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
-	"github.com/nycholasmarques/socialdev/internal/services"
+	favorite_services "github.com/nycholasmarques/socialdev/internal/modules/favorite/service"
 	"github.com/nycholasmarques/socialdev/utils"
 )
 
 type FavoriteHandler struct {
-	favoriteService services.FavoriteService
+	favoriteService favorite_services.FavoriteService
 }
 
-func NewFavoriteHandler(favoriteService services.FavoriteService) *FavoriteHandler {
+func NewFavoriteHandler(favoriteService favorite_services.FavoriteService) *FavoriteHandler {
 	return &FavoriteHandler{favoriteService: favoriteService}
 }
 

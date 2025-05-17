@@ -1,4 +1,4 @@
-package services
+package favorite_services
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
 	"github.com/nycholasmarques/socialdev/internal/entity"
-	"github.com/nycholasmarques/socialdev/internal/repository"
+	favorite_repository "github.com/nycholasmarques/socialdev/internal/modules/favorite/repository"
 )
 
 type FavoriteService interface {
@@ -18,10 +18,10 @@ type FavoriteService interface {
 }
 
 type favoriteService struct {
-	favoriteRepo repository.FavoriteRepository
+	favoriteRepo favorite_repository.FavoriteRepository
 }
 
-func NewFavoriteService(favoriteRepo repository.FavoriteRepository) FavoriteService {
+func NewFavoriteService(favoriteRepo favorite_repository.FavoriteRepository) FavoriteService {
 	return &favoriteService{favoriteRepo: favoriteRepo}
 }
 

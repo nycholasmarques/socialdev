@@ -1,4 +1,4 @@
-package repository
+package favorite_repository
 
 import (
 	"context"
