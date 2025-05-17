@@ -1,4 +1,4 @@
-package services
+package user_service
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
 	"github.com/nycholasmarques/socialdev/internal/entity"
-	"github.com/nycholasmarques/socialdev/internal/repository"
+	user_repository "github.com/nycholasmarques/socialdev/internal/modules/user/repository"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService struct {
-	userRepo *repository.UserRepository
+	userRepo *user_repository.UserRepository
 }
 
-func NewUserService(userRepo *repository.UserRepository) *UserService {
+func NewUserService(userRepo *user_repository.UserRepository) *UserService {
 	return &UserService{userRepo: userRepo}
 }
 
@@ -226,15 +226,4 @@ func (s *UserService) UpdateUser(user_id uuid.UUID, username, email, password, a
 func (s *UserService) DeleteUser(user_id uuid.UUID) error {
 	ctx := context.Background()
 	return s.userRepo.DeleteUser(ctx, user_id)
-}
-
-func (s *UserService) LoginUser(email string) (entity.UserResponse, error) {
-	ctx := context.Background()
-	user, err := s.userRepo.LoginUser(ctx, email)
-	if err == sql.ErrNoRows {
-		return entity.UserResponse{}, entity.ErrUserNotFound
-	} else if err != nil {
-		return entity.UserResponse{}, entity.ErrInternalServer
-	}
-	return user, nil
 }

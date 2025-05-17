@@ -1,7 +1,6 @@
-package handlers
+package http
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -10,18 +9,14 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	configs "github.com/nycholasmarques/socialdev/config"
 	"github.com/nycholasmarques/socialdev/internal/entity"
+	"github.com/nycholasmarques/socialdev/internal/handlers"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
+	services "github.com/nycholasmarques/socialdev/internal/modules/user/service"
 	pkg "github.com/nycholasmarques/socialdev/internal/pkg/auth"
-	"github.com/nycholasmarques/socialdev/internal/services"
 	"github.com/nycholasmarques/socialdev/utils"
 	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 )
-
-var cfg = configs.LoadConfig()
 
 type UserHandler struct {
 	userService *services.UserService
@@ -40,17 +35,6 @@ type UserResponse struct {
 	Token string              `json:"token"`
 }
 
-var (
-	googleOauthConfig = &oauth2.Config{
-		RedirectURL:  cfg.GoogleRedirectURL,
-		ClientID:     cfg.GoogleClientID,
-		ClientSecret: cfg.GoogleClientSecret,
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"},
-		Endpoint:     google.Endpoint,
-	}
-	randomState = "random"
-)
-
 func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -61,7 +45,7 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	validate = validator.New()
+	validate := validator.New()
 
 	if err := validate.Struct(registerUser); err != nil {
 		errorMessages := entity.GetValidationUserErrors(err)
@@ -246,7 +230,7 @@ func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 		userUpdate.Website = &user.Website
 	}
 
-	fileHandler := NewFileHandler()
+	fileHandler := handlers.NewFileHandler()
 
 	if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
 		avatarPath, err := fileHandler.UploadFile(r)
@@ -314,165 +298,4 @@ func (h *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) 
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("User deleted successfully!"))
-}
-
-func (h *UserHandler) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	var loginUser entity.LoginUserRequest
-	err := json.NewDecoder(r.Body).Decode(&loginUser)
-	if err != nil {
-		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid request body", err.Error())
-		return
-	}
-
-	validate = validator.New()
-
-	if err := validate.Struct(loginUser); err != nil {
-		errorMessages := entity.GetValidationUserErrors(err)
-		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid request body", errorMessages)
-		return
-	}
-
-	user, err := h.userService.LoginUser(loginUser.Email)
-	if err != nil {
-		switch err {
-		case entity.ErrUserNotFound:
-			utils.NewErrorResponse(w, http.StatusNotFound, "User not found", true)
-		default:
-			utils.NewErrorResponse(w, http.StatusInternalServerError, "email ou senha inválido", true)
-		}
-		return
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginUser.Password))
-	if err != nil {
-		utils.NewErrorResponse(w, http.StatusUnauthorized, "email ou senha inválido", true)
-		return
-	}
-
-	println(loginUser.KeepLogin)
-
-	token, err := pkg.CreateToken(user.UserID, loginUser.KeepLogin)
-	if err != nil {
-		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to create token", err.Error())
-		return
-	}
-
-	response := UserResponse{
-		User:  user,
-		Token: token,
-	}
-
-	res, err := json.Marshal(response)
-	if err != nil {
-		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to marshal user", err.Error())
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(res))
-}
-
-func (h *UserHandler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		utils.NewErrorResponse(w, http.StatusMethodNotAllowed, "Método não permitido", "")
-		return
-	}
-
-	url := googleOauthConfig.AuthCodeURL(randomState)
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-}
-
-func (h *UserHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		utils.NewErrorResponse(w, http.StatusMethodNotAllowed, "Método não permitido", "")
-		return
-	}
-
-	if r.FormValue("state") != randomState {
-		utils.NewErrorResponse(w, http.StatusBadRequest, "Erro na autenticação", "")
-		return
-	}
-
-	context := context.Background()
-
-	token, err := googleOauthConfig.Exchange(context, r.FormValue("code"))
-	if err != nil {
-		utils.NewErrorResponse(w, http.StatusInternalServerError, "Erro ao obter token", err.Error())
-		return
-	}
-
-	client := googleOauthConfig.Client(context, token)
-	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
-	if err != nil {
-		utils.NewErrorResponse(w, http.StatusInternalServerError, "Erro ao obter informações do usuário", err.Error())
-		return
-	}
-	defer resp.Body.Close()
-
-	var userInfo map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
-		utils.NewErrorResponse(w, http.StatusInternalServerError, "Erro ao decodificar informações do usuário", "")
-		return
-	}
-
-	email, ok := userInfo["email"].(string)
-	if !ok {
-		utils.NewErrorResponse(w, http.StatusInternalServerError, "Erro na autenticação", "")
-		return
-	}
-
-	name, ok := userInfo["name"].(string)
-	if !ok {
-		utils.NewErrorResponse(w, http.StatusInternalServerError, "Erro na autenticação", "")
-		return
-	}
-
-	user, err := h.userService.LoginUser(email)
-	if err != nil {
-		user, err = h.userService.CreateUserWithGoogle(name, email, "", userInfo["id"].(string), userInfo["picture"].(string))
-		if err != nil {
-			utils.NewErrorResponse(w, http.StatusInternalServerError, "Erro ao criar usuário", err.Error())
-			return
-		}
-	}
-
-	jwtToken, err := pkg.CreateToken(user.UserID, true)
-	if err != nil {
-		utils.NewErrorResponse(w, http.StatusInternalServerError, "Erro ao criar token", err.Error())
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"token": jwtToken,
-		"user":  user,
-	})
-}
-
-func (h *UserHandler) VerifyTokenInSession(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(middlewares.UserIDKey).(string)
-	if userID == "" {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	userUUID, err := uuid.Parse(userID)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	user, err := h.userService.GetUser(userUUID)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message": "Token valid",
-		"user":    user,
-	})
 }

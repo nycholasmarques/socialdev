@@ -1,4 +1,4 @@
-package repository
+package user_repository
 
 import (
 	"context"
@@ -15,10 +15,6 @@ type UserRepository struct {
 }
 
 func NewUserRepository(queries *db.Queries) *UserRepository {
-	return &UserRepository{queries: queries}
-}
-
-func GetUserRepository(queries *db.Queries) *UserRepository {
 	return &UserRepository{queries: queries}
 }
 
@@ -107,29 +103,4 @@ func (r *UserRepository) DeleteUser(ctx context.Context, user_id uuid.UUID) erro
 		log.Printf("%v", err)
 	}
 	return err
-}
-
-func (r *UserRepository) LoginUser(ctx context.Context, email string) (entity.UserResponse, error) {
-	user, err := r.queries.GetUserByEmail(ctx, email)
-	if err == sql.ErrNoRows {
-		return entity.UserResponse{}, entity.ErrUserNotFound
-	} else if err != nil {
-		log.Printf("%v", err)
-	}
-
-	var userResponse entity.UserResponse
-
-	userResponse.UserID = user.UserID.String()
-	userResponse.Username = user.Username
-	userResponse.Password = user.Password
-	userResponse.Email = user.Email
-	userResponse.Avatar = user.Avatar.String
-	userResponse.Bio = user.Bio.String
-	userResponse.Github = user.Github.String
-	userResponse.Linkedin = user.Linkedin.String
-	userResponse.Website = user.Website.String
-	userResponse.CreatedAt = user.CreatedAt.Time.String()
-	userResponse.UpdatedAt = user.UpdatedAt.Time.String()
-
-	return userResponse, err
 }
