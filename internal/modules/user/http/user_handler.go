@@ -10,8 +10,8 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/entity"
-	"github.com/nycholasmarques/socialdev/internal/handlers"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
+	file_handlers "github.com/nycholasmarques/socialdev/internal/modules/file/http"
 	services "github.com/nycholasmarques/socialdev/internal/modules/user/service"
 	pkg "github.com/nycholasmarques/socialdev/internal/pkg/auth"
 	"github.com/nycholasmarques/socialdev/utils"
@@ -230,7 +230,7 @@ func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 		userUpdate.Website = &user.Website
 	}
 
-	fileHandler := handlers.NewFileHandler()
+	fileHandler := file_handlers.NewFileHandler()
 
 	if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
 		avatarPath, err := fileHandler.UploadFile(r)

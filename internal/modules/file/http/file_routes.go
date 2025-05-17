@@ -1,14 +1,13 @@
-package routes
+package file_handlers
 
 import (
 	"net/http"
 
 	"github.com/nycholasmarques/socialdev/internal/db"
-	"github.com/nycholasmarques/socialdev/internal/handlers"
 )
 
 func SetupFileRoutes(r *http.ServeMux, queries *db.Queries) {
-	fileHandler := handlers.NewFileHandler()
+	fileHandler := NewFileHandler()
 
 	r.HandleFunc("POST /upload", func(w http.ResponseWriter, r *http.Request) {
 		avatarPath, err := fileHandler.UploadFile(r)
