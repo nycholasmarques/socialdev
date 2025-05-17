@@ -7,6 +7,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"fmt"
 )
 
 type DBTX interface {
@@ -20,12 +21,508 @@ func New(db DBTX) *Queries {
 	return &Queries{db: db}
 }
 
+func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
+	q := Queries{db: db}
+	var err error
+	if q.addFavoriteStmt, err = db.PrepareContext(ctx, addFavorite); err != nil {
+		return nil, fmt.Errorf("error preparing query AddFavorite: %w", err)
+	}
+	if q.addUserThemeStmt, err = db.PrepareContext(ctx, addUserTheme); err != nil {
+		return nil, fmt.Errorf("error preparing query AddUserTheme: %w", err)
+	}
+	if q.checkFavoriteExistsStmt, err = db.PrepareContext(ctx, checkFavoriteExists); err != nil {
+		return nil, fmt.Errorf("error preparing query CheckFavoriteExists: %w", err)
+	}
+	if q.createCommentStmt, err = db.PrepareContext(ctx, createComment); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateComment: %w", err)
+	}
+	if q.createLikeStmt, err = db.PrepareContext(ctx, createLike); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateLike: %w", err)
+	}
+	if q.createPostStmt, err = db.PrepareContext(ctx, createPost); err != nil {
+		return nil, fmt.Errorf("error preparing query CreatePost: %w", err)
+	}
+	if q.createRoleStmt, err = db.PrepareContext(ctx, createRole); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateRole: %w", err)
+	}
+	if q.createThemeStmt, err = db.PrepareContext(ctx, createTheme); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateTheme: %w", err)
+	}
+	if q.createUserStmt, err = db.PrepareContext(ctx, createUser); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateUser: %w", err)
+	}
+	if q.createUserWithRolesStmt, err = db.PrepareContext(ctx, createUserWithRoles); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateUserWithRoles: %w", err)
+	}
+	if q.deleteCommentStmt, err = db.PrepareContext(ctx, deleteComment); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteComment: %w", err)
+	}
+	if q.deleteLikeStmt, err = db.PrepareContext(ctx, deleteLike); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteLike: %w", err)
+	}
+	if q.deletePostStmt, err = db.PrepareContext(ctx, deletePost); err != nil {
+		return nil, fmt.Errorf("error preparing query DeletePost: %w", err)
+	}
+	if q.deleteRoleStmt, err = db.PrepareContext(ctx, deleteRole); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteRole: %w", err)
+	}
+	if q.deleteThemeStmt, err = db.PrepareContext(ctx, deleteTheme); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteTheme: %w", err)
+	}
+	if q.deleteUserStmt, err = db.PrepareContext(ctx, deleteUser); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteUser: %w", err)
+	}
+	if q.deleteUserThemeStmt, err = db.PrepareContext(ctx, deleteUserTheme); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteUserTheme: %w", err)
+	}
+	if q.deleteUserWithRolesStmt, err = db.PrepareContext(ctx, deleteUserWithRoles); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteUserWithRoles: %w", err)
+	}
+	if q.getAllCommentsStmt, err = db.PrepareContext(ctx, getAllComments); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllComments: %w", err)
+	}
+	if q.getAllPostsStmt, err = db.PrepareContext(ctx, getAllPosts); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllPosts: %w", err)
+	}
+	if q.getAllRolesStmt, err = db.PrepareContext(ctx, getAllRoles); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllRoles: %w", err)
+	}
+	if q.getAllUserPostsStmt, err = db.PrepareContext(ctx, getAllUserPosts); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllUserPosts: %w", err)
+	}
+	if q.getAllUsersStmt, err = db.PrepareContext(ctx, getAllUsers); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllUsers: %w", err)
+	}
+	if q.getCommentStmt, err = db.PrepareContext(ctx, getComment); err != nil {
+		return nil, fmt.Errorf("error preparing query GetComment: %w", err)
+	}
+	if q.getLikeStmt, err = db.PrepareContext(ctx, getLike); err != nil {
+		return nil, fmt.Errorf("error preparing query GetLike: %w", err)
+	}
+	if q.getPostStmt, err = db.PrepareContext(ctx, getPost); err != nil {
+		return nil, fmt.Errorf("error preparing query GetPost: %w", err)
+	}
+	if q.getRoleStmt, err = db.PrepareContext(ctx, getRole); err != nil {
+		return nil, fmt.Errorf("error preparing query GetRole: %w", err)
+	}
+	if q.getRoleWithNameStmt, err = db.PrepareContext(ctx, getRoleWithName); err != nil {
+		return nil, fmt.Errorf("error preparing query GetRoleWithName: %w", err)
+	}
+	if q.getThemeByIDStmt, err = db.PrepareContext(ctx, getThemeByID); err != nil {
+		return nil, fmt.Errorf("error preparing query GetThemeByID: %w", err)
+	}
+	if q.getUserStmt, err = db.PrepareContext(ctx, getUser); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUser: %w", err)
+	}
+	if q.getUserByEmailStmt, err = db.PrepareContext(ctx, getUserByEmail); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserByEmail: %w", err)
+	}
+	if q.getUserFavoritesStmt, err = db.PrepareContext(ctx, getUserFavorites); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserFavorites: %w", err)
+	}
+	if q.getUserPostStmt, err = db.PrepareContext(ctx, getUserPost); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserPost: %w", err)
+	}
+	if q.getUserWithUsernameStmt, err = db.PrepareContext(ctx, getUserWithUsername); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserWithUsername: %w", err)
+	}
+	if q.listAllThemesStmt, err = db.PrepareContext(ctx, listAllThemes); err != nil {
+		return nil, fmt.Errorf("error preparing query ListAllThemes: %w", err)
+	}
+	if q.listUserThemesStmt, err = db.PrepareContext(ctx, listUserThemes); err != nil {
+		return nil, fmt.Errorf("error preparing query ListUserThemes: %w", err)
+	}
+	if q.removeFavoriteStmt, err = db.PrepareContext(ctx, removeFavorite); err != nil {
+		return nil, fmt.Errorf("error preparing query RemoveFavorite: %w", err)
+	}
+	if q.updateCommentStmt, err = db.PrepareContext(ctx, updateComment); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateComment: %w", err)
+	}
+	if q.updatePostStmt, err = db.PrepareContext(ctx, updatePost); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdatePost: %w", err)
+	}
+	if q.updateRoleStmt, err = db.PrepareContext(ctx, updateRole); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateRole: %w", err)
+	}
+	if q.updateThemeStmt, err = db.PrepareContext(ctx, updateTheme); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateTheme: %w", err)
+	}
+	if q.updateUserStmt, err = db.PrepareContext(ctx, updateUser); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateUser: %w", err)
+	}
+	if q.updateUserThemeStmt, err = db.PrepareContext(ctx, updateUserTheme); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateUserTheme: %w", err)
+	}
+	if q.userHasActiveThemeStmt, err = db.PrepareContext(ctx, userHasActiveTheme); err != nil {
+		return nil, fmt.Errorf("error preparing query UserHasActiveTheme: %w", err)
+	}
+	if q.userHasThemeStmt, err = db.PrepareContext(ctx, userHasTheme); err != nil {
+		return nil, fmt.Errorf("error preparing query UserHasTheme: %w", err)
+	}
+	return &q, nil
+}
+
+func (q *Queries) Close() error {
+	var err error
+	if q.addFavoriteStmt != nil {
+		if cerr := q.addFavoriteStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing addFavoriteStmt: %w", cerr)
+		}
+	}
+	if q.addUserThemeStmt != nil {
+		if cerr := q.addUserThemeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing addUserThemeStmt: %w", cerr)
+		}
+	}
+	if q.checkFavoriteExistsStmt != nil {
+		if cerr := q.checkFavoriteExistsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing checkFavoriteExistsStmt: %w", cerr)
+		}
+	}
+	if q.createCommentStmt != nil {
+		if cerr := q.createCommentStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createCommentStmt: %w", cerr)
+		}
+	}
+	if q.createLikeStmt != nil {
+		if cerr := q.createLikeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createLikeStmt: %w", cerr)
+		}
+	}
+	if q.createPostStmt != nil {
+		if cerr := q.createPostStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createPostStmt: %w", cerr)
+		}
+	}
+	if q.createRoleStmt != nil {
+		if cerr := q.createRoleStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createRoleStmt: %w", cerr)
+		}
+	}
+	if q.createThemeStmt != nil {
+		if cerr := q.createThemeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createThemeStmt: %w", cerr)
+		}
+	}
+	if q.createUserStmt != nil {
+		if cerr := q.createUserStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createUserStmt: %w", cerr)
+		}
+	}
+	if q.createUserWithRolesStmt != nil {
+		if cerr := q.createUserWithRolesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createUserWithRolesStmt: %w", cerr)
+		}
+	}
+	if q.deleteCommentStmt != nil {
+		if cerr := q.deleteCommentStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteCommentStmt: %w", cerr)
+		}
+	}
+	if q.deleteLikeStmt != nil {
+		if cerr := q.deleteLikeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteLikeStmt: %w", cerr)
+		}
+	}
+	if q.deletePostStmt != nil {
+		if cerr := q.deletePostStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deletePostStmt: %w", cerr)
+		}
+	}
+	if q.deleteRoleStmt != nil {
+		if cerr := q.deleteRoleStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteRoleStmt: %w", cerr)
+		}
+	}
+	if q.deleteThemeStmt != nil {
+		if cerr := q.deleteThemeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteThemeStmt: %w", cerr)
+		}
+	}
+	if q.deleteUserStmt != nil {
+		if cerr := q.deleteUserStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteUserStmt: %w", cerr)
+		}
+	}
+	if q.deleteUserThemeStmt != nil {
+		if cerr := q.deleteUserThemeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteUserThemeStmt: %w", cerr)
+		}
+	}
+	if q.deleteUserWithRolesStmt != nil {
+		if cerr := q.deleteUserWithRolesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteUserWithRolesStmt: %w", cerr)
+		}
+	}
+	if q.getAllCommentsStmt != nil {
+		if cerr := q.getAllCommentsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllCommentsStmt: %w", cerr)
+		}
+	}
+	if q.getAllPostsStmt != nil {
+		if cerr := q.getAllPostsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllPostsStmt: %w", cerr)
+		}
+	}
+	if q.getAllRolesStmt != nil {
+		if cerr := q.getAllRolesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllRolesStmt: %w", cerr)
+		}
+	}
+	if q.getAllUserPostsStmt != nil {
+		if cerr := q.getAllUserPostsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllUserPostsStmt: %w", cerr)
+		}
+	}
+	if q.getAllUsersStmt != nil {
+		if cerr := q.getAllUsersStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllUsersStmt: %w", cerr)
+		}
+	}
+	if q.getCommentStmt != nil {
+		if cerr := q.getCommentStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getCommentStmt: %w", cerr)
+		}
+	}
+	if q.getLikeStmt != nil {
+		if cerr := q.getLikeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getLikeStmt: %w", cerr)
+		}
+	}
+	if q.getPostStmt != nil {
+		if cerr := q.getPostStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getPostStmt: %w", cerr)
+		}
+	}
+	if q.getRoleStmt != nil {
+		if cerr := q.getRoleStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getRoleStmt: %w", cerr)
+		}
+	}
+	if q.getRoleWithNameStmt != nil {
+		if cerr := q.getRoleWithNameStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getRoleWithNameStmt: %w", cerr)
+		}
+	}
+	if q.getThemeByIDStmt != nil {
+		if cerr := q.getThemeByIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getThemeByIDStmt: %w", cerr)
+		}
+	}
+	if q.getUserStmt != nil {
+		if cerr := q.getUserStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserStmt: %w", cerr)
+		}
+	}
+	if q.getUserByEmailStmt != nil {
+		if cerr := q.getUserByEmailStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserByEmailStmt: %w", cerr)
+		}
+	}
+	if q.getUserFavoritesStmt != nil {
+		if cerr := q.getUserFavoritesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserFavoritesStmt: %w", cerr)
+		}
+	}
+	if q.getUserPostStmt != nil {
+		if cerr := q.getUserPostStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserPostStmt: %w", cerr)
+		}
+	}
+	if q.getUserWithUsernameStmt != nil {
+		if cerr := q.getUserWithUsernameStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserWithUsernameStmt: %w", cerr)
+		}
+	}
+	if q.listAllThemesStmt != nil {
+		if cerr := q.listAllThemesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listAllThemesStmt: %w", cerr)
+		}
+	}
+	if q.listUserThemesStmt != nil {
+		if cerr := q.listUserThemesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listUserThemesStmt: %w", cerr)
+		}
+	}
+	if q.removeFavoriteStmt != nil {
+		if cerr := q.removeFavoriteStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing removeFavoriteStmt: %w", cerr)
+		}
+	}
+	if q.updateCommentStmt != nil {
+		if cerr := q.updateCommentStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateCommentStmt: %w", cerr)
+		}
+	}
+	if q.updatePostStmt != nil {
+		if cerr := q.updatePostStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updatePostStmt: %w", cerr)
+		}
+	}
+	if q.updateRoleStmt != nil {
+		if cerr := q.updateRoleStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateRoleStmt: %w", cerr)
+		}
+	}
+	if q.updateThemeStmt != nil {
+		if cerr := q.updateThemeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateThemeStmt: %w", cerr)
+		}
+	}
+	if q.updateUserStmt != nil {
+		if cerr := q.updateUserStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateUserStmt: %w", cerr)
+		}
+	}
+	if q.updateUserThemeStmt != nil {
+		if cerr := q.updateUserThemeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateUserThemeStmt: %w", cerr)
+		}
+	}
+	if q.userHasActiveThemeStmt != nil {
+		if cerr := q.userHasActiveThemeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing userHasActiveThemeStmt: %w", cerr)
+		}
+	}
+	if q.userHasThemeStmt != nil {
+		if cerr := q.userHasThemeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing userHasThemeStmt: %w", cerr)
+		}
+	}
+	return err
+}
+
+func (q *Queries) exec(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) (sql.Result, error) {
+	switch {
+	case stmt != nil && q.tx != nil:
+		return q.tx.StmtContext(ctx, stmt).ExecContext(ctx, args...)
+	case stmt != nil:
+		return stmt.ExecContext(ctx, args...)
+	default:
+		return q.db.ExecContext(ctx, query, args...)
+	}
+}
+
+func (q *Queries) query(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) (*sql.Rows, error) {
+	switch {
+	case stmt != nil && q.tx != nil:
+		return q.tx.StmtContext(ctx, stmt).QueryContext(ctx, args...)
+	case stmt != nil:
+		return stmt.QueryContext(ctx, args...)
+	default:
+		return q.db.QueryContext(ctx, query, args...)
+	}
+}
+
+func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) *sql.Row {
+	switch {
+	case stmt != nil && q.tx != nil:
+		return q.tx.StmtContext(ctx, stmt).QueryRowContext(ctx, args...)
+	case stmt != nil:
+		return stmt.QueryRowContext(ctx, args...)
+	default:
+		return q.db.QueryRowContext(ctx, query, args...)
+	}
+}
+
 type Queries struct {
-	db DBTX
+	db                      DBTX
+	tx                      *sql.Tx
+	addFavoriteStmt         *sql.Stmt
+	addUserThemeStmt        *sql.Stmt
+	checkFavoriteExistsStmt *sql.Stmt
+	createCommentStmt       *sql.Stmt
+	createLikeStmt          *sql.Stmt
+	createPostStmt          *sql.Stmt
+	createRoleStmt          *sql.Stmt
+	createThemeStmt         *sql.Stmt
+	createUserStmt          *sql.Stmt
+	createUserWithRolesStmt *sql.Stmt
+	deleteCommentStmt       *sql.Stmt
+	deleteLikeStmt          *sql.Stmt
+	deletePostStmt          *sql.Stmt
+	deleteRoleStmt          *sql.Stmt
+	deleteThemeStmt         *sql.Stmt
+	deleteUserStmt          *sql.Stmt
+	deleteUserThemeStmt     *sql.Stmt
+	deleteUserWithRolesStmt *sql.Stmt
+	getAllCommentsStmt      *sql.Stmt
+	getAllPostsStmt         *sql.Stmt
+	getAllRolesStmt         *sql.Stmt
+	getAllUserPostsStmt     *sql.Stmt
+	getAllUsersStmt         *sql.Stmt
+	getCommentStmt          *sql.Stmt
+	getLikeStmt             *sql.Stmt
+	getPostStmt             *sql.Stmt
+	getRoleStmt             *sql.Stmt
+	getRoleWithNameStmt     *sql.Stmt
+	getThemeByIDStmt        *sql.Stmt
+	getUserStmt             *sql.Stmt
+	getUserByEmailStmt      *sql.Stmt
+	getUserFavoritesStmt    *sql.Stmt
+	getUserPostStmt         *sql.Stmt
+	getUserWithUsernameStmt *sql.Stmt
+	listAllThemesStmt       *sql.Stmt
+	listUserThemesStmt      *sql.Stmt
+	removeFavoriteStmt      *sql.Stmt
+	updateCommentStmt       *sql.Stmt
+	updatePostStmt          *sql.Stmt
+	updateRoleStmt          *sql.Stmt
+	updateThemeStmt         *sql.Stmt
+	updateUserStmt          *sql.Stmt
+	updateUserThemeStmt     *sql.Stmt
+	userHasActiveThemeStmt  *sql.Stmt
+	userHasThemeStmt        *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db: tx,
+		db:                      tx,
+		tx:                      tx,
+		addFavoriteStmt:         q.addFavoriteStmt,
+		addUserThemeStmt:        q.addUserThemeStmt,
+		checkFavoriteExistsStmt: q.checkFavoriteExistsStmt,
+		createCommentStmt:       q.createCommentStmt,
+		createLikeStmt:          q.createLikeStmt,
+		createPostStmt:          q.createPostStmt,
+		createRoleStmt:          q.createRoleStmt,
+		createThemeStmt:         q.createThemeStmt,
+		createUserStmt:          q.createUserStmt,
+		createUserWithRolesStmt: q.createUserWithRolesStmt,
+		deleteCommentStmt:       q.deleteCommentStmt,
+		deleteLikeStmt:          q.deleteLikeStmt,
+		deletePostStmt:          q.deletePostStmt,
+		deleteRoleStmt:          q.deleteRoleStmt,
+		deleteThemeStmt:         q.deleteThemeStmt,
+		deleteUserStmt:          q.deleteUserStmt,
+		deleteUserThemeStmt:     q.deleteUserThemeStmt,
+		deleteUserWithRolesStmt: q.deleteUserWithRolesStmt,
+		getAllCommentsStmt:      q.getAllCommentsStmt,
+		getAllPostsStmt:         q.getAllPostsStmt,
+		getAllRolesStmt:         q.getAllRolesStmt,
+		getAllUserPostsStmt:     q.getAllUserPostsStmt,
+		getAllUsersStmt:         q.getAllUsersStmt,
+		getCommentStmt:          q.getCommentStmt,
+		getLikeStmt:             q.getLikeStmt,
+		getPostStmt:             q.getPostStmt,
+		getRoleStmt:             q.getRoleStmt,
+		getRoleWithNameStmt:     q.getRoleWithNameStmt,
+		getThemeByIDStmt:        q.getThemeByIDStmt,
+		getUserStmt:             q.getUserStmt,
+		getUserByEmailStmt:      q.getUserByEmailStmt,
+		getUserFavoritesStmt:    q.getUserFavoritesStmt,
+		getUserPostStmt:         q.getUserPostStmt,
+		getUserWithUsernameStmt: q.getUserWithUsernameStmt,
+		listAllThemesStmt:       q.listAllThemesStmt,
+		listUserThemesStmt:      q.listUserThemesStmt,
+		removeFavoriteStmt:      q.removeFavoriteStmt,
+		updateCommentStmt:       q.updateCommentStmt,
+		updatePostStmt:          q.updatePostStmt,
+		updateRoleStmt:          q.updateRoleStmt,
+		updateThemeStmt:         q.updateThemeStmt,
+		updateUserStmt:          q.updateUserStmt,
+		updateUserThemeStmt:     q.updateUserThemeStmt,
+		userHasActiveThemeStmt:  q.userHasActiveThemeStmt,
+		userHasThemeStmt:        q.userHasThemeStmt,
 	}
 }
