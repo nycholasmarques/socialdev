@@ -7,6 +7,7 @@ import (
 
 	"github.com/nycholasmarques/socialdev/internal/db"
 	authHttp "github.com/nycholasmarques/socialdev/internal/modules/auth/http"
+	role_handler "github.com/nycholasmarques/socialdev/internal/modules/role/http"
 	userHttp "github.com/nycholasmarques/socialdev/internal/modules/user/http"
 )
 
@@ -24,7 +25,7 @@ func SetupRoutes(queries *db.Queries) *http.ServeMux {
 	apiRouter := http.NewServeMux()
 	authHttp.SetupAuthRoutes(apiRouter, queries)
 	userHttp.SetupUserRoutes(apiRouter, queries)
-	SetupRoleRoutes(apiRouter, queries)
+	role_handler.SetupUserRoutes(apiRouter, queries)
 	SetupPostRoutes(apiRouter, queries)
 	SetupLikeRoutes(apiRouter, queries)
 	SetupCommentRoutes(apiRouter, queries)

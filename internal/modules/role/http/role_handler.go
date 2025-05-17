@@ -1,4 +1,4 @@
-package handlers
+package role_handler
 
 import (
 	"encoding/json"
@@ -9,11 +9,11 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
-	"github.com/nycholasmarques/socialdev/internal/services"
+	role_service "github.com/nycholasmarques/socialdev/internal/modules/role/service"
 )
 
 type RoleHandler struct {
-	roleService *services.RoleService
+	roleService *role_service.RoleService
 }
 
 type RoleWithUser struct {
@@ -21,7 +21,7 @@ type RoleWithUser struct {
 	UserID uuid.UUID `json:"user_id"`
 }
 
-func NewRoleHandler(roleService *services.RoleService) *RoleHandler {
+func NewRoleHandler(roleService *role_service.RoleService) *RoleHandler {
 	return &RoleHandler{roleService: roleService}
 }
 

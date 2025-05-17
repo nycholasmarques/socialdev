@@ -1,18 +1,18 @@
-package services
+package role_service
 
 import (
 	"context"
 
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
-	"github.com/nycholasmarques/socialdev/internal/repository"
+	role_repository "github.com/nycholasmarques/socialdev/internal/modules/role/repository"
 )
 
 type RoleService struct {
-	roleRepo *repository.RoleRepository
+	roleRepo *role_repository.RoleRepository
 }
 
-func NewRoleService(roleRepo *repository.RoleRepository) *RoleService {
+func NewRoleService(roleRepo *role_repository.RoleRepository) *RoleService {
 	return &RoleService{roleRepo: roleRepo}
 }
 
