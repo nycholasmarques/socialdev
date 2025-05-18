@@ -1,10 +1,11 @@
-package theme_handler
+package theme_routes
 
 import (
 	"net/http"
 
 	"github.com/nycholasmarques/socialdev/internal/db"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
+	theme_handler "github.com/nycholasmarques/socialdev/internal/modules/theme/handler"
 	theme_repository "github.com/nycholasmarques/socialdev/internal/modules/theme/repository"
 	theme_service "github.com/nycholasmarques/socialdev/internal/modules/theme/service"
 )
@@ -12,7 +13,7 @@ import (
 func SetupThemeRoutes(r *http.ServeMux, queries *db.Queries) {
 	themeRepo := theme_repository.NewThemeRepository(queries)
 	themeService := theme_service.NewThemeService(themeRepo)
-	themeHandler := NewThemeHandler(themeService)
+	themeHandler := theme_handler.NewThemeHandler(themeService)
 
 	r.HandleFunc("POST /themes", themeHandler.CreateThemeHandler)
 	r.HandleFunc("GET /themes/{theme_id}", themeHandler.GetThemeHandler)
