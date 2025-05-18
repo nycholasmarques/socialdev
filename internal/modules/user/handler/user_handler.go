@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/entity"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
-	file_handlers "github.com/nycholasmarques/socialdev/internal/modules/file/http"
+	file_handlers "github.com/nycholasmarques/socialdev/internal/modules/file/handler"
 	services "github.com/nycholasmarques/socialdev/internal/modules/user/service"
 	pkg "github.com/nycholasmarques/socialdev/internal/pkg/auth"
 	"github.com/nycholasmarques/socialdev/utils"
