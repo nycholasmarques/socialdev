@@ -1,4 +1,4 @@
-package http
+package auth_handlers
 
 import (
 	"encoding/json"

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/nycholasmarques/socialdev/internal/db"
-	authHttp "github.com/nycholasmarques/socialdev/internal/modules/auth/http"
+	auth_routes "github.com/nycholasmarques/socialdev/internal/modules/auth/routes"
 	comment_routes "github.com/nycholasmarques/socialdev/internal/modules/comment/routes"
 	favorite_routes "github.com/nycholasmarques/socialdev/internal/modules/favorite/routes"
 	file_routes "github.com/nycholasmarques/socialdev/internal/modules/file/routes"
@@ -29,7 +29,7 @@ func SetupRoutes(queries *db.Queries) *http.ServeMux {
 	r.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir(uploadsDir))))
 
 	apiRouter := http.NewServeMux()
-	authHttp.SetupAuthRoutes(apiRouter, queries)
+	auth_routes.SetupAuthRoutes(apiRouter, queries)
 	user_routes.SetupUserRoutes(apiRouter, queries)
 	role_routes.SetupUserRoutes(apiRouter, queries)
 	post_routes.SetupPostRoutes(apiRouter, queries)
