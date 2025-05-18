@@ -25,7 +25,7 @@ type AddFavoriteParams struct {
 }
 
 func (q *Queries) AddFavorite(ctx context.Context, arg AddFavoriteParams) (Favorite, error) {
-	row := q.db.QueryRowContext(ctx, addFavorite, arg.UserID, arg.PostID)
+	row := q.queryRow(ctx, q.addFavoriteStmt, addFavorite, arg.UserID, arg.PostID)
 	var i Favorite
 	err := row.Scan(
 		&i.UserID,
@@ -53,7 +53,7 @@ type AddUserThemeParams struct {
 }
 
 func (q *Queries) AddUserTheme(ctx context.Context, arg AddUserThemeParams) (UserTheme, error) {
-	row := q.db.QueryRowContext(ctx, addUserTheme,
+	row := q.queryRow(ctx, q.addUserThemeStmt, addUserTheme,
 		arg.UserID,
 		arg.ThemeID,
 		arg.Active,
@@ -84,7 +84,7 @@ type CheckFavoriteExistsParams struct {
 }
 
 func (q *Queries) CheckFavoriteExists(ctx context.Context, arg CheckFavoriteExistsParams) (bool, error) {
-	row := q.db.QueryRowContext(ctx, checkFavoriteExists, arg.UserID, arg.PostID)
+	row := q.queryRow(ctx, q.checkFavoriteExistsStmt, checkFavoriteExists, arg.UserID, arg.PostID)
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
@@ -107,7 +107,7 @@ type CreateCommentParams struct {
 }
 
 func (q *Queries) CreateComment(ctx context.Context, arg CreateCommentParams) (Comment, error) {
-	row := q.db.QueryRowContext(ctx, createComment,
+	row := q.queryRow(ctx, q.createCommentStmt, createComment,
 		arg.CommentID,
 		arg.UserID,
 		arg.PostID,
@@ -141,7 +141,7 @@ type CreateLikeParams struct {
 }
 
 func (q *Queries) CreateLike(ctx context.Context, arg CreateLikeParams) (Like, error) {
-	row := q.db.QueryRowContext(ctx, createLike, arg.UserID, arg.PostID)
+	row := q.queryRow(ctx, q.createLikeStmt, createLike, arg.UserID, arg.PostID)
 	var i Like
 	err := row.Scan(
 		&i.UserID,
@@ -171,7 +171,7 @@ type CreatePostParams struct {
 }
 
 func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) (Post, error) {
-	row := q.db.QueryRowContext(ctx, createPost,
+	row := q.queryRow(ctx, q.createPostStmt, createPost,
 		arg.PostID,
 		arg.UserID,
 		arg.Title,
@@ -209,7 +209,7 @@ type CreateRoleParams struct {
 }
 
 func (q *Queries) CreateRole(ctx context.Context, arg CreateRoleParams) (Role, error) {
-	row := q.db.QueryRowContext(ctx, createRole, arg.RoleID, arg.Name)
+	row := q.queryRow(ctx, q.createRoleStmt, createRole, arg.RoleID, arg.Name)
 	var i Role
 	err := row.Scan(
 		&i.RoleID,
@@ -242,7 +242,7 @@ type CreateThemeParams struct {
 }
 
 func (q *Queries) CreateTheme(ctx context.Context, arg CreateThemeParams) (Theme, error) {
-	row := q.db.QueryRowContext(ctx, createTheme,
+	row := q.queryRow(ctx, q.createThemeStmt, createTheme,
 		arg.ThemeID,
 		arg.Name,
 		arg.Description,
@@ -289,7 +289,7 @@ type CreateUserParams struct {
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser,
+	row := q.queryRow(ctx, q.createUserStmt, createUser,
 		arg.UserID,
 		arg.Username,
 		arg.Email,
@@ -331,7 +331,7 @@ type CreateUserWithRolesParams struct {
 }
 
 func (q *Queries) CreateUserWithRoles(ctx context.Context, arg CreateUserWithRolesParams) (UserRole, error) {
-	row := q.db.QueryRowContext(ctx, createUserWithRoles, arg.UserID, arg.RoleID)
+	row := q.queryRow(ctx, q.createUserWithRolesStmt, createUserWithRoles, arg.UserID, arg.RoleID)
 	var i UserRole
 	err := row.Scan(&i.UserID, &i.RoleID, &i.CreatedAt)
 	return i, err
@@ -349,7 +349,7 @@ type DeleteCommentParams struct {
 }
 
 func (q *Queries) DeleteComment(ctx context.Context, arg DeleteCommentParams) error {
-	_, err := q.db.ExecContext(ctx, deleteComment, arg.CommentID, arg.UserID)
+	_, err := q.exec(ctx, q.deleteCommentStmt, deleteComment, arg.CommentID, arg.UserID)
 	return err
 }
 
@@ -365,7 +365,7 @@ type DeleteLikeParams struct {
 }
 
 func (q *Queries) DeleteLike(ctx context.Context, arg DeleteLikeParams) error {
-	_, err := q.db.ExecContext(ctx, deleteLike, arg.UserID, arg.PostID)
+	_, err := q.exec(ctx, q.deleteLikeStmt, deleteLike, arg.UserID, arg.PostID)
 	return err
 }
 
@@ -375,7 +375,7 @@ WHERE post_id = $1
 `
 
 func (q *Queries) DeletePost(ctx context.Context, postID uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deletePost, postID)
+	_, err := q.exec(ctx, q.deletePostStmt, deletePost, postID)
 	return err
 }
 
@@ -385,7 +385,7 @@ WHERE role_id = $1
 `
 
 func (q *Queries) DeleteRole(ctx context.Context, roleID uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteRole, roleID)
+	_, err := q.exec(ctx, q.deleteRoleStmt, deleteRole, roleID)
 	return err
 }
 
@@ -395,7 +395,7 @@ WHERE theme_id = $1
 `
 
 func (q *Queries) DeleteTheme(ctx context.Context, themeID uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteTheme, themeID)
+	_, err := q.exec(ctx, q.deleteThemeStmt, deleteTheme, themeID)
 	return err
 }
 
@@ -405,7 +405,7 @@ WHERE user_id = $1
 `
 
 func (q *Queries) DeleteUser(ctx context.Context, userID uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteUser, userID)
+	_, err := q.exec(ctx, q.deleteUserStmt, deleteUser, userID)
 	return err
 }
 
@@ -420,7 +420,7 @@ type DeleteUserThemeParams struct {
 }
 
 func (q *Queries) DeleteUserTheme(ctx context.Context, arg DeleteUserThemeParams) error {
-	_, err := q.db.ExecContext(ctx, deleteUserTheme, arg.UserID, arg.ThemeID)
+	_, err := q.exec(ctx, q.deleteUserThemeStmt, deleteUserTheme, arg.UserID, arg.ThemeID)
 	return err
 }
 
@@ -436,7 +436,7 @@ type DeleteUserWithRolesParams struct {
 }
 
 func (q *Queries) DeleteUserWithRoles(ctx context.Context, arg DeleteUserWithRolesParams) error {
-	_, err := q.db.ExecContext(ctx, deleteUserWithRoles, arg.UserID, arg.RoleID)
+	_, err := q.exec(ctx, q.deleteUserWithRolesStmt, deleteUserWithRoles, arg.UserID, arg.RoleID)
 	return err
 }
 
@@ -468,7 +468,7 @@ type GetAllCommentsRow struct {
 }
 
 func (q *Queries) GetAllComments(ctx context.Context, postID uuid.UUID) ([]GetAllCommentsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getAllComments, postID)
+	rows, err := q.query(ctx, q.getAllCommentsStmt, getAllComments, postID)
 	if err != nil {
 		return nil, err
 	}
@@ -579,7 +579,7 @@ type GetAllPostsRow struct {
 }
 
 func (q *Queries) GetAllPosts(ctx context.Context, arg GetAllPostsParams) ([]GetAllPostsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getAllPosts,
+	rows, err := q.query(ctx, q.getAllPostsStmt, getAllPosts,
 		arg.UserID,
 		arg.Title,
 		arg.Content,
@@ -629,7 +629,7 @@ SELECT role_id, name, created_at, updated_at FROM roles
 `
 
 func (q *Queries) GetAllRoles(ctx context.Context) ([]Role, error) {
-	rows, err := q.db.QueryContext(ctx, getAllRoles)
+	rows, err := q.query(ctx, q.getAllRolesStmt, getAllRoles)
 	if err != nil {
 		return nil, err
 	}
@@ -710,7 +710,7 @@ type GetAllUserPostsRow struct {
 }
 
 func (q *Queries) GetAllUserPosts(ctx context.Context, userID uuid.UUID) ([]GetAllUserPostsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getAllUserPosts, userID)
+	rows, err := q.query(ctx, q.getAllUserPostsStmt, getAllUserPosts, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -761,7 +761,7 @@ type GetAllUsersParams struct {
 }
 
 func (q *Queries) GetAllUsers(ctx context.Context, arg GetAllUsersParams) ([]User, error) {
-	rows, err := q.db.QueryContext(ctx, getAllUsers, arg.Username, arg.Offset, arg.Limit)
+	rows, err := q.query(ctx, q.getAllUsersStmt, getAllUsers, arg.Username, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -824,7 +824,7 @@ type GetCommentRow struct {
 }
 
 func (q *Queries) GetComment(ctx context.Context, commentID uuid.UUID) (GetCommentRow, error) {
-	row := q.db.QueryRowContext(ctx, getComment, commentID)
+	row := q.queryRow(ctx, q.getCommentStmt, getComment, commentID)
 	var i GetCommentRow
 	err := row.Scan(
 		&i.CommentID,
@@ -851,7 +851,7 @@ type GetLikeParams struct {
 }
 
 func (q *Queries) GetLike(ctx context.Context, arg GetLikeParams) (Like, error) {
-	row := q.db.QueryRowContext(ctx, getLike, arg.UserID, arg.PostID)
+	row := q.queryRow(ctx, q.getLikeStmt, getLike, arg.UserID, arg.PostID)
 	var i Like
 	err := row.Scan(
 		&i.UserID,
@@ -927,7 +927,7 @@ type GetPostRow struct {
 }
 
 func (q *Queries) GetPost(ctx context.Context, arg GetPostParams) (GetPostRow, error) {
-	row := q.db.QueryRowContext(ctx, getPost, arg.PostID, arg.UserID)
+	row := q.queryRow(ctx, q.getPostStmt, getPost, arg.PostID, arg.UserID)
 	var i GetPostRow
 	err := row.Scan(
 		&i.PostID,
@@ -955,7 +955,7 @@ WHERE role_id = $1
 `
 
 func (q *Queries) GetRole(ctx context.Context, roleID uuid.UUID) (Role, error) {
-	row := q.db.QueryRowContext(ctx, getRole, roleID)
+	row := q.queryRow(ctx, q.getRoleStmt, getRole, roleID)
 	var i Role
 	err := row.Scan(
 		&i.RoleID,
@@ -972,7 +972,7 @@ WHERE name LIKE $1
 `
 
 func (q *Queries) GetRoleWithName(ctx context.Context, name string) ([]Role, error) {
-	rows, err := q.db.QueryContext(ctx, getRoleWithName, name)
+	rows, err := q.query(ctx, q.getRoleWithNameStmt, getRoleWithName, name)
 	if err != nil {
 		return nil, err
 	}
@@ -1005,7 +1005,7 @@ WHERE theme_id = $1
 `
 
 func (q *Queries) GetThemeByID(ctx context.Context, themeID uuid.UUID) (Theme, error) {
-	row := q.db.QueryRowContext(ctx, getThemeByID, themeID)
+	row := q.queryRow(ctx, q.getThemeByIDStmt, getThemeByID, themeID)
 	var i Theme
 	err := row.Scan(
 		&i.ThemeID,
@@ -1029,7 +1029,7 @@ WHERE user_id = $1 LIMIT 1
 `
 
 func (q *Queries) GetUser(ctx context.Context, userID uuid.UUID) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUser, userID)
+	row := q.queryRow(ctx, q.getUserStmt, getUser, userID)
 	var i User
 	err := row.Scan(
 		&i.UserID,
@@ -1055,7 +1055,7 @@ WHERE email = $1 LIMIT 1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	row := q.queryRow(ctx, q.getUserByEmailStmt, getUserByEmail, email)
 	var i User
 	err := row.Scan(
 		&i.UserID,
@@ -1145,7 +1145,7 @@ type GetUserFavoritesRow struct {
 }
 
 func (q *Queries) GetUserFavorites(ctx context.Context, arg GetUserFavoritesParams) ([]GetUserFavoritesRow, error) {
-	rows, err := q.db.QueryContext(ctx, getUserFavorites, arg.UserID, arg.Limit, arg.Offset)
+	rows, err := q.query(ctx, q.getUserFavoritesStmt, getUserFavorites, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -1195,7 +1195,7 @@ type GetUserPostParams struct {
 }
 
 func (q *Queries) GetUserPost(ctx context.Context, arg GetUserPostParams) (Post, error) {
-	row := q.db.QueryRowContext(ctx, getUserPost, arg.UserID, arg.PostID)
+	row := q.queryRow(ctx, q.getUserPostStmt, getUserPost, arg.UserID, arg.PostID)
 	var i Post
 	err := row.Scan(
 		&i.PostID,
@@ -1222,7 +1222,7 @@ type GetUserWithUsernameRow struct {
 }
 
 func (q *Queries) GetUserWithUsername(ctx context.Context, username string) ([]GetUserWithUsernameRow, error) {
-	rows, err := q.db.QueryContext(ctx, getUserWithUsername, username)
+	rows, err := q.query(ctx, q.getUserWithUsernameStmt, getUserWithUsername, username)
 	if err != nil {
 		return nil, err
 	}
@@ -1250,7 +1250,7 @@ ORDER BY created_at DESC
 `
 
 func (q *Queries) ListAllThemes(ctx context.Context) ([]Theme, error) {
-	rows, err := q.db.QueryContext(ctx, listAllThemes)
+	rows, err := q.query(ctx, q.listAllThemesStmt, listAllThemes)
 	if err != nil {
 		return nil, err
 	}
@@ -1321,7 +1321,7 @@ type ListUserThemesRow struct {
 }
 
 func (q *Queries) ListUserThemes(ctx context.Context, userID uuid.UUID) ([]ListUserThemesRow, error) {
-	rows, err := q.db.QueryContext(ctx, listUserThemes, userID)
+	rows, err := q.query(ctx, q.listUserThemesStmt, listUserThemes, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -1368,7 +1368,7 @@ type RemoveFavoriteParams struct {
 }
 
 func (q *Queries) RemoveFavorite(ctx context.Context, arg RemoveFavoriteParams) error {
-	_, err := q.db.ExecContext(ctx, removeFavorite, arg.UserID, arg.PostID)
+	_, err := q.exec(ctx, q.removeFavoriteStmt, removeFavorite, arg.UserID, arg.PostID)
 	return err
 }
 
@@ -1388,7 +1388,7 @@ type UpdateCommentParams struct {
 }
 
 func (q *Queries) UpdateComment(ctx context.Context, arg UpdateCommentParams) (Comment, error) {
-	row := q.db.QueryRowContext(ctx, updateComment, arg.CommentID, arg.Content, arg.UserID)
+	row := q.queryRow(ctx, q.updateCommentStmt, updateComment, arg.CommentID, arg.Content, arg.UserID)
 	var i Comment
 	err := row.Scan(
 		&i.CommentID,
@@ -1424,7 +1424,7 @@ type UpdatePostParams struct {
 }
 
 func (q *Queries) UpdatePost(ctx context.Context, arg UpdatePostParams) (Post, error) {
-	row := q.db.QueryRowContext(ctx, updatePost,
+	row := q.queryRow(ctx, q.updatePostStmt, updatePost,
 		arg.PostID,
 		arg.UserID,
 		arg.Title,
@@ -1460,7 +1460,7 @@ type UpdateRoleParams struct {
 }
 
 func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) (Role, error) {
-	row := q.db.QueryRowContext(ctx, updateRole, arg.RoleID, arg.Name)
+	row := q.queryRow(ctx, q.updateRoleStmt, updateRole, arg.RoleID, arg.Name)
 	var i Role
 	err := row.Scan(
 		&i.RoleID,
@@ -1499,7 +1499,7 @@ type UpdateThemeParams struct {
 }
 
 func (q *Queries) UpdateTheme(ctx context.Context, arg UpdateThemeParams) (Theme, error) {
-	row := q.db.QueryRowContext(ctx, updateTheme,
+	row := q.queryRow(ctx, q.updateThemeStmt, updateTheme,
 		arg.ThemeID,
 		arg.Name,
 		arg.Description,
@@ -1557,7 +1557,7 @@ type UpdateUserParams struct {
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateUser,
+	row := q.queryRow(ctx, q.updateUserStmt, updateUser,
 		arg.UserID,
 		arg.Username,
 		arg.Email,
@@ -1602,7 +1602,7 @@ type UpdateUserThemeParams struct {
 }
 
 func (q *Queries) UpdateUserTheme(ctx context.Context, arg UpdateUserThemeParams) (UserTheme, error) {
-	row := q.db.QueryRowContext(ctx, updateUserTheme, arg.UserID, arg.Active, arg.ThemeID)
+	row := q.queryRow(ctx, q.updateUserThemeStmt, updateUserTheme, arg.UserID, arg.Active, arg.ThemeID)
 	var i UserTheme
 	err := row.Scan(
 		&i.UserID,
@@ -1633,7 +1633,7 @@ type UserHasActiveThemeRow struct {
 }
 
 func (q *Queries) UserHasActiveTheme(ctx context.Context, userID uuid.UUID) (UserHasActiveThemeRow, error) {
-	row := q.db.QueryRowContext(ctx, userHasActiveTheme, userID)
+	row := q.queryRow(ctx, q.userHasActiveThemeStmt, userHasActiveTheme, userID)
 	var i UserHasActiveThemeRow
 	err := row.Scan(
 		&i.ThemeID,
@@ -1657,7 +1657,7 @@ type UserHasThemeParams struct {
 }
 
 func (q *Queries) UserHasTheme(ctx context.Context, arg UserHasThemeParams) (bool, error) {
-	row := q.db.QueryRowContext(ctx, userHasTheme, arg.UserID, arg.ThemeID)
+	row := q.queryRow(ctx, q.userHasThemeStmt, userHasTheme, arg.UserID, arg.ThemeID)
 	var has_theme bool
 	err := row.Scan(&has_theme)
 	return has_theme, err
