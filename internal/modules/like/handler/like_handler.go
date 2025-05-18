@@ -1,4 +1,4 @@
-package liker_handler
+package like_handler
 
 import (
 	"net/http"

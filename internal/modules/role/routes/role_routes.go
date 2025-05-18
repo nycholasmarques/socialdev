@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/nycholasmarques/socialdev/internal/db"
-	role_handler "github.com/nycholasmarques/socialdev/internal/modules/role/http"
+	role_handler "github.com/nycholasmarques/socialdev/internal/modules/role/handler"
 	role_repository "github.com/nycholasmarques/socialdev/internal/modules/role/repository"
 	role_service "github.com/nycholasmarques/socialdev/internal/modules/role/service"
 )
