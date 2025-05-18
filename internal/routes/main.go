@@ -12,7 +12,7 @@ import (
 	file_handlers "github.com/nycholasmarques/socialdev/internal/modules/file/http"
 	liker_handler "github.com/nycholasmarques/socialdev/internal/modules/like/http"
 	post_handler "github.com/nycholasmarques/socialdev/internal/modules/posts/http"
-	role_handler "github.com/nycholasmarques/socialdev/internal/modules/role/http"
+	role_routes "github.com/nycholasmarques/socialdev/internal/modules/role/routes"
 	theme_routes "github.com/nycholasmarques/socialdev/internal/modules/theme/routes"
 	user_routes "github.com/nycholasmarques/socialdev/internal/modules/user/routes"
 )
@@ -31,7 +31,7 @@ func SetupRoutes(queries *db.Queries) *http.ServeMux {
 	apiRouter := http.NewServeMux()
 	authHttp.SetupAuthRoutes(apiRouter, queries)
 	user_routes.SetupUserRoutes(apiRouter, queries)
-	role_handler.SetupUserRoutes(apiRouter, queries)
+	role_routes.SetupUserRoutes(apiRouter, queries)
 	post_handler.SetupPostRoutes(apiRouter, queries)
 	liker_handler.SetupLikeRoutes(apiRouter, queries)
 	comment_handlers.SetupCommentRoutes(apiRouter, queries)
