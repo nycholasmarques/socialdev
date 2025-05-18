@@ -1,10 +1,11 @@
-package post_handler
+package post_routes
 
 import (
 	"net/http"
 
 	"github.com/nycholasmarques/socialdev/internal/db"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
+	post_handler "github.com/nycholasmarques/socialdev/internal/modules/posts/handler"
 	post_repository "github.com/nycholasmarques/socialdev/internal/modules/posts/repository"
 	post_services "github.com/nycholasmarques/socialdev/internal/modules/posts/service"
 )
@@ -13,7 +14,7 @@ func SetupPostRoutes(r *http.ServeMux, queries *db.Queries) {
 	
 	repo := post_repository.NewPostRepository(queries)
 	services := post_services.NewPostSerivice(repo)
-	handler := NewPostHandler(services)
+	handler := post_handler.NewPostHandler(services)
 	
 	r.HandleFunc("POST /posts", middlewares.ProtectedRoutes(handler.CreatePostHandler))
 	r.HandleFunc("PATCH /posts/{post_id}", middlewares.ProtectedRoutes(handler.UpdatePostHandler))
