@@ -21,30 +21,30 @@ func NewUserService(userRepo *user_repository.UserRepository) *UserService {
 	return &UserService{userRepo: userRepo}
 }
 
-func (s *UserService) CreateUser(username, email, password string) (entity.UserResponse, error) {
+func (s *UserService) CreateUser(username, email, password string) (db.User, error) {
 	ctx := context.Background()
 
 	_, err := s.userRepo.GetUserByEmail(ctx, email)
 	if err == nil {
-		return entity.UserResponse{}, entity.ErrEmailAlreadyExists
+		return db.User{}, entity.ErrEmailAlreadyExists
 	} else if err != sql.ErrNoRows {
 		log.Printf("Error checking email existence: %v", err)
-		return entity.UserResponse{}, entity.ErrInternalServer
+		return db.User{}, entity.ErrInternalServer
 	}
 
 	_, err = s.userRepo.GetUserWithUsername(ctx, username)
 	if err == nil {
-		return entity.UserResponse{}, entity.ErrUsernameAlreadyExists
+		return db.User{}, entity.ErrUsernameAlreadyExists
 	} else if err != sql.ErrNoRows {
 		log.Printf("Error checking username existence: %v", err)
-		return entity.UserResponse{}, entity.ErrInternalServer
+		return db.User{}, entity.ErrInternalServer
 	}
 
 	// Gerar hash da senha
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Error encrypting password: %v", err)
-		return entity.UserResponse{}, err
+		return db.User{}, err
 	}
 
 	// Criar parâmetros para o repositório
@@ -58,24 +58,25 @@ func (s *UserService) CreateUser(username, email, password string) (entity.UserR
 	userResponse, err := s.userRepo.CreateUser(ctx, userParams)
 	if err != nil {
 		log.Printf("Error creating user: %v", err)
-		return entity.UserResponse{}, entity.ErrInternalServer
+		return db.User{}, entity.ErrInternalServer
 	}
 
 	return userResponse, nil
 }
 
-func (s *UserService) CreateUserWithGoogle(username, email, password, googleID, avatar string) (entity.UserResponse, error) {
+func (s *UserService) CreateUserWithGoogle(username, email, password, googleID, avatar string) (db.User, error) {
 	ctx := context.Background()
 
 	existingUser, err := s.userRepo.GetUserByEmail(ctx, email)
 	if err != nil && err != sql.ErrNoRows {
 		log.Printf("Error getting user by email: %v", err)
-		return entity.UserResponse{}, fmt.Errorf("erro ao verificar usuário existente: %v", err)
+		return db.User{}, fmt.Errorf("erro ao verificar usuário existente: %v", err)
 	}
 
-	if existingUser.UserID != "" {
-		if existingUser.GoogleID == googleID {
-			return entity.UserResponse{
+
+	if existingUser.UserID.String() != "" {
+		if existingUser.GoogleID.String == googleID {
+			return db.User{
 				UserID:   existingUser.UserID,
 				Username: existingUser.Username,
 				Email:    existingUser.Email,
@@ -85,7 +86,7 @@ func (s *UserService) CreateUserWithGoogle(username, email, password, googleID, 
 
 	existingUserByUsername, err := s.userRepo.GetUserWithUsername(ctx, username)
 	if err != nil && err != sql.ErrNoRows {
-		return entity.UserResponse{}, fmt.Errorf("erro ao verificar nome de usuário: %v", err)
+		return db.User{}, fmt.Errorf("erro ao verificar nome de usuário: %v", err)
 	}
 
 	if len(existingUserByUsername) > 0 {
@@ -97,7 +98,7 @@ func (s *UserService) CreateUserWithGoogle(username, email, password, googleID, 
 		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
 			log.Printf("Error encrypting password: %v", err)
-			return entity.UserResponse{}, fmt.Errorf("erro ao gerar hash da senha: %v", err)
+			return db.User{}, fmt.Errorf("erro ao gerar hash da senha: %v", err)
 		}
 		passwordHash = string(hash)
 	}
@@ -114,10 +115,10 @@ func (s *UserService) CreateUserWithGoogle(username, email, password, googleID, 
 	createdUser, err := s.userRepo.CreateUser(ctx, userParams)
 	if err != nil {
 		log.Printf("Error creating user: %v", err)
-		return entity.UserResponse{}, fmt.Errorf("{erro ao criar usuário: %v}", err)
+		return db.User{}, fmt.Errorf("{erro ao criar usuário: %v}", err)
 	}
 
-	return entity.UserResponse{
+	return db.User{
 		UserID:   createdUser.UserID,
 		Username: createdUser.Username,
 		Email:    createdUser.Email,
@@ -125,34 +126,20 @@ func (s *UserService) CreateUserWithGoogle(username, email, password, googleID, 
 	}, nil
 }
 
-func (s *UserService) GetUser(user_id uuid.UUID) (entity.UserResponse, error) {
+func (s *UserService) GetUser(user_id uuid.UUID) (db.User, error) {
 	ctx := context.Background()
 	user, err := s.userRepo.GetUser(ctx, user_id)
 	if err == sql.ErrNoRows {
-		return entity.UserResponse{}, entity.ErrUserNotFound
+		return db.User{}, entity.ErrUserNotFound
 	} else if err != nil {
 		log.Printf("Error getting user: %v", err)
-		return entity.UserResponse{}, entity.ErrInternalServer
+		return db.User{}, entity.ErrInternalServer
 	}
 
-	entityUser := entity.UserResponse{
-		UserID:    user.UserID.String(),
-		Username:  user.Username,
-		Email:     user.Email,
-		Password:  user.Password,
-		Avatar:    user.Avatar.String,
-		Bio:       user.Bio.String,
-		Github:    user.Github.String,
-		Linkedin:  user.Linkedin.String,
-		Website:   user.Website.String,
-		CreatedAt: user.CreatedAt.Time.String(),
-		UpdatedAt: user.UpdatedAt.Time.String(),
-	}
-
-	return entityUser, nil
+	return user, nil
 }
 
-func (s *UserService) GetAllUsers(username string, limit, offset int32) ([]entity.UserResponseSafe, error) {
+func (s *UserService) GetAllUsers(username string, limit, offset int32) ([]db.User, error) {
 	ctx := context.Background()
 
 	params := db.GetAllUsersParams{
@@ -163,26 +150,7 @@ func (s *UserService) GetAllUsers(username string, limit, offset int32) ([]entit
 
 	users, err := s.userRepo.GetAllUsers(ctx, params)
 
-	var usersResponse []entity.UserResponseSafe
-
-	for _, user := range users {
-		var userResponse entity.UserResponseSafe
-
-		userResponse.UserID = user.UserID.String()
-		userResponse.Username = user.Username
-		userResponse.Email = user.Email
-		userResponse.Avatar = user.Avatar.String
-		userResponse.Bio = user.Bio.String
-		userResponse.Github = user.Github.String
-		userResponse.Linkedin = user.Linkedin.String
-		userResponse.Website = user.Website.String
-		userResponse.CreatedAt = user.CreatedAt.Time.String()
-		userResponse.UpdatedAt = user.UpdatedAt.Time.String()
-
-		usersResponse = append(usersResponse, userResponse)
-	}
-
-	return usersResponse, err
+	return users, err
 }
 
 func (s *UserService) GetUserWithUsername(username string) ([]db.GetUserWithUsernameRow, error) {
@@ -190,7 +158,7 @@ func (s *UserService) GetUserWithUsername(username string) ([]db.GetUserWithUser
 	return s.userRepo.GetUserWithUsername(ctx, username)
 }
 
-func (s *UserService) UpdateUser(user_id uuid.UUID, username, email, password, avatar, bio, github, linkedin, website string) (entity.UserResponse, error) {
+func (s *UserService) UpdateUser(user_id uuid.UUID, username, email, password, avatar, bio, github, linkedin, website string) (db.User, error) {
 	ctx := context.Background()
 
 	user, err := s.userRepo.UpdateUser(ctx, db.UpdateUserParams{
@@ -206,21 +174,10 @@ func (s *UserService) UpdateUser(user_id uuid.UUID, username, email, password, a
 	})
 	if err != nil {
 
-		return entity.UserResponse{}, entity.ErrInternalServer
+		return db.User{}, entity.ErrInternalServer
 	}
 
-	return entity.UserResponse{
-		UserID:    user.UserID.String(),
-		Username:  user.Username,
-		Email:     user.Email,
-		Avatar:    user.Avatar.String,
-		Bio:       user.Bio.String,
-		Github:    user.Github.String,
-		Linkedin:  user.Linkedin.String,
-		Website:   user.Website.String,
-		CreatedAt: user.CreatedAt.Time.String(),
-		UpdatedAt: user.UpdatedAt.Time.String(),
-	}, nil
+	return user, nil
 }
 
 func (s *UserService) DeleteUser(user_id uuid.UUID) error {

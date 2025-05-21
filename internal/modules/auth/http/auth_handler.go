@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/nycholasmarques/socialdev/internal/db"
 	"github.com/nycholasmarques/socialdev/internal/entity"
 	services "github.com/nycholasmarques/socialdev/internal/modules/auth/service"
 	pkg "github.com/nycholasmarques/socialdev/internal/pkg/auth"
@@ -23,14 +24,20 @@ func NewAuthHandler(authService services.AuthService) *AuthHandler {
 }
 
 	type UserResponse struct {
-		User entity.UserResponse
+		User db.User
 		Token string
 	}
+
+	type LoginUserRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=6,max=12"`
+	KeepLogin bool   `json:"keep_login"`
+}
 
 func (h *AuthHandler) LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var loginUser entity.LoginUserRequest
+	var loginUser LoginUserRequest
 	err := json.NewDecoder(r.Body).Decode(&loginUser)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid request body", err.Error())
@@ -64,7 +71,7 @@ func (h *AuthHandler) LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	println(loginUser.KeepLogin)
 
-	token, err := pkg.CreateToken(user.UserID, loginUser.KeepLogin)
+	token, err := pkg.CreateToken(user.UserID.String(), loginUser.KeepLogin)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to create token", err.Error())
 		return

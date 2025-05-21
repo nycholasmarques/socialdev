@@ -9,3 +9,11 @@ sql:
         out: "internal/db"
         emit_json_tags: true
         emit_prepared_queries: true
+        overrides:
+          - column: users.username
+            go_struct_tag: validate:"required,min=3,max=30"
+          - column: users.email
+            go_struct_tag: validate:"required,email"
+          - column: users.password
+            go_struct_tag: validate:"required,min=6,max=12"
+          

@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/nycholasmarques/socialdev/internal/db"
 	"github.com/nycholasmarques/socialdev/internal/entity"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
 	file_handlers "github.com/nycholasmarques/socialdev/internal/modules/file/handler"
@@ -31,14 +32,26 @@ type UserWithUsername struct {
 }
 
 type UserResponse struct {
-	User  entity.UserResponse `json:"user"`
+	User  db.User `json:"user"`
 	Token string              `json:"token"`
 }
+
+type UpdateUserRequest struct {
+	Username *string `json:"username" validate:"omitempty,min=3,max=30"`
+	Password *string `json:"password" validate:"omitempty,min=6,max=12"`
+	Email    *string `json:"email" validate:"omitempty,email"`
+	Avatar   *string `json:"avatar" validate:"omitempty"`
+	Bio      *string `json:"bio" validate:"omitempty,min=5,max=255"`
+	Github   *string `json:"github" validate:"omitempty,url"`
+	Linkedin *string `json:"linkedin" validate:"omitempty,url"`
+	Website  *string `json:"website" validate:"omitempty,url"`
+}
+
 
 func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var registerUser entity.RegisterUserRequest
+	var registerUser db.User
 
 	if err := json.NewDecoder(r.Body).Decode(&registerUser); err != nil {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid request body", err.Error())
@@ -66,7 +79,7 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	token, err := pkg.CreateToken(userResponse.UserID, true)
+	token, err := pkg.CreateToken(userResponse.UserID.String(), true)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to create token", err.Error())
 		return
@@ -182,7 +195,7 @@ func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	var userUpdate entity.UpdateUserRequest
+	var userUpdate UpdateUserRequest
 	err = json.NewDecoder(r.Body).Decode(&userUpdate)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid request body", err.Error())
@@ -215,19 +228,19 @@ func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 		userUpdate.Password = &hashedPassword
 	}
 	if userUpdate.Avatar == nil {
-		userUpdate.Avatar = &user.Avatar
+		userUpdate.Avatar = &user.Avatar.String
 	}
 	if userUpdate.Bio == nil {
-		userUpdate.Bio = &user.Bio
+		userUpdate.Bio = &user.Bio.String
 	}
 	if userUpdate.Github == nil {
-		userUpdate.Github = &user.Github
+		userUpdate.Github = &user.Github.String
 	}
 	if userUpdate.Linkedin == nil {
-		userUpdate.Linkedin = &user.Linkedin
+		userUpdate.Linkedin = &user.Linkedin.String
 	}
 	if userUpdate.Website == nil {
-		userUpdate.Website = &user.Website
+		userUpdate.Website = &user.Website.String
 	}
 
 	fileHandler := file_handlers.NewFileHandler()

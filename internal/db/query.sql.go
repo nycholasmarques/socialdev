@@ -281,9 +281,9 @@ RETURNING user_id, google_id, username, email, password, avatar, cover_image, bi
 
 type CreateUserParams struct {
 	UserID   uuid.UUID      `json:"user_id"`
-	Username string         `json:"username"`
-	Email    string         `json:"email"`
-	Password string         `json:"password"`
+	Username string         `json:"username" validate:"required,min=3,max=30"`
+	Email    string         `json:"email" validate:"required,email"`
+	Password string         `json:"password" validate:"required,min=6,max=12"`
 	GoogleID sql.NullString `json:"google_id"`
 	Avatar   sql.NullString `json:"avatar"`
 }
@@ -463,7 +463,7 @@ type GetAllCommentsRow struct {
 	Content   string         `json:"content"`
 	CreatedAt sql.NullTime   `json:"created_at"`
 	UpdatedAt sql.NullTime   `json:"updated_at"`
-	Username  string         `json:"username"`
+	Username  string         `json:"username" validate:"required,min=3,max=30"`
 	Avatar    sql.NullString `json:"avatar"`
 }
 
@@ -569,7 +569,7 @@ type GetAllPostsRow struct {
 	Video        sql.NullString `json:"video"`
 	CreatedAt    sql.NullTime   `json:"created_at"`
 	UpdatedAt    sql.NullTime   `json:"updated_at"`
-	UserName     sql.NullString `json:"user_name"`
+	UserName     sql.NullString `json:"user_name" validate:"required,min=3,max=30"`
 	UserAvatar   sql.NullString `json:"user_avatar"`
 	LikeCount    int64          `json:"like_count"`
 	ViewsCount   int64          `json:"views_count"`
@@ -702,7 +702,7 @@ type GetAllUserPostsRow struct {
 	Video        sql.NullString `json:"video"`
 	CreatedAt    sql.NullTime   `json:"created_at"`
 	UpdatedAt    sql.NullTime   `json:"updated_at"`
-	UserName     sql.NullString `json:"user_name"`
+	UserName     sql.NullString `json:"user_name" validate:"required,min=3,max=30"`
 	UserAvatar   sql.NullString `json:"user_avatar"`
 	LikeCount    int64          `json:"like_count"`
 	ViewsCount   int64          `json:"views_count"`
@@ -819,7 +819,7 @@ type GetCommentRow struct {
 	Content   string         `json:"content"`
 	CreatedAt sql.NullTime   `json:"created_at"`
 	UpdatedAt sql.NullTime   `json:"updated_at"`
-	Username  string         `json:"username"`
+	Username  string         `json:"username" validate:"required,min=3,max=30"`
 	Avatar    sql.NullString `json:"avatar"`
 }
 
@@ -917,7 +917,7 @@ type GetPostRow struct {
 	Video        sql.NullString `json:"video"`
 	CreatedAt    sql.NullTime   `json:"created_at"`
 	UpdatedAt    sql.NullTime   `json:"updated_at"`
-	UserName     sql.NullString `json:"user_name"`
+	UserName     sql.NullString `json:"user_name" validate:"required,min=3,max=30"`
 	UserAvatar   sql.NullString `json:"user_avatar"`
 	LikeCount    int64          `json:"like_count"`
 	ViewsCount   int64          `json:"views_count"`
@@ -1136,7 +1136,7 @@ type GetUserFavoritesRow struct {
 	PostCreatedAt     sql.NullTime   `json:"post_created_at"`
 	UpdatedAt         sql.NullTime   `json:"updated_at"`
 	FavoriteCreatedAt sql.NullTime   `json:"favorite_created_at"`
-	UserName          string         `json:"user_name"`
+	UserName          string         `json:"user_name" validate:"required,min=3,max=30"`
 	UserAvatar        sql.NullString `json:"user_avatar"`
 	LikeCount         int64          `json:"like_count"`
 	ViewsCount        int64          `json:"views_count"`
@@ -1217,7 +1217,7 @@ WHERE username LIKE $1
 `
 
 type GetUserWithUsernameRow struct {
-	Username string         `json:"username"`
+	Username string         `json:"username" validate:"required,min=3,max=30"`
 	Avatar   sql.NullString `json:"avatar"`
 }
 
@@ -1545,9 +1545,9 @@ RETURNING user_id, google_id, username, email, password, avatar, cover_image, bi
 
 type UpdateUserParams struct {
 	UserID     uuid.UUID      `json:"user_id"`
-	Username   string         `json:"username"`
-	Email      string         `json:"email"`
-	Password   string         `json:"password"`
+	Username   string         `json:"username" validate:"required,min=3,max=30"`
+	Email      string         `json:"email" validate:"required,email"`
+	Password   string         `json:"password" validate:"required,min=6,max=12"`
 	Avatar     sql.NullString `json:"avatar"`
 	Bio        sql.NullString `json:"bio"`
 	Github     sql.NullString `json:"github"`

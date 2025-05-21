@@ -6,58 +6,6 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type UserResponse struct {
-	UserID    string `json:"user_id"`
-	GoogleID  string `json:"-"`
-	Username  string `json:"username" validate:"required,min=3,max=30"`
-	Password  string `json:"-" validate:"required,min=6,max=12"`
-	Email     string `json:"email" validate:"required,email"`
-	Avatar    string `json:"avatar"`
-	Bio       string `json:"bio"`
-	Github    string `json:"github"`
-	Linkedin  string `json:"linkedin"`
-	Website   string `json:"website"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-}
-
-type UserResponseSafe struct {
-	UserID    string `json:"user_id"`
-	GoogleID  string `json:"-"`
-	Username  string `json:"username" validate:"required,min=3,max=30"`
-	Password  string `json:"-" validate:"required,min=6,max=12"`
-	Email     string `json:"-" validate:"required,email"`
-	Avatar    string `json:"avatar"`
-	Bio       string `json:"bio"`
-	Github    string `json:"-"`
-	Linkedin  string `json:"-"`
-	Website   string `json:"-"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-}
-
-type UpdateUserRequest struct {
-	Username *string `json:"username" validate:"omitempty,min=3,max=30"`
-	Password *string `json:"password" validate:"omitempty,min=6,max=12"`
-	Email    *string `json:"email" validate:"omitempty,email"`
-	Avatar   *string `json:"avatar" validate:"omitempty"`
-	Bio      *string `json:"bio" validate:"omitempty,min=5,max=255"`
-	Github   *string `json:"github" validate:"omitempty,url"`
-	Linkedin *string `json:"linkedin" validate:"omitempty,url"`
-	Website  *string `json:"website" validate:"omitempty,url"`
-}
-
-type LoginUserRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=6,max=12"`
-	KeepLogin bool   `json:"keep_login"`
-}
-
-type RegisterUserRequest struct {
-	Username string `json:"username" validate:"required,min=3,max=30"`
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=6,max=12"`
-}
 
 // definindo erros
 var (

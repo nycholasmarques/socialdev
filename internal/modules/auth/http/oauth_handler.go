@@ -100,7 +100,7 @@ func (h *OOAuthHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Requ
 		}
 	}
 
-	jwtToken, err := pkg.CreateToken(user.UserID, true)
+	jwtToken, err := pkg.CreateToken(user.UserID.String(), true)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusInternalServerError, "Erro ao criar token", err.Error())
 		return
