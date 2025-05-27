@@ -6,8 +6,9 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/nycholasmarques/socialdev/internal/db"
-	"github.com/nycholasmarques/socialdev/internal/entity"
 	services "github.com/nycholasmarques/socialdev/internal/modules/auth/service"
+	user_errors "github.com/nycholasmarques/socialdev/internal/modules/user/errors"
+	httputil "github.com/nycholasmarques/socialdev/internal/pkg"
 	pkg "github.com/nycholasmarques/socialdev/internal/pkg/auth"
 	"github.com/nycholasmarques/socialdev/utils"
 	"golang.org/x/crypto/bcrypt"
@@ -24,8 +25,8 @@ func NewAuthHandler(authService services.AuthService) *AuthHandler {
 }
 
 	type UserResponse struct {
-		User db.User
-		Token string
+		User db.User `json:"user"`
+		Token string `json:"token"`
 	}
 
 	type LoginUserRequest struct {
@@ -47,7 +48,7 @@ func (h *AuthHandler) LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
 	validate := validator.New()
 
 	if err := validate.Struct(loginUser); err != nil {
-		errorMessages := entity.GetValidationUserErrors(err)
+		errorMessages := user_errors.GetValidationUserErrors(err)
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid request body", errorMessages)
 		return
 	}
@@ -55,7 +56,7 @@ func (h *AuthHandler) LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := h.authService.LoginUser(loginUser.Email)
 	if err != nil {
 		switch err {
-		case entity.ErrUserNotFound:
+		case user_errors.ErrUserNotFound:
 			utils.NewErrorResponse(w, http.StatusNotFound, "User not found", true)
 		default:
 			utils.NewErrorResponse(w, http.StatusInternalServerError, "email ou senha inválido", true)
@@ -82,14 +83,7 @@ func (h *AuthHandler) LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
 		Token: token,
 	}
 
-	res, err := json.Marshal(response)
-	if err != nil {
-		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to marshal user", err.Error())
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(res))
+	httputil.New(w).Status(200).Data(response).Send()
 }
 
 

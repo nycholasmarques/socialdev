@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/nycholasmarques/socialdev/internal/db"
-	"github.com/nycholasmarques/socialdev/internal/entity"
+	user_errors "github.com/nycholasmarques/socialdev/internal/modules/user/errors"
 )
 
 type AuthRepository struct {
@@ -20,12 +20,10 @@ func NewAuthRepository(queries *db.Queries) *AuthRepository {
 func (r *AuthRepository) LoginUser(ctx context.Context, email string) (db.User, error) {
 	user, err := r.queries.GetUserByEmail(ctx, email)
 	if err == sql.ErrNoRows {
-		return db.User{}, entity.ErrUserNotFound
+		return db.User{}, user_errors.ErrUserNotFound
 	} else if err != nil {
 		log.Printf("%v", err)
 	}
-
-
 	return user, err
 }
 

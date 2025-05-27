@@ -2,28 +2,28 @@ package user_handler
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
-	"github.com/nycholasmarques/socialdev/internal/entity"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
-	file_handlers "github.com/nycholasmarques/socialdev/internal/modules/file/handler"
-	services "github.com/nycholasmarques/socialdev/internal/modules/user/service"
+
+	// file_handlers "github.com/nycholasmarques/socialdev/internal/modules/file/handler"
+	user_dto "github.com/nycholasmarques/socialdev/internal/modules/user/dto"
+	user_errors "github.com/nycholasmarques/socialdev/internal/modules/user/errors"
+	user_service "github.com/nycholasmarques/socialdev/internal/modules/user/service"
+	httputil "github.com/nycholasmarques/socialdev/internal/pkg"
 	pkg "github.com/nycholasmarques/socialdev/internal/pkg/auth"
 	"github.com/nycholasmarques/socialdev/utils"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserHandler struct {
-	userService *services.UserService
+	userService *user_service.UserService
 }
 
-func NewUserHandler(userService *services.UserService) *UserHandler {
+func NewUserHandler(userService *user_service.UserService) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
@@ -32,19 +32,8 @@ type UserWithUsername struct {
 }
 
 type UserResponse struct {
-	User  db.User `json:"user"`
+	User  user_dto.UserResponse `json:"user"`
 	Token string              `json:"token"`
-}
-
-type UpdateUserRequest struct {
-	Username *string `json:"username" validate:"omitempty,min=3,max=30"`
-	Password *string `json:"password" validate:"omitempty,min=6,max=12"`
-	Email    *string `json:"email" validate:"omitempty,email"`
-	Avatar   *string `json:"avatar" validate:"omitempty"`
-	Bio      *string `json:"bio" validate:"omitempty,min=5,max=255"`
-	Github   *string `json:"github" validate:"omitempty,url"`
-	Linkedin *string `json:"linkedin" validate:"omitempty,url"`
-	Website  *string `json:"website" validate:"omitempty,url"`
 }
 
 
@@ -61,17 +50,17 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	validate := validator.New()
 
 	if err := validate.Struct(registerUser); err != nil {
-		errorMessages := entity.GetValidationUserErrors(err)
+		errorMessages := user_errors.GetValidationUserErrors(err)
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid request body", errorMessages)
 		return
 	}
 
-	userResponse, err := h.userService.CreateUser(registerUser.Username, registerUser.Email, registerUser.Password)
+	user, err := h.userService.CreateUser(registerUser.Username, registerUser.Email, registerUser.Password)
 	if err != nil {
 		switch err {
-		case entity.ErrEmailAlreadyExists:
+		case user_errors.ErrEmailAlreadyExists:
 			utils.NewErrorResponse(w, http.StatusConflict, "Email already exists", err.Error())
-		case entity.ErrUsernameAlreadyExists:
+		case user_errors.ErrUsernameAlreadyExists:
 			utils.NewErrorResponse(w, http.StatusConflict, "Username already exists", err.Error())
 		default:
 			utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to create user", err.Error())
@@ -79,11 +68,13 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	token, err := pkg.CreateToken(userResponse.UserID.String(), true)
+	token, err := pkg.CreateToken(user.UserID.String(), true)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to create token", err.Error())
 		return
 	}
+
+	userResponse := user_service.Sanitize(user)
 
 	response := UserResponse{
 		User:  userResponse,
@@ -113,7 +104,7 @@ func (h *UserHandler) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := h.userService.GetUser(uuid)
 	if err != nil {
 		switch err {
-		case entity.ErrUserNotFound:
+		case user_errors.ErrUserNotFound:
 			utils.NewErrorResponse(w, http.StatusNotFound, "User not found", err.Error())
 		default:
 			utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to get user", err.Error())
@@ -121,14 +112,9 @@ func (h *UserHandler) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := json.Marshal(user)
-	if err != nil {
-		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to marshal user", err.Error())
-		return
-	}
+	userResponse := user_service.Sanitize(user)
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(res))
+	httputil.New(w).Status(200).Message("User found successfully!").Data(userResponse).Send()
 }
 
 func (h *UserHandler) GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
@@ -145,39 +131,25 @@ func (h *UserHandler) GetAllUsersHandler(w http.ResponseWriter, r *http.Request)
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
 
-	limit := int32(10)
-	offset := int32(0)
-	if limitStr != "" {
-		if l, err := strconv.ParseInt(limitStr, 10, 32); err == nil {
-			limit = int32(l)
-		}
-	}
-	if offsetStr != "" {
-		if o, err := strconv.ParseInt(offsetStr, 10, 32); err == nil {
-			offset = int32(o)
-		}
-	}
-
-	users, err := h.userService.GetAllUsers(username, limit, offset)
+	users, err := h.userService.GetAllUsers(username, limitStr, offsetStr)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to get users", err.Error())
 		return
 	}
 
-	res, err := json.Marshal(users)
-	if err != nil {
-		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to marshal users", err.Error())
-		return
-	}
+	var usersResponse []user_dto.UserResponse
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(res))
+	for _, v := range users {
+		user := user_service.Sanitize(v)
+		usersResponse = append(usersResponse, user)
+	}
+	httputil.New(w).Status(200).Message("Users founds successfully!").Data(usersResponse).Send()
 }
 
 func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
+	userID, ok := r.Context().Value(middlewares .UserIDKey).(string)
 	if !ok || userID == "" {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "")
 		return
@@ -189,13 +161,7 @@ func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	user, err := h.userService.GetUser(convertUUID)
-	if err != nil {
-		utils.NewErrorResponse(w, http.StatusNotFound, "User not found", err.Error())
-		return
-	}
-
-	var userUpdate UpdateUserRequest
+	var userUpdate user_dto.UpdateUserRequest
 	err = json.NewDecoder(r.Body).Decode(&userUpdate)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid request body", err.Error())
@@ -205,81 +171,32 @@ func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 	validate := validator.New()
 	err = validate.Struct(userUpdate)
 	if err != nil {
-		errorMessages := entity.GetValidationUserErrors(err)
+		errorMessages := user_errors.GetValidationUserErrors(err)
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid request body", errorMessages)
 		return
 	}
 
-	if userUpdate.Username == nil {
-		userUpdate.Username = &user.Username
-	}
-	if userUpdate.Email == nil {
-		userUpdate.Email = &user.Email
-	}
-	if userUpdate.Password == nil {
-		userUpdate.Password = &user.Password
-	} else {
-		passwordHash, err := bcrypt.GenerateFromPassword([]byte(*userUpdate.Password), bcrypt.DefaultCost)
-		if err != nil {
-			utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to hash password", err.Error())
-			return
-		}
-		hashedPassword := string(passwordHash)
-		userUpdate.Password = &hashedPassword
-	}
-	if userUpdate.Avatar == nil {
-		userUpdate.Avatar = &user.Avatar.String
-	}
-	if userUpdate.Bio == nil {
-		userUpdate.Bio = &user.Bio.String
-	}
-	if userUpdate.Github == nil {
-		userUpdate.Github = &user.Github.String
-	}
-	if userUpdate.Linkedin == nil {
-		userUpdate.Linkedin = &user.Linkedin.String
-	}
-	if userUpdate.Website == nil {
-		userUpdate.Website = &user.Website.String
-	}
+	// fileHandler := file_handlers.NewFileHandler()
 
-	fileHandler := file_handlers.NewFileHandler()
+	// if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+	// 	avatarPath, err := fileHandler.UploadFile(r)
+	// if err != nil && !errors.Is(err, http.ErrMissingFile) {
+	// 	utils.NewErrorResponse(w, http.StatusBadRequest, "Erro no upload do avatar", err.Error())
+	// 	return
+	// }
+	// if avatarPath != "" {
+	// 	userUpdate.Avatar = &avatarPath
+	// }
+//}
 
-	if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
-		avatarPath, err := fileHandler.UploadFile(r)
-	if err != nil && !errors.Is(err, http.ErrMissingFile) {
-		utils.NewErrorResponse(w, http.StatusBadRequest, "Erro no upload do avatar", err.Error())
-		return
-	}
-	if avatarPath != "" {
-		userUpdate.Avatar = &avatarPath
-	}
-}
-
-	updatedUser, err := h.userService.UpdateUser(convertUUID,
-		*userUpdate.Username,
-		*userUpdate.Email,
-		*userUpdate.Password,
-		*userUpdate.Avatar,
-		*userUpdate.Bio,
-		*userUpdate.Github,
-		*userUpdate.Linkedin,
-		*userUpdate.Website,
-	)
-
+	updatedUser, err := h.userService.UpdateUser(convertUUID, userUpdate)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to update user", err.Error())
 		return
 	}
 
-	res, err := json.Marshal(updatedUser)
-	if err != nil {
-		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to marshal user", err.Error())
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(res)
+	userResponse := user_service.Sanitize(updatedUser)
+	httputil.New(w).Status(200).Message("User update successfully!").Data(userResponse).Send()
 }
 
 func (h *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -297,18 +214,11 @@ func (h *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	_, err = h.userService.GetUser(convertUUID)
-	if err != nil {
-		utils.NewErrorResponse(w, http.StatusNotFound, "User not found", err.Error())
-		return
-	}
-
 	err = h.userService.DeleteUser(convertUUID)
 	if err != nil {
 		utils.NewErrorResponse(w, http.StatusInternalServerError, "Failed to delete user", err.Error())
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("User deleted successfully!"))
+	httputil.New(w).Status(200).Message("User Deleted successfully!").Send()
 }

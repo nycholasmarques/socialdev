@@ -19,6 +19,6 @@ func SetupUserRoutes(r *http.ServeMux, queries *db.Queries) {
 	r.HandleFunc("POST /users", handler.CreateUserHandler)
 	r.HandleFunc("GET /users/{user_id}", handler.GetUserHandler)
 	r.HandleFunc("GET /users", middlewares.ProtectedRoutes(handler.GetAllUsersHandler))
-	r.HandleFunc("PATCH /users/{user_id}", middlewares.ProtectedRoutes(handler.UpdateUserHandler))
+	r.HandleFunc("PATCH /users", middlewares.ProtectedRoutes(handler.UpdateUserHandler))
 	r.HandleFunc("DELETE /users/{user_id}", middlewares.ProtectedRoutes(handler.DeleteUserHandler))
 }

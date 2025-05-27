@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
-	"github.com/nycholasmarques/socialdev/internal/entity"
 	"github.com/nycholasmarques/socialdev/internal/modules/auth/repository"
+	user_errors "github.com/nycholasmarques/socialdev/internal/modules/user/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -26,9 +26,9 @@ func (s *AuthService) LoginUser(email string) (db.User, error) {
 	ctx := context.Background()
 	user, err := s.AuthRepo.LoginUser(ctx, email)
 	if err == sql.ErrNoRows {
-		return db.User{}, entity.ErrUserNotFound
+		return db.User{}, user_errors.ErrUserNotFound
 	} else if err != nil {
-		return db.User{}, entity.ErrInternalServer
+		return db.User{}, user_errors.ErrInternalServer
 	}
 	return user, nil
 }

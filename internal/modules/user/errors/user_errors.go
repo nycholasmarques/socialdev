@@ -1,4 +1,4 @@
-package entity
+package user_errors
 
 import (
 	"errors"
@@ -6,8 +6,6 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-
-// definindo erros
 var (
 	ErrUserNotFound          = errors.New("user not found")
 	ErrUserExists            = errors.New("user already exists")
@@ -16,7 +14,7 @@ var (
 	ErrUsernameAlreadyExists = errors.New("username already exists")
 )
 
-// Função para retornar mensagens personalizadas de erro
+// function for custom errors
 func GetValidationUserErrors(err error) map[string]string {
 	errors := make(map[string]string)
 
