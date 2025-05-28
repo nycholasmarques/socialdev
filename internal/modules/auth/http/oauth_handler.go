@@ -7,6 +7,9 @@ import (
 
 	configs "github.com/nycholasmarques/socialdev/config"
 	services "github.com/nycholasmarques/socialdev/internal/modules/auth/service"
+	user_dto "github.com/nycholasmarques/socialdev/internal/modules/user/dto"
+	user_service "github.com/nycholasmarques/socialdev/internal/modules/user/service"
+	httputil "github.com/nycholasmarques/socialdev/internal/pkg"
 	pkg "github.com/nycholasmarques/socialdev/internal/pkg/auth"
 	"github.com/nycholasmarques/socialdev/utils"
 	"golang.org/x/oauth2"
@@ -106,9 +109,12 @@ func (h *OOAuthHandler) HandleGoogleCallback(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"token": jwtToken,
-		"user":  user,
-	})
+	userSanitize := user_service.Sanitize(user)
+
+	response := user_dto.UserResponseJSON{
+		User: userSanitize,
+		Token: jwtToken,
+	}
+
+	httputil.New(w).Status(200).Message("User login with successfully!").Data(response).Send()
 }

@@ -5,9 +5,10 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/nycholasmarques/socialdev/internal/db"
 	services "github.com/nycholasmarques/socialdev/internal/modules/auth/service"
+	user_dto "github.com/nycholasmarques/socialdev/internal/modules/user/dto"
 	user_errors "github.com/nycholasmarques/socialdev/internal/modules/user/errors"
+	user_service "github.com/nycholasmarques/socialdev/internal/modules/user/service"
 	httputil "github.com/nycholasmarques/socialdev/internal/pkg"
 	pkg "github.com/nycholasmarques/socialdev/internal/pkg/auth"
 	"github.com/nycholasmarques/socialdev/utils"
@@ -23,11 +24,6 @@ func NewAuthHandler(authService services.AuthService) *AuthHandler {
 		authService: authService,
 	}
 }
-
-	type UserResponse struct {
-		User db.User `json:"user"`
-		Token string `json:"token"`
-	}
 
 	type LoginUserRequest struct {
 	Email    string `json:"email" validate:"required,email"`
@@ -78,12 +74,14 @@ func (h *AuthHandler) LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := UserResponse{
-		User:  user,
+	userResponse := user_service.Sanitize(user)
+
+	response := user_dto.UserResponseJSON{
+		User:  userResponse,
 		Token: token,
 	}
 
-	httputil.New(w).Status(200).Data(response).Send()
+	httputil.New(w).Status(200).Message("User login with successfully!").Data(response).Send()
 }
 
 
