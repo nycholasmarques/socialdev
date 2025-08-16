@@ -12,13 +12,13 @@ import (
 )
 
 type FileHandler struct {
-	UploadsDir   string
+	UploadsDir    string
 	MaxUploadSize int64
 }
 
 func NewFileHandler() *FileHandler {
 	return &FileHandler{
-		UploadsDir:   "./uploads",
+		UploadsDir:    "./uploads",
 		MaxUploadSize: 10 << 20, // 10MB
 	}
 }

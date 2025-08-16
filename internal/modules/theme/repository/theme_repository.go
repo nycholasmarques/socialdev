@@ -97,11 +97,11 @@ func (r *ThemeRepository) UserHasTheme(ctx context.Context, params db.UserHasThe
 func (r *ThemeRepository) UserHasActiveTheme(ctx context.Context, user_id uuid.UUID) (*db.UserHasActiveThemeRow, error) {
 	userHasActiveTheme, err := r.queries.UserHasActiveTheme(ctx, user_id)
 	if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-					return nil, nil
-			}
-			log.Printf("Error querying user active theme: %v", err)
-			return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		log.Printf("Error querying user active theme: %v", err)
+		return nil, err
 	}
 	return &userHasActiveTheme, nil
 }

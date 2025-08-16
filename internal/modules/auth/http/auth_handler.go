@@ -22,10 +22,10 @@ func NewAuthHandler(authService services.AuthService) *AuthHandler {
 	}
 }
 
-	type UserResponse struct {
-		User entity.UserResponse
-		Token string
-	}
+type UserResponse struct {
+	User  entity.UserResponse
+	Token string
+}
 
 func (h *AuthHandler) LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -84,8 +84,6 @@ func (h *AuthHandler) LoginAuthHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(res))
 }
-
-
 
 func (h *AuthHandler) VerifyTokenInSession(w http.ResponseWriter, r *http.Request) {
 	// userID := r.Context().Value(middlewares.UserIDKey).(string)

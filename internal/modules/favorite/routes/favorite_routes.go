@@ -1,8 +1,7 @@
 package favorite_routes
 
 import (
-	"net/http"
-
+	"github.com/go-chi/chi/v5"
 	"github.com/nycholasmarques/socialdev/internal/db"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
 	favorite_handlers "github.com/nycholasmarques/socialdev/internal/modules/favorite/handler"
@@ -10,13 +9,12 @@ import (
 	favorite_services "github.com/nycholasmarques/socialdev/internal/modules/favorite/service"
 )
 
-func SetupFavoriteRoutes(r *http.ServeMux, queries *db.Queries) {
-	
+func SetupFavoriteRoutes(r chi.Router, queries *db.Queries) {
 	repo := favorite_repository.NewFavoriteRepository(queries)
 	services := favorite_services.NewFavoriteService(repo)
 	handler := favorite_handlers.NewFavoriteHandler(services)
-	
-	r.HandleFunc("POST /favorites/{post_id}", middlewares.ProtectedRoutes(handler.AddFavoriteHandler))
-	r.HandleFunc("DELETE /favorites/{post_id}", middlewares.ProtectedRoutes(handler.RemoveFavoriteHandler))
-	r.HandleFunc("GET /favorites", middlewares.ProtectedRoutes(handler.GetUserFavoritesHandler))
+
+	r.With(middlewares.ProtectedRoutes).Post("/favorites/{post_id}", handler.AddFavoriteHandler)
+	r.With(middlewares.ProtectedRoutes).Delete("/favorites/{post_id}", handler.RemoveFavoriteHandler)
+	r.With(middlewares.ProtectedRoutes).Get("/favorites", handler.GetUserFavoritesHandler)
 }

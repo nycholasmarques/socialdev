@@ -3,6 +3,7 @@ package like_handler
 import (
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
@@ -34,7 +35,7 @@ func (h *LikeHandler) CreateLikeHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	postID := r.PathValue("post_id")
+	postID := chi.URLParam(r, "post_id")
 
 	if userID == "" || postID == "" {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Missing user_id or like_id in URL", "")
@@ -82,7 +83,7 @@ func (h *LikeHandler) GetLikeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	postID := r.PathValue("post_id")
+	postID := chi.URLParam(r, "post_id")
 
 	if userID == "" || postID == "" {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Missing user_id or like_id in URL", "")
@@ -124,7 +125,7 @@ func (h *LikeHandler) DeleteLikeHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	postID := r.PathValue("post_id")
+	postID := chi.URLParam(r, "post_id")
 
 	if userID == "" || postID == "" {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Missing user_id or like_id in URL", "")

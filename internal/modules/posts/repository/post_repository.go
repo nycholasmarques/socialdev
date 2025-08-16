@@ -155,30 +155,30 @@ func (r *PostRepository) DeletePost(ctx context.Context, post_id uuid.UUID) erro
 func (r *PostRepository) GetAllUserPosts(ctx context.Context, user_id uuid.UUID) ([]entity.Post, error) {
 	posts, err := r.queries.GetAllUserPosts(ctx, user_id)
 	if err != nil {
-			log.Printf("%v", err)
-			return nil, err
+		log.Printf("%v", err)
+		return nil, err
 	}
 
 	var postsResponse []entity.Post
 	for _, post := range posts {
-			postsResponse = append(postsResponse, entity.Post{
-					PostID:        post.PostID.String(),
-					UserID:        post.UserID.String(),
-					Title:         post.Title.String,
-					Content:       post.Content,
-					Photo:         post.Photo.String,
-					Video:         post.Video.String,
-					CreatedAt:     post.CreatedAt.Time.UTC().Format(time.RFC3339),
-					UpdatedAt:     post.UpdatedAt.Time.UTC().Format(time.RFC3339),
-					Like:          int(post.LikeCount),
-					Views:         int(post.ViewsCount),
-					CommentsCount: int(post.CommentCount),
-					User: entity.UserPost{
-							UserID:   post.UserID.String(),
-							Username: post.UserName.String,
-							Avatar:   post.UserAvatar.String,
-					},
-			})
+		postsResponse = append(postsResponse, entity.Post{
+			PostID:        post.PostID.String(),
+			UserID:        post.UserID.String(),
+			Title:         post.Title.String,
+			Content:       post.Content,
+			Photo:         post.Photo.String,
+			Video:         post.Video.String,
+			CreatedAt:     post.CreatedAt.Time.UTC().Format(time.RFC3339),
+			UpdatedAt:     post.UpdatedAt.Time.UTC().Format(time.RFC3339),
+			Like:          int(post.LikeCount),
+			Views:         int(post.ViewsCount),
+			CommentsCount: int(post.CommentCount),
+			User: entity.UserPost{
+				UserID:   post.UserID.String(),
+				Username: post.UserName.String,
+				Avatar:   post.UserAvatar.String,
+			},
+		})
 	}
 
 	return postsResponse, nil

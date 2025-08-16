@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/db"
 	role_service "github.com/nycholasmarques/socialdev/internal/modules/role/service"
@@ -32,7 +32,7 @@ func (h *RoleHandler) CreateRoleHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
 		return
 	}
-	rb.Close()
+	defer rb.Close()
 
 	var roleCreate *db.CreateRoleParams
 	err = json.Unmarshal(reader, &roleCreate)
@@ -60,8 +60,7 @@ func (h *RoleHandler) CreateRoleHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *RoleHandler) GetRoleHandler(w http.ResponseWriter, r *http.Request) {
-	role_id := r.URL.Path
-	roleID := strings.TrimPrefix(role_id, "/roles/")
+	roleID := chi.URLParam(r, "role_id")
 
 	uuid, err := uuid.Parse(roleID)
 	if err != nil {
@@ -124,8 +123,7 @@ func (h *RoleHandler) GetRoleWithNameHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *RoleHandler) UpdateRoleHandler(w http.ResponseWriter, r *http.Request) {
-	role_id := r.URL.Path
-	roleID := strings.TrimPrefix(role_id, "/roles/")
+	roleID := chi.URLParam(r, "role_id")
 
 	uuid, err := uuid.Parse(roleID)
 	if err != nil {
@@ -145,7 +143,7 @@ func (h *RoleHandler) UpdateRoleHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
 		return
 	}
-	rb.Close()
+	defer rb.Close()
 
 	var roleUpdate *db.UpdateRoleParams
 	err = json.Unmarshal(reader, &roleUpdate)
@@ -170,8 +168,7 @@ func (h *RoleHandler) UpdateRoleHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *RoleHandler) DeleteRoleHandler(w http.ResponseWriter, r *http.Request) {
-	role_id := r.URL.Path
-	roleID := strings.TrimPrefix(role_id, "/roles/")
+	roleID := chi.URLParam(r, "role_id")
 
 	uuid, err := uuid.Parse(roleID)
 	if err != nil {
@@ -196,9 +193,8 @@ func (h *RoleHandler) DeleteRoleHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *RoleHandler) CreateUserWithRoleHandler(w http.ResponseWriter, r *http.Request) {
-	// Obter parâmetros da URL
-	userID := r.PathValue("user_id")
-	roleID := r.PathValue("role_id")
+	userID := chi.URLParam(r, "user_id")
+	roleID := chi.URLParam(r, "role_id")
 
 	if userID == "" || roleID == "" {
 		http.Error(w, "Missing user_id or role_id in URL", http.StatusBadRequest)
@@ -234,9 +230,8 @@ func (h *RoleHandler) CreateUserWithRoleHandler(w http.ResponseWriter, r *http.R
 }
 
 func (h *RoleHandler) DeleteUserWithRoleHandler(w http.ResponseWriter, r *http.Request) {
-	// Obter parâmetros da URL
-	userID := r.PathValue("user_id")
-	roleID := r.PathValue("role_id")
+	userID := chi.URLParam(r, "user_id")
+	roleID := chi.URLParam(r, "role_id")
 
 	if userID == "" || roleID == "" {
 		http.Error(w, "Missing user_id or role_id in URL", http.StatusBadRequest)

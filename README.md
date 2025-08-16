@@ -86,3 +86,15 @@ ou
 
 docker-compose exec app migrate -path internal/db/migrations -database "postgresql://user:password@db:5432/app?sslmode=disable" up
 ```
+
+### Configuração do Ambiente de Desenvolvimento Atlas
+
+Para que o Atlas possa gerar novas migrações comparando seu `schema.sql` com um banco de dados limpo (ambiente de desenvolvimento), é necessário ter um banco de dados separado para essa finalidade.
+
+Execute o seguinte comando para criar o banco de dados `socialdev_dev` no seu contêiner PostgreSQL:
+
+```bash
+docker exec socialdev-db psql -U socialdev -c "CREATE DATABASE socialdev_dev;"
+```
+
+Este banco de dados será usado internamente pelo Atlas para suas operações de `diff` e não armazenará dados persistentes do seu aplicativo.

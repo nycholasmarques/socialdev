@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/entity"
@@ -88,8 +89,7 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *UserHandler) GetUserHandler(w http.ResponseWriter, r *http.Request) {
-	user_id := r.URL.Path
-	userID := strings.TrimPrefix(user_id, "/users/")
+	userID := chi.URLParam(r, "user_id")
 
 	uuid, err := uuid.Parse(userID)
 	if err != nil {
@@ -164,9 +164,9 @@ func (h *UserHandler) GetAllUsersHandler(w http.ResponseWriter, r *http.Request)
 func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
-	if !ok || userID == "" {
-		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "")
+	userID := chi.URLParam(r, "user_id")
+	if userID == "" {
+		utils.NewErrorResponse(w, http.StatusBadRequest, "Missing user_id in URL", "")
 		return
 	}
 
@@ -234,14 +234,14 @@ func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 
 	if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
 		avatarPath, err := fileHandler.UploadFile(r)
-	if err != nil && !errors.Is(err, http.ErrMissingFile) {
-		utils.NewErrorResponse(w, http.StatusBadRequest, "Erro no upload do avatar", err.Error())
-		return
+		if err != nil && !errors.Is(err, http.ErrMissingFile) {
+			utils.NewErrorResponse(w, http.StatusBadRequest, "Erro no upload do avatar", err.Error())
+			return
+		}
+		if avatarPath != "" {
+			userUpdate.Avatar = &avatarPath
+		}
 	}
-	if avatarPath != "" {
-		userUpdate.Avatar = &avatarPath
-	}
-}
 
 	updatedUser, err := h.userService.UpdateUser(convertUUID,
 		*userUpdate.Username,
@@ -272,11 +272,7 @@ func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 func (h *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
-	if !ok || userID == "" {
-		utils.NewErrorResponse(w, http.StatusBadRequest, "Invalid user ID", "")
-		return
-	}
+	userID := chi.URLParam(r, "user_id")
 
 	convertUUID, err := uuid.Parse(userID)
 	if err != nil {

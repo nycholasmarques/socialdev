@@ -6,9 +6,9 @@ import (
 )
 
 type Response struct {
-	Status  int         `json:"status"`
-	Message string      `json:"message"`
-	Data    any `json:"data,omitempty"`
+	Status  int    `json:"status"`
+	Message string `json:"message"`
+	Data    any    `json:"data,omitempty"`
 }
 
 func New(w http.ResponseWriter) *ResponseBuilder {
@@ -42,7 +42,7 @@ func (rb *ResponseBuilder) Data(data any) *ResponseBuilder {
 func (rb *ResponseBuilder) Send() {
 	rb.w.Header().Set("Content-Type", "application/json")
 	rb.w.WriteHeader(rb.status)
-	
+
 	json.NewEncoder(rb.w).Encode(Response{
 		Status:  rb.status,
 		Message: rb.message,

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/entity"
@@ -30,7 +31,7 @@ func (h *CommentHandler) CreateCommentHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	postID := r.PathValue("post_id")
+	postID := chi.URLParam(r, "post_id")
 	if postID == "" {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Missing post_id in URL", nil)
 		return
@@ -89,7 +90,7 @@ func (h *CommentHandler) CreateCommentHandler(w http.ResponseWriter, r *http.Req
 func (h *CommentHandler) GetCommentHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	commentID := r.PathValue("comment_id")
+	commentID := chi.URLParam(r, "comment_id")
 	if commentID == "" {
 		http.Error(w, `{"error": "Comment ID is required"}`, http.StatusBadRequest)
 		return
@@ -129,7 +130,7 @@ func (h *CommentHandler) GetCommentHandler(w http.ResponseWriter, r *http.Reques
 func (h *CommentHandler) GetAllCommentsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	postID := r.PathValue("post_id")
+	postID := chi.URLParam(r, "post_id")
 	if postID == "" {
 		http.Error(w, `{"error": "Post ID is required"}`, http.StatusBadRequest)
 		return
@@ -174,7 +175,7 @@ func (h *CommentHandler) UpdateCommentHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	commentID := r.PathValue("comment_id")
+	commentID := chi.URLParam(r, "comment_id")
 	if commentID == "" {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Missing comment_id in URL", nil)
 		return
@@ -241,7 +242,7 @@ func (h *CommentHandler) DeleteCommentHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	commentID := r.PathValue("comment_id")
+	commentID := chi.URLParam(r, "comment_id")
 
 	commentIDUUID, err := uuid.Parse(commentID)
 	if err != nil {
