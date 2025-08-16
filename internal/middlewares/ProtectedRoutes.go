@@ -15,8 +15,8 @@ type contextKey string
 
 const UserIDKey contextKey = "user_id"
 
-func ProtectedRoutes(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func ProtectedRoutes(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
 			http.Error(w, "Missing token", http.StatusUnauthorized)
@@ -60,6 +60,6 @@ func ProtectedRoutes(next http.HandlerFunc) http.HandlerFunc {
 		ctx := context.WithValue(r.Context(), UserIDKey, userID)
 		r = r.WithContext(ctx)
 
-		next(w, r)
-	}
+		next.ServeHTTP(w, r)
+	})
 }

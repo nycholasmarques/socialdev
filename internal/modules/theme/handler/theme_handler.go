@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/nycholasmarques/socialdev/internal/entity"
@@ -104,7 +105,7 @@ func (h *ThemeHandler) ListAllThemesHandler(w http.ResponseWriter, r *http.Reque
 func (h *ThemeHandler) GetThemeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	themeID := r.PathValue("theme_id")
+	themeID := chi.URLParam(r, "theme_id")
 	if themeID == "" {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Missing user_id in URL", "")
 		return
@@ -139,7 +140,7 @@ func (h *ThemeHandler) GetThemeHandler(w http.ResponseWriter, r *http.Request) {
 func (h *ThemeHandler) UpdateThemeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	themeID := r.PathValue("theme_id")
+	themeID := chi.URLParam(r, "theme_id")
 	if themeID == "" {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Missing user_id in URL", "")
 		return
@@ -196,7 +197,7 @@ func (h *ThemeHandler) UpdateThemeHandler(w http.ResponseWriter, r *http.Request
 func (h *ThemeHandler) DeleteThemeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	themeID := r.PathValue("theme_id")
+	themeID := chi.URLParam(r, "theme_id")
 	if themeID == "" {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Missing user_id in URL", "")
 		return
@@ -227,7 +228,7 @@ func (h *ThemeHandler) AddUserThemeHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	themeID := r.PathValue("theme_id")
+	themeID := chi.URLParam(r, "theme_id")
 	if themeID == "" {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Missing user_id in URL", "")
 		return
@@ -376,7 +377,7 @@ func (h *ThemeHandler) UpdateUserThemeHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	themeID := r.PathValue("theme_id")
+	themeID := chi.URLParam(r, "theme_id")
 	if themeID == "" {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Missing user_id in URL", "")
 		return
@@ -429,13 +430,13 @@ func (h *ThemeHandler) UpdateUserThemeHandler(w http.ResponseWriter, r *http.Req
 func (h *ThemeHandler) RemoveUserThemeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	userID := r.PathValue("user_id")
+	userID := chi.URLParam(r, "user_id")
 	if userID == "" {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Missing user_id in URL", "")
 		return
 	}
 
-	themeID := r.PathValue("theme_id")
+	themeID := chi.URLParam(r, "theme_id")
 	if themeID == "" {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Missing user_id in URL", "")
 		return

@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/nycholasmarques/socialdev/internal/entity"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
@@ -81,8 +81,7 @@ func (ph *PostHandler) GetPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := r.URL.Path
-	postID := strings.TrimPrefix(id, "/posts/")
+	postID := chi.URLParam(r, "post_id")
 
 	post, err := ph.postService.GetPost(postID, userID)
 	if err != nil {
@@ -165,14 +164,11 @@ func (ph *PostHandler) GetUserPostsHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Extrai o user_id da URL
-	vars := r.PathValue("user_id")
-	if vars == "" {
+	userID := chi.URLParam(r, "user_id")
+	if userID == "" {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Missing user_id in URL", "")
 		return
 	}
-
-	userID := vars
 
 	// Busca as postagens do usuário
 	posts, err := ph.postService.GetAllUserPosts(userID)
@@ -195,8 +191,7 @@ func (ph *PostHandler) UpdatePostHandler(w http.ResponseWriter, r *http.Request)
 	w.Header().Set("Content-Type", "application/json")
 	defer r.Body.Close()
 
-	id := r.URL.Path
-	postID := strings.TrimPrefix(id, "/posts/")
+	postID := chi.URLParam(r, "post_id")
 
 	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
 	if !ok || userID == "" {
@@ -249,8 +244,7 @@ func (ph *PostHandler) DeletePostHandler(w http.ResponseWriter, r *http.Request)
 	w.Header().Set("Content-Type", "application/json")
 	defer r.Body.Close()
 
-	id := r.URL.Path
-	postID := strings.TrimPrefix(id, "/posts/")
+	postID := chi.URLParam(r, "post_id")
 
 	userID, ok := r.Context().Value(middlewares.UserIDKey).(string)
 	if !ok || userID == "" {

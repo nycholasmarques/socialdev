@@ -3,14 +3,15 @@ package file_routes
 import (
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/nycholasmarques/socialdev/internal/db"
 	file_handlers "github.com/nycholasmarques/socialdev/internal/modules/file/handler"
 )
 
-func SetupFileRoutes(r *http.ServeMux, queries *db.Queries) {
+func SetupFileRoutes(r chi.Router, queries *db.Queries) {
 	fileHandler := file_handlers.NewFileHandler()
 
-	r.HandleFunc("POST /upload", func(w http.ResponseWriter, r *http.Request) {
+	r.Post("/upload", func(w http.ResponseWriter, r *http.Request) {
 		avatarPath, err := fileHandler.UploadFile(r)
 		if err != nil {
 			http.Error(w, "Erro ao fazer upload do arquivo", http.StatusBadRequest)

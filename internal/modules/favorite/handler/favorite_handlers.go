@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/nycholasmarques/socialdev/internal/middlewares"
 	favorite_services "github.com/nycholasmarques/socialdev/internal/modules/favorite/service"
 	"github.com/nycholasmarques/socialdev/utils"
@@ -28,7 +29,7 @@ func (h *FavoriteHandler) AddFavoriteHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	postID := r.PathValue("post_id")
+	postID := chi.URLParam(r, "post_id")
 	if postID == "" {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Post ID is required", "")
 		return
@@ -54,7 +55,7 @@ func (h *FavoriteHandler) RemoveFavoriteHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	postID := r.PathValue("post_id")
+	postID := chi.URLParam(r, "post_id")
 	if postID == "" {
 		utils.NewErrorResponse(w, http.StatusBadRequest, "Post ID is required", "")
 		return
