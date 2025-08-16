@@ -5,7 +5,7 @@ FROM golang:1.24-alpine AS builder
 WORKDIR /app
 
 RUN apk add --no-cache gcc musl-dev postgresql-client git
-RUN go install github.com/cosmtrek/air@latest
+RUN go install github.com/air-verse/air@latest
 
 # Copia os arquivos para o container
 COPY go.mod go.sum ./

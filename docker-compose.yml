@@ -18,11 +18,15 @@ services:
     build: 
       context: .
       target: builder 
-      command: air -c .air.toml
+    command: air -c .air.toml
     depends_on:
       - db
     environment:
-      DATABASE_URL: "postgresql://socialdev:root@db:5432/socialdev?sslmode=disable"
+      DB_HOST: db
+      DB_USER: socialdev
+      DB_PASSWORD: root
+      DB_NAME: socialdev
+      DB_PORT: 5432
     ports:
       - "8080:8080"
     volumes:
