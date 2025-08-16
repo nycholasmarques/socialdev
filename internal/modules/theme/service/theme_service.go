@@ -26,10 +26,10 @@ func (r *ThemeService) CreateTheme(name, description, previewImage string, isPre
 	ctx := context.Background()
 
 	params := db.CreateThemeParams{
-		ThemeID:     uuid.New(),
-		Name: sql.NullString{String: name, Valid: name != ""},
-		Description: sql.NullString{String: description, Valid: description != ""},
-		IsPremium:   sql.NullBool{Bool: isPremium, Valid: true},
+		ThemeID:      uuid.New(),
+		Name:         sql.NullString{String: name, Valid: name != ""},
+		Description:  sql.NullString{String: description, Valid: description != ""},
+		IsPremium:    sql.NullBool{Bool: isPremium, Valid: true},
 		PreviewImage: sql.NullString{String: previewImage, Valid: previewImage != ""},
 		ThemeConfig:  pqtype.NullRawMessage{RawMessage: themeConfig, Valid: themeConfig != nil},
 		Status:       sql.NullBool{Bool: status, Valid: true},
@@ -56,10 +56,10 @@ func (r *ThemeService) UpdateTheme(theme_id uuid.UUID, name, description, previe
 	ctx := context.Background()
 
 	params := db.UpdateThemeParams{
-		ThemeID:     theme_id,
-		Name: sql.NullString{String: name, Valid: name != ""},
-		Description: sql.NullString{String: description, Valid: description != ""},
-		IsPremium:   sql.NullBool{Bool: isPremium, Valid: true},
+		ThemeID:      theme_id,
+		Name:         sql.NullString{String: name, Valid: name != ""},
+		Description:  sql.NullString{String: description, Valid: description != ""},
+		IsPremium:    sql.NullBool{Bool: isPremium, Valid: true},
 		PreviewImage: sql.NullString{String: previewImage, Valid: previewImage != ""},
 		ThemeConfig:  pqtype.NullRawMessage{RawMessage: themeConfig, Valid: themeConfig != nil},
 		Status:       sql.NullBool{Bool: status, Valid: true},
@@ -70,7 +70,7 @@ func (r *ThemeService) UpdateTheme(theme_id uuid.UUID, name, description, previe
 	return r.themeRepo.UpdateTheme(ctx, params)
 }
 
-func (r *ThemeService) DeleteTheme(theme_id uuid.UUID) (error) {
+func (r *ThemeService) DeleteTheme(theme_id uuid.UUID) error {
 	ctx := context.Background()
 
 	return r.themeRepo.DeleteTheme(ctx, theme_id)
@@ -121,11 +121,11 @@ func (r *ThemeService) UserHasActiveTheme(user_id uuid.UUID) (*db.UserHasActiveT
 	return r.themeRepo.UserHasActiveTheme(ctx, user_id)
 }
 
-func (r *ThemeService) DeleteUserTheme(user_id uuid.UUID, theme_id uuid.UUID) (error) {
+func (r *ThemeService) DeleteUserTheme(user_id uuid.UUID, theme_id uuid.UUID) error {
 	ctx := context.Background()
 
 	userHasTheme, err := r.themeRepo.UserHasTheme(ctx, db.UserHasThemeParams{
-		UserID: user_id,
+		UserID:  user_id,
 		ThemeID: theme_id,
 	})
 	if err != nil {

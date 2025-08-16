@@ -4,8 +4,8 @@ FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
-# Instala dependências do sistema
 RUN apk add --no-cache gcc musl-dev postgresql-client git
+RUN go install github.com/cosmtrek/air@latest
 
 # Copia os arquivos para o container
 COPY go.mod go.sum ./
@@ -18,18 +18,17 @@ COPY . .
 # Compila a aplicação
 RUN go build -o main ./cmd/server
 
-# Imagem final
-FROM alpine:latest
-WORKDIR /root/
+FROM alpine:3.20
+WORKDIR /app/
 
-# Instala dependências
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 RUN apk add --no-cache ca-certificates
 
-# Copia o binário da aplicação
 COPY --from=builder /app/main .
 
-# Define a porta que o container expõe
+USER appuser
+
 EXPOSE 8080
 
-# Comando de execução da aplicação
-CMD ["/root/main"]
+CMD ["/app/main"]

@@ -13,21 +13,21 @@ var cfg = configs.LoadConfig()
 func CreateToken(userId string, KeepLogin bool) (string, error) {
 	var expiresIn int64
 	if KeepLogin {
-			expiresIn = time.Now().Add((time.Hour * 24) * 30).Unix()
+		expiresIn = time.Now().Add((time.Hour * 24) * 30).Unix()
 	} else {
-			expiresIn = time.Now().Add((time.Hour * 24) * 7).Unix()
+		expiresIn = time.Now().Add((time.Hour * 24) * 7).Unix()
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
-			jwt.MapClaims{
-					"user_id": userId,
-					"exp":     expiresIn,
-					"iat":     time.Now().Unix(),
-			})
+		jwt.MapClaims{
+			"user_id": userId,
+			"exp":     expiresIn,
+			"iat":     time.Now().Unix(),
+		})
 
 	tokenString, err := token.SignedString([]byte(cfg.JWTSecret))
 	if err != nil {
-			return "", err
+		return "", err
 	}
 
 	return tokenString, nil

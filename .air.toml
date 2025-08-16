@@ -5,8 +5,11 @@ tmp_dir = "tmp"
   cmd = "go build -o ./tmp/main ./cmd/server"
   bin = "./tmp/main"
   delay = 1000 # ms
-  exclude_dir = ["tmp", "vendor"]
-  include_ext = ["go"]
+  exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+  exclude_re = ["_test.go", ".sql.go$"]
+  include_ext = ["go", "tpl", "tmpl", "html"]
+  include_file = []
+  follow_symlink = true
 
 [log]
   time = true

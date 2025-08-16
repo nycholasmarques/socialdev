@@ -15,7 +15,7 @@ import (
 
 type AuthService struct {
 	AuthRepo *repository.AuthRepository
-	queries *db.Queries
+	queries  *db.Queries
 }
 
 func NewAuthService(authRepo *repository.AuthRepository) *AuthService {

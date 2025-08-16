@@ -21,9 +21,9 @@ type Theme struct {
 }
 
 type ListUserThemesRow struct {
-	Theme 	 Theme `json:"theme"`	
-	UserID   string `json:"user_id"`
-	Useractive   bool   `json:"user_active_theme"`
+	Theme         Theme     `json:"theme"`
+	UserID        string    `json:"user_id"`
+	Useractive    bool      `json:"user_active_theme"`
 	UserExpiresIn time.Time `json:"user_expires_in_theme"`
 }
 
@@ -39,9 +39,9 @@ type ThemeRequest struct {
 }
 
 type UserTheme struct {
-	UserID   string `json:"user_id"`
-	ThemeID  string `json:"theme_id"`
-	Active   bool   `json:"active"`
+	UserID    string    `json:"user_id"`
+	ThemeID   string    `json:"theme_id"`
+	Active    bool      `json:"active"`
 	ExpiresIn time.Time `json:"expires_in"`
 }
 

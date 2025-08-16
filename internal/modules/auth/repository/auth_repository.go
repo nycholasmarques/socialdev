@@ -60,4 +60,3 @@ func (r *AuthRepository) GetUserByEmail(ctx context.Context, email string) (enti
 
 	return userResponse, err
 }
-
